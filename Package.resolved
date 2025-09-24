@@ -1,0 +1,33 @@
+{
+  "originHash" : "1d4cb9dd4f5800b417eb3d63fc52535b6e7eb2a93022bd4641e730ec0e45d06b",
+  "pins" : [
+    {
+      "identity" : "geometrylite3d",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/schwa/GeometryLite3D",
+      "state" : {
+        "branch" : "main",
+        "revision" : "59e3663e6a6668a5b25cb7bfb5da54dfad1ed8ab"
+      }
+    },
+    {
+      "identity" : "swift-async-algorithms",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-async-algorithms",
+      "state" : {
+        "revision" : "042e1c4d9d19748c9c228f8d4ebc97bb1e339b0b",
+        "version" : "1.0.4"
+      }
+    },
+    {
+      "identity" : "swift-collections",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-collections.git",
+      "state" : {
+        "revision" : "8c0c0a8b49e080e54e5e328cc552821ff07cd341",
+        "version" : "1.2.1"
+      }
+    }
+  ],
+  "version" : 3
+}

@@ -1,0 +1,4 @@
+project: Interaction3DDemo/Interaction3DDemo.xcodeproj
+retain_public: true
+schemes:
+- Interaction3DDemo
