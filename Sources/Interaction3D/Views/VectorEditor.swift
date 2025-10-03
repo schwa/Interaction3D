@@ -23,7 +23,7 @@ public struct VectorEditor <Value, Label, Style>: View where Value: SIMD, Style:
     public var body: some View {
         HStack {
             Group(subviews: labels) { collection in
-                ForEach(collection[..<value.scalarCount].enumerated(), id: \.offset) { offset, label in
+                ForEach(Array(collection[..<value.scalarCount].enumerated()), id: \.offset) { offset, label in
                     if labelsVisibility != .hidden {
                         LabeledContent {
                             TextField(value: $value.scalars[offset], format: style) { label }

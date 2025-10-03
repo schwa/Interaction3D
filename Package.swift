@@ -1,12 +1,12 @@
-// swift-tools-version: 6.2
+// swift-tools-version: 6.1
 
 import PackageDescription
 
 let package = Package(
     name: "Interaction3D",
     platforms: [
-        .macOS(.v26),
-        .iOS(.v26),
+        .macOS(.v15),
+        .iOS(.v18),
     ],
     products: [
         .library(
