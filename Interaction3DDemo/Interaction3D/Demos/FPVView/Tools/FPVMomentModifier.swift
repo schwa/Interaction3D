@@ -1,7 +1,7 @@
-import SwiftUI
 import Interaction3D
-import simd
 import SceneKit
+import simd
+import SwiftUI
 
 struct FPVMomentModifier: ViewModifier {
     @Binding
@@ -9,14 +9,12 @@ struct FPVMomentModifier: ViewModifier {
 
     let verticalFOV: CGFloat
 
-
     @State private var fpvController = FPVController()
     @State private var wasdController = WASDController()
     @State private var gameController = GameControllerMovementController()
     @State private var positionTrail: [SIMD2<Float>] = []
     @State private var mapScale: CGFloat = 2.0
     @State private var isShowingControlsPopover = false
-
 
     func body(content: Content) -> some View {
         content
@@ -257,4 +255,3 @@ struct FPVMomentModifier: ViewModifier {
         .buttonStyle(.plain)
     }
 }
-

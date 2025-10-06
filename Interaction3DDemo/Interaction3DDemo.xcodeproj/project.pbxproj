@@ -10,6 +10,7 @@
 		45014FA22E8DE09700E0B7CC /* Panels in Frameworks */ = {isa = PBXBuildFile; productRef = 45014FA12E8DE09700E0B7CC /* Panels */; };
 		45014FA52E8DE10E00E0B7CC /* DemoKit in Frameworks */ = {isa = PBXBuildFile; productRef = 45014FA42E8DE10E00E0B7CC /* DemoKit */; };
 		4539124A2E8471A5007B2B89 /* Interaction3D in Frameworks */ = {isa = PBXBuildFile; productRef = 453912492E8471A5007B2B89 /* Interaction3D */; };
+		459FE16A2E92C48800839617 /* SwiftFormats in Frameworks */ = {isa = PBXBuildFile; productRef = 459FE1692E92C48800839617 /* SwiftFormats */; };
 		45DEDEF12E84C6C5003F1F2C /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = 45DEDEF02E84C6C5003F1F2C /* AsyncAlgorithms */; };
 /* End PBXBuildFile section */
 
@@ -33,6 +34,7 @@
 				45014FA52E8DE10E00E0B7CC /* DemoKit in Frameworks */,
 				45014FA22E8DE09700E0B7CC /* Panels in Frameworks */,
 				4539124A2E8471A5007B2B89 /* Interaction3D in Frameworks */,
+				459FE16A2E92C48800839617 /* SwiftFormats in Frameworks */,
 				45DEDEF12E84C6C5003F1F2C /* AsyncAlgorithms in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -80,6 +82,7 @@
 				45DEDEF02E84C6C5003F1F2C /* AsyncAlgorithms */,
 				45014FA12E8DE09700E0B7CC /* Panels */,
 				45014FA42E8DE10E00E0B7CC /* DemoKit */,
+				459FE1692E92C48800839617 /* SwiftFormats */,
 			);
 			productName = Interaction3D;
 			productReference = 45C5A3E12E830E5F001FBED4 /* Interaction3DDemo.app */;
@@ -114,6 +117,7 @@
 				45DEDEEF2E84C6C5003F1F2C /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
 				45014FA02E8DE09700E0B7CC /* XCRemoteSwiftPackageReference "Panels" */,
 				45014FA32E8DE10E00E0B7CC /* XCRemoteSwiftPackageReference "DemoKit" */,
+				459FE1682E92C48800839617 /* XCRemoteSwiftPackageReference "SwiftFormats" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 45C5A3E22E830E5F001FBED4 /* Products */;
@@ -399,6 +403,14 @@
 				minimumVersion = 0.1.0;
 			};
 		};
+		459FE1682E92C48800839617 /* XCRemoteSwiftPackageReference "SwiftFormats" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/schwa/SwiftFormats";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.3.6;
+			};
+		};
 		45DEDEEF2E84C6C5003F1F2C /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/apple/swift-async-algorithms.git";
@@ -423,6 +435,11 @@
 		453912492E8471A5007B2B89 /* Interaction3D */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = Interaction3D;
+		};
+		459FE1692E92C48800839617 /* SwiftFormats */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 459FE1682E92C48800839617 /* XCRemoteSwiftPackageReference "SwiftFormats" */;
+			productName = SwiftFormats;
 		};
 		45DEDEF02E84C6C5003F1F2C /* AsyncAlgorithms */ = {
 			isa = XCSwiftPackageProductDependency;

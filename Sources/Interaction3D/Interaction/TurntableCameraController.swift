@@ -1,6 +1,6 @@
 import GeometryLite3D
-import SwiftUI
 import simd
+import SwiftUI
 
 public struct TurntableCameraController: ViewModifier {
     @Binding
@@ -23,7 +23,7 @@ public struct TurntableCameraController: ViewModifier {
             .draggableValue(
                 $constraint.yaw.degrees, axis: .horizontal, scale: 0.1, behavior: constraint.yawBehavior
             )
-        // TODO: Should not need an axis for .magnify
+            // TODO: Should not need an axis for .magnify
             .draggableValue(
                 $constraint.radius.double, axis: .vertical, scale: -10, behavior: .linear,
                 gestureKind: .magnify
@@ -55,8 +55,8 @@ public struct TurntableControllerConstraint: Equatable {
     public var transform: simd_float4x4 {
         // Convert SwiftUI Angles to radians:
         let rotation =
-        simd_quatf(angle: Float(yaw.radians), axis: [0, 1, 0])
-        * simd_quatf(angle: Float(pitch.radians), axis: [1, 0, 0])
+            simd_quatf(angle: Float(yaw.radians), axis: [0, 1, 0])
+            * simd_quatf(angle: Float(pitch.radians), axis: [1, 0, 0])
         let localPos = SIMD4<Float>(0, 0, radius, 1)
         let rotatedOffset = simd_float4x4(rotation) * localPos
         let position = target + rotatedOffset.xyz

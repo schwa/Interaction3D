@@ -1,6 +1,6 @@
-import SwiftUI
-import Interaction3D
 import DemoKit
+import Interaction3D
+import SwiftUI
 
 struct ToolDemoView: View {
     var body: some View {
@@ -10,7 +10,6 @@ struct ToolDemoView: View {
                 .tool("Green", id: "green", modifier: GreenTool())
         }
     }
-
 }
 
 extension ToolDemoView: DemoView {

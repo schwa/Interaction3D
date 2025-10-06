@@ -132,8 +132,8 @@ public struct MeasurementDial <U>: View where U: Dimension {
             .init(value: 50, unit: .milesPerHour)
         ]
     )
-        .frame(width: 200, height: 200)
-        .padding()
+    .frame(width: 200, height: 200)
+    .padding()
 }
 
 extension Path {

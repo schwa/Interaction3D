@@ -132,7 +132,7 @@ struct AnyWorldController: Hashable, Identifiable, @unchecked Sendable {
         makeBodyClosure()
     }
 
-    static func == (lhs: AnyWorldController, rhs: AnyWorldController) -> Bool {
+    static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id
     }
 
@@ -168,7 +168,7 @@ private struct ControllerPicker: View {
  @State private var worldModel = WorldModel()
 
  WorldView(model: worldModel) {
-     MyRenderer()
+ MyRenderer()
  }
  .worldController(KeyboardNavigationController())
  .worldController(TurntableController())

@@ -1,21 +1,7 @@
 import simd
 import SwiftUI
 
-internal extension SIMD {
-    var scalars: [Scalar] {
-        get {
-            (0..<scalarCount).map { self[$0] }
-        }
-        set {
-            assert(newValue.count <= scalarCount, "New value has too many scalars")
-            for i in 0..<Swift.min(scalarCount, newValue.count) {
-                self[i] = newValue[i]
-            }
-        }
-    }
-}
-
-public extension simd_quatf {
+extension simd_quatf {
     var matrix: simd_float4x4 {
         get {
             simd_float4x4(self)
@@ -38,10 +24,15 @@ public extension simd_quatf {
         return (pitch, yaw)
     }
 
+    func slerpShortest(to target: simd_quatf, t: Float) -> simd_quatf {
+        let dotProduct = real * target.real + simd_dot(imag, target.imag)
+        let adjustedTarget = dotProduct < 0 ? simd_quatf(ix: -target.imag.x, iy: -target.imag.y, iz: -target.imag.z, r: -target.real) : target
+        return simd_slerp(self, adjustedTarget, t)
+    }
 }
 
-public extension SIMD3<Float> {
-    func rounded(precision: Float = 1e-4) -> SIMD3<Float> {
+extension SIMD3<Float> {
+    func rounded(precision: Float = 0.0001) -> SIMD3<Float> {
         SIMD3<Float>((x / precision).rounded() * precision, (y / precision).rounded() * precision, (z / precision).rounded() * precision)
     }
 }

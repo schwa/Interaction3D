@@ -1,15 +1,15 @@
+import DemoKit
 import Interaction3D
 import Observation
 import SceneKit
 import simd
 import Spatial
 import SwiftUI
-import DemoKit
 
 struct CityDemoView: View {
     @State private var model = CityModel()
 
-    init() {        
+    init() {
     }
 
     var body: some View {
@@ -21,10 +21,10 @@ struct CityDemoView: View {
             )
             .tool("FPV Flight", id: "fpv-flight", modifier: FPVMomentModifier(cameraMatrix: $model.cameraNode.simdTransform, verticalFOV: model.cameraNode.camera!.fieldOfView))
             .tool("Turntable", id: "turntable", modifier: TurnableModifier(cameraMatrix: $model.cameraNode.simdTransform))
+            .tool("Rotation Widget", id: "rotation-widget", modifier: RotationWidgetToolModifier(cameraMatrix: $model.cameraNode.simdTransform))
         }
     }
 }
-
 
 extension CityDemoView: DemoView {
     static var metadata = DemoMetadata(

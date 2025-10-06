@@ -52,7 +52,7 @@ public final class GameControllerMovementController: @unchecked Sendable {
     ) {
         self.movementTransformer = movementTransformer
         self.lookTransformer = lookTransformer
-        self.altitudeTransformer = altitudeTransformer ?? GameControllerMovementController.makeDefaultAltitudeTransformer()
+        self.altitudeTransformer = altitudeTransformer ?? Self.makeDefaultAltitudeTransformer()
         Task { @MainActor [weak self] in
             guard let self else {
                 return

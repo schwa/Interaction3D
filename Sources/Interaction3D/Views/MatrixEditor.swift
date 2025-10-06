@@ -24,7 +24,7 @@ public struct MatrixEditor <Value, Style>: View where Value: Matrix, Style: Pars
                         TextField(value: binding, format: style) {
                             // This line intentionally left blank
                         }
-                            .labelsHidden()
+                        .labelsHidden()
                     }
                 }
             }

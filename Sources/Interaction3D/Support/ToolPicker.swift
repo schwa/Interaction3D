@@ -1,6 +1,6 @@
+import Collections
 import Observation
 import SwiftUI
-import Collections
 
 @Observable
 internal class ToolPickerModel {
@@ -16,7 +16,7 @@ internal class ToolPickerModel {
 
 extension ToolPickerModel {
     var activeToolModifier: AnyViewModifier {
-        if let activeTool = activeTool, let entry = tools[activeTool] {
+        if let activeTool, let entry = tools[activeTool] {
             entry.modifier
         }
         else {
@@ -44,20 +44,20 @@ public struct ToolPickerHost<Content: View>: View {
 
     public var body: some View {
         content
-        .environment(model)
-        .toolbar {
-            Picker(selection: $model.activeTool, label: Text("Tools")) {
-                ForEach(Array(model.tools.values)) { entry in
-                    entry.label.tag(entry.id)
+            .environment(model)
+            .toolbar {
+                Picker(selection: $model.activeTool, label: Text("Tools")) {
+                    ForEach(Array(model.tools.values)) { entry in
+                        entry.label.tag(entry.id)
+                    }
                 }
             }
-        }
-        .onChange(of: model.tools.keys, initial: true) {
-            if model.activeTool == nil {
-                model.activeTool = model.tools.keys.first
+            .onChange(of: model.tools.keys, initial: true) {
+                if model.activeTool == nil {
+                    model.activeTool = model.tools.keys.first
+                }
             }
-        }
-        .modifier(model.activeToolModifier)
+            .modifier(model.activeToolModifier)
     }
 }
 
@@ -69,9 +69,9 @@ struct ToolModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-        .onChange(of: entry.id, initial: true) {
-            toolPickerModel.tools[entry.id] = entry
-        }
+            .onChange(of: entry.id, initial: true) {
+                toolPickerModel.tools[entry.id] = entry
+            }
     }
 }
 
