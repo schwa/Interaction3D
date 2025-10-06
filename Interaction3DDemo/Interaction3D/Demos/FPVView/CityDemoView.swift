@@ -22,6 +22,7 @@ struct CityDemoView: View {
             .tool("FPV Flight", id: "fpv-flight", modifier: FPVMomentModifier(cameraMatrix: $model.cameraNode.simdTransform, verticalFOV: model.cameraNode.camera!.fieldOfView))
             .tool("Turntable", id: "turntable", modifier: TurnableModifier(cameraMatrix: $model.cameraNode.simdTransform))
             .tool("Rotation Widget", id: "rotation-widget", modifier: RotationWidgetToolModifier(cameraMatrix: $model.cameraNode.simdTransform))
+            .tool("Orbit", id: "orbit", modifier: OrbitToolModifier(cameraMatrix: $model.cameraNode.simdTransform))
         }
     }
 }
