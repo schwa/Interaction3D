@@ -15,14 +15,9 @@ public struct TurnableCameraModifier: ViewModifier {
 
     public func body(content: Content) -> some View {
         content
-            .modifier(
-                TurntableCameraController(constraint: $constraint, transform: $cameraMatrix)
-            )
-            .inspector(isPresented: .constant(true)) {
-                Form {
-                    TurntableConstraintEditor(value: $constraint)
-                }
-            }
+        .modifier(
+            TurntableCameraController(constraint: $constraint, transform: $cameraMatrix)
+        )
     }
 }
 
