@@ -3,14 +3,18 @@ import SceneKit
 import simd
 import SwiftUI
 
-struct TurnableModifier: ViewModifier {
+public struct TurnableModifier: ViewModifier {
     @Binding
     var cameraMatrix: simd_float4x4
 
     @State private var constraint = TurntableControllerConstraint(target: .zero, radius: 10)
     @State private var showsConstraintEditor = false
 
-    func body(content: Content) -> some View {
+    public init(cameraMatrix: Binding<simd_float4x4>) {
+        self._cameraMatrix = cameraMatrix
+    }
+
+    public func body(content: Content) -> some View {
         content
             .modifier(
                 TurntableCameraController(constraint: $constraint, transform: $cameraMatrix)

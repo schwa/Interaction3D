@@ -3,7 +3,7 @@ import Interaction3D
 import simd
 import SwiftUI
 
-struct OrbitToolModifier: ViewModifier {
+public struct OrbitToolModifier: ViewModifier {
     @Binding
     var cameraMatrix: simd_float4x4
 
@@ -16,7 +16,11 @@ struct OrbitToolModifier: ViewModifier {
     @State
     private var animationStartTime: TimeInterval?
 
-    func body(content: Content) -> some View {
+    public init(cameraMatrix: Binding<simd_float4x4>) {
+        self._cameraMatrix = cameraMatrix
+    }
+
+    public func body(content: Content) -> some View {
         TimelineView(.animation) { context in
             content
                 .overlay(alignment: .bottomTrailing) {
