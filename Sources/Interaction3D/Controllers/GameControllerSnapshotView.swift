@@ -1,10 +1,13 @@
 import GameController
 import SwiftUI
 
-struct GameControllerSnapshotView: View {
+public struct GameControllerSnapshotView: View {
     @State private var display = SnapshotDisplay.empty
 
-    var body: some View {
+    public init() {
+    }
+
+    public var body: some View {
         TimelineView(.animation) { context in
             let date = context.date
             VStack(alignment: .leading, spacing: 4) {

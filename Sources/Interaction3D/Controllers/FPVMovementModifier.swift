@@ -3,7 +3,7 @@ import SceneKit
 import simd
 import SwiftUI
 
-public struct FPVMomentModifier: ViewModifier {
+public struct FPVMovementModifier: ViewModifier {
     @Binding
     var cameraMatrix: matrix_float4x4
 
@@ -20,7 +20,6 @@ public struct FPVMomentModifier: ViewModifier {
         self._cameraMatrix = cameraMatrix
         self.verticalFOV = verticalFOV
     }
-
 
     public func body(content: Content) -> some View {
         content
