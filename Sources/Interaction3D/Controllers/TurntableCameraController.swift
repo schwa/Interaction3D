@@ -7,7 +7,6 @@ public struct TurnableCameraModifier: ViewModifier {
     var cameraMatrix: simd_float4x4
 
     @State private var constraint = TurntableControllerConstraint(target: .zero, radius: 10)
-    @State private var showsConstraintEditor = false
 
     public init(cameraMatrix: Binding<simd_float4x4>) {
         self._cameraMatrix = cameraMatrix

@@ -1,5 +1,4 @@
 import DemoKit
-import Interaction3D
 import Observation
 import SceneKit
 import simd

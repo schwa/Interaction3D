@@ -106,14 +106,3 @@ extension AnyViewModifier {
     }
 }
 
-extension View {
-    @ViewBuilder
-    func modifier(_ modifier: (some ViewModifier)?) -> some View {
-        if let modifier {
-            self.modifier(modifier)
-        }
-        else {
-            self.modifier(EmptyModifier())
-        }
-    }
-}
