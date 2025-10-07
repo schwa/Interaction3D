@@ -234,7 +234,7 @@ public struct MeshRenderState {
         rearEdges = []
         frontEdges = []
 
-        let perspectiveProjection = PerspectiveProjection(verticalAngleOfView: .degrees(Float(verticalFOV)), zClip: 1 ... 100)
+        let perspectiveProjection = PerspectiveProjection(verticalAngleOfView: .degrees(Float(verticalFOV)))
         let projectionMatrix = perspectiveProjection.projectionMatrix(width: Float(size.width), height: Float(size.height))
         let clipToScreenMatrix = float4x4.clipToScreen(width: Float(size.width), height: Float(size.height))
         let cameraMatrix = rotation.matrix * float4x4(translation: [0, 0, 4])
