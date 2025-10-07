@@ -6,8 +6,8 @@ struct ToolDemoView: View {
     var body: some View {
         ToolPickerHost {
             Text("Hello world")
-                .tool("Red", id: "red", modifier: RedTool())
-                .tool("Green", id: "green", modifier: GreenTool())
+                .tool("Red", id: "red", modifier: { RedTool() })
+                .tool("Green", id: "green", modifier: { GreenTool() })
         }
     }
 }

@@ -7,7 +7,7 @@ internal class ToolPickerModel {
     struct Tool: Identifiable {
         let id: AnyHashable
         let label: AnyView
-        let modifier: AnyViewModifier
+        let modifier: () -> AnyViewModifier
         let enabled: Bool
     }
 
@@ -18,7 +18,7 @@ internal class ToolPickerModel {
 extension ToolPickerModel {
     var activeToolModifier: AnyViewModifier {
         if let activeTool, let entry = tools[activeTool] {
-            entry.modifier
+            entry.modifier()
         }
         else {
             AnyViewModifier()
@@ -28,10 +28,10 @@ extension ToolPickerModel {
 
 extension ToolPickerModel.Tool {
     @MainActor
-    public init(id: some Hashable, label: some View, modifier: some ViewModifier, enabled: Bool) {
+    public init(id: some Hashable, label: some View, modifier: @escaping () -> some ViewModifier, enabled: Bool) {
         self.id = AnyHashable(id)
         self.label = AnyView(label)
-        self.modifier = AnyViewModifier(modifier)
+        self.modifier = { AnyViewModifier(modifier()) }
         self.enabled = enabled
     }
 }
@@ -78,12 +78,12 @@ struct ToolModifier: ViewModifier {
 }
 
 public extension View {
-    func tool(_ label: some View, id: some Hashable, enabled: Bool = true, modifier: some ViewModifier) -> some View {
+    func tool(_ label: some View, id: some Hashable, enabled: Bool = true, modifier: @escaping () -> some ViewModifier) -> some View {
         let entry = ToolPickerModel.Tool(id: id, label: label, modifier: modifier, enabled: enabled)
         return self.modifier(ToolModifier(entry: entry))
     }
 
-    func tool(_ label: LocalizedStringKey, id: some Hashable, enabled: Bool = true, modifier: some ViewModifier) -> some View {
+    func tool(_ label: LocalizedStringKey, id: some Hashable, enabled: Bool = true, modifier: @escaping () -> some ViewModifier) -> some View {
         let entry = ToolPickerModel.Tool(id: id, label: Text(label), modifier: modifier, enabled: enabled)
         return self.modifier(ToolModifier(entry: entry))
     }

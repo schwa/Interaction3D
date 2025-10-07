@@ -218,10 +218,8 @@ public final class WASDController: @unchecked Sendable {
             print("Mouse input available")
 
             mouseInput.mouseMovedHandler = { [weak self] input, deltaX, deltaY in
-                print("Mouse moved: deltaX=\(deltaX), deltaY=\(deltaY)")
                 self?.eventContinuation?.yield(.look(deltaX: deltaX, deltaY: deltaY))
             }
-
             _ = mouseInput.capture()
             print("Mouse input is ready")
         } else {

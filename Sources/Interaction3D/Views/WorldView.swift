@@ -36,10 +36,10 @@ public struct WorldView<Content: View>: View {
     public var body: some View {
         ToolPickerHost {
             content
-                .tool("Turntable", id: "turntable", enabled: tools.contains(.turntable), modifier: TurntableCameraController(transform: $cameraMatrix))
-                .tool("Orbit", id: "orbit", enabled: tools.contains(.orbit), modifier: OrbitRotationModifier(cameraMatrix: $cameraMatrix))
-                .tool("Rotation Widget", id: "rotation-widget", enabled: tools.contains(.rotationWidget), modifier: RotationWidgetToolModifier(cameraMatrix: $cameraMatrix))
-                .tool("FPV Flight", id: "fpv-flight", enabled: tools.contains(.fpvFlight), modifier: FPVMovementModifier(cameraMatrix: $cameraMatrix, verticalFOV: verticalFOV))
+                .tool("Turntable", id: "turntable", enabled: tools.contains(.turntable), modifier: { TurntableCameraController(transform: $cameraMatrix) })
+                .tool("Orbit", id: "orbit", enabled: tools.contains(.orbit), modifier: { OrbitRotationModifier(cameraMatrix: $cameraMatrix) })
+                .tool("Rotation Widget", id: "rotation-widget", enabled: tools.contains(.rotationWidget), modifier: { RotationWidgetToolModifier(cameraMatrix: $cameraMatrix) })
+                .tool("FPV Flight", id: "fpv-flight", enabled: tools.contains(.fpvFlight), modifier: { FPVMovementModifier(cameraMatrix: $cameraMatrix, verticalFOV: verticalFOV) })
         }
     }
 
