@@ -391,8 +391,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/schwa/Panels";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.0;
 			};
 		};
 		45014FA32E8DE10E00E0B7CC /* XCRemoteSwiftPackageReference "DemoKit" */ = {

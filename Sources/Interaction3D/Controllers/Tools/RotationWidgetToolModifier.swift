@@ -4,14 +4,18 @@ import SceneKit
 import simd
 import SwiftUI
 
-struct RotationWidgetToolModifier: ViewModifier {
+public struct RotationWidgetToolModifier: ViewModifier {
     @Binding
     var cameraMatrix: simd_float4x4
 
     @State
     private var rotation: simd_quatf = .identity
 
-    func body(content: Content) -> some View {
+    public init(cameraMatrix: Binding<simd_float4x4>) {
+        self._cameraMatrix = cameraMatrix
+    }
+
+    public func body(content: Content) -> some View {
         content
             .onChange(of: rotation, initial: false) {
                 let position = cameraMatrix.translation

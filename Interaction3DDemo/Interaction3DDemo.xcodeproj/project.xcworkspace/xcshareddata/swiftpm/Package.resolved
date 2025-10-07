@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/schwa/Panels",
       "state" : {
-        "branch" : "main",
-        "revision" : "69d396ba90b17cfe2adbc0fb2aec5f175fefe7df"
+        "revision" : "69d396ba90b17cfe2adbc0fb2aec5f175fefe7df",
+        "version" : "0.1.0"
       }
     },
     {

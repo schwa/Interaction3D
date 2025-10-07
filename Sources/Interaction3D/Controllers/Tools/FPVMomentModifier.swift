@@ -3,7 +3,7 @@ import SceneKit
 import simd
 import SwiftUI
 
-struct FPVMomentModifier: ViewModifier {
+public struct FPVMomentModifier: ViewModifier {
     @Binding
     var cameraMatrix: matrix_float4x4
 
@@ -16,7 +16,13 @@ struct FPVMomentModifier: ViewModifier {
     @State private var mapScale: CGFloat = 2.0
     @State private var isShowingControlsPopover = false
 
-    func body(content: Content) -> some View {
+    public init(cameraMatrix: Binding<matrix_float4x4>, verticalFOV: CGFloat) {
+        self._cameraMatrix = cameraMatrix
+        self.verticalFOV = verticalFOV
+    }
+
+
+    public func body(content: Content) -> some View {
         content
             .focusable()
             .disableWASDKeys()
