@@ -9,7 +9,7 @@ public struct FPVMovementModifier: ViewModifier {
 
     let verticalFOV: CGFloat
 
-    @State private var fpvController = FPVController()
+    @State private var fpvController = FPVMovementController()
     @State private var wasdController = WASDController()
     @State private var gameController = GameControllerMovementController()
     @State private var positionTrail: [SIMD2<Float>] = []

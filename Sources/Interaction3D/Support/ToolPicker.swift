@@ -8,6 +8,7 @@ internal class ToolPickerModel {
         let id: AnyHashable
         let label: AnyView
         let modifier: AnyViewModifier
+        let enabled: Bool
     }
 
     var tools: OrderedDictionary<Tool.ID, Tool> = [:]
@@ -27,10 +28,11 @@ extension ToolPickerModel {
 
 extension ToolPickerModel.Tool {
     @MainActor
-    public init(id: some Hashable, label: some View, modifier: some ViewModifier) {
+    public init(id: some Hashable, label: some View, modifier: some ViewModifier, enabled: Bool) {
         self.id = AnyHashable(id)
         self.label = AnyView(label)
         self.modifier = AnyViewModifier(modifier)
+        self.enabled = enabled
     }
 }
 
@@ -47,14 +49,14 @@ public struct ToolPickerHost<Content: View>: View {
             .environment(model)
             .toolbar {
                 Picker(selection: $model.activeTool, label: Text("Tools")) {
-                    ForEach(Array(model.tools.values)) { entry in
+                    ForEach(Array(model.tools.values.filter { $0.enabled })) { entry in
                         entry.label.tag(entry.id)
                     }
                 }
             }
             .onChange(of: model.tools.keys, initial: true) {
                 if model.activeTool == nil {
-                    model.activeTool = model.tools.keys.first
+                    model.activeTool = model.tools.values.first(where: { $0.enabled })?.id
                 }
             }
             .modifier(model.activeToolModifier)
@@ -76,13 +78,13 @@ struct ToolModifier: ViewModifier {
 }
 
 public extension View {
-    func tool(_ label: some View, id: some Hashable, modifier: some ViewModifier) -> some View {
-        let entry = ToolPickerModel.Tool(id: id, label: label, modifier: modifier)
+    func tool(_ label: some View, id: some Hashable, enabled: Bool = true, modifier: some ViewModifier) -> some View {
+        let entry = ToolPickerModel.Tool(id: id, label: label, modifier: modifier, enabled: enabled)
         return self.modifier(ToolModifier(entry: entry))
     }
 
-    func tool(_ label: LocalizedStringKey, id: some Hashable, modifier: some ViewModifier) -> some View {
-        let entry = ToolPickerModel.Tool(id: id, label: Text(label), modifier: modifier)
+    func tool(_ label: LocalizedStringKey, id: some Hashable, enabled: Bool = true, modifier: some ViewModifier) -> some View {
+        let entry = ToolPickerModel.Tool(id: id, label: Text(label), modifier: modifier, enabled: enabled)
         return self.modifier(ToolModifier(entry: entry))
     }
 }

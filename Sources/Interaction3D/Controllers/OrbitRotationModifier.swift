@@ -3,7 +3,7 @@ import Interaction3D
 import simd
 import SwiftUI
 
-public struct OrbitToolModifier: ViewModifier {
+public struct OrbitRotationModifier: ViewModifier {
     @Binding
     var cameraMatrix: simd_float4x4
 

@@ -2,7 +2,7 @@ import Foundation
 import Observation
 import simd
 
-public struct FPVController {
+public struct FPVMovementController {
     public var movementController = MovementController()
 
     private var keyboardAxes: SIMD2<Float> = .zero

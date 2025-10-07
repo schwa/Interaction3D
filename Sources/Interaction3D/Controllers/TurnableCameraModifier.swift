@@ -2,33 +2,13 @@ import GeometryLite3D
 import simd
 import SwiftUI
 
-public struct TurnableCameraModifier: ViewModifier {
-    @Binding
-    var cameraMatrix: simd_float4x4
-
-    @State private var constraint = TurntableControllerConstraint(target: .zero, radius: 10)
-
-    public init(cameraMatrix: Binding<simd_float4x4>) {
-        self._cameraMatrix = cameraMatrix
-    }
-
-    public func body(content: Content) -> some View {
-        content
-        .modifier(
-            TurntableCameraController(constraint: $constraint, transform: $cameraMatrix)
-        )
-    }
-}
-
 public struct TurntableCameraController: ViewModifier {
-    @Binding
-    private var constraint: TurntableControllerConstraint
+    @State private var constraint = TurntableControllerConstraint(target: .zero, radius: 10)
 
     @Binding
     var transform: simd_float4x4
 
-    public init(constraint: Binding<TurntableControllerConstraint>, transform: Binding<simd_float4x4>) {
-        self._constraint = constraint
+    public init(transform: Binding<simd_float4x4>) {
         self._transform = transform
         // TODO: #132 compute pitch yaw from transform
     }
