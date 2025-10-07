@@ -1,6 +1,5 @@
 import GeometryLite3D
 import Interaction3D
-import Panels
 import simd
 import SwiftUI
 
