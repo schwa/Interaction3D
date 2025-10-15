@@ -8,7 +8,7 @@ public struct OrbitRotationModifier: ViewModifier {
     var cameraMatrix: simd_float4x4
 
     @State
-    private var rotation: simd_quatf = .identity
+    private var constraint = OrbitTransformer(center: [0, 0, 0], radius: 5, angle: .zero, normal: [0, 1, 0])
 
     @State
     private var isAnimating = false
@@ -24,36 +24,37 @@ public struct OrbitRotationModifier: ViewModifier {
         TimelineView(.animation) { context in
             content
                 .overlay(alignment: .bottomTrailing) {
-                    VStack(spacing: 12) {
-                        Button(isAnimating ? "Stop" : "Start") {
-                            isAnimating.toggle()
-                            if isAnimating {
-                                animationStartTime = context.date.timeIntervalSinceReferenceDate
-                            }
+                    Button(isAnimating ? "Stop" : "Start") {
+                        isAnimating.toggle()
+                        if isAnimating {
+                            animationStartTime = context.date.timeIntervalSinceReferenceDate
                         }
-                        .buttonStyle(.borderedProminent)
-
-                        RotationWidget(rotation: $rotation)
-                            .frame(width: 120, height: 120)
-                            .background(Color.black, in: RoundedRectangle(cornerRadius: 8))
                     }
+                    .buttonStyle(.borderedProminent)
                     .padding()
                 }
-                .onChange(of: rotation, initial: false) {
+                .onChange(of: constraint, initial: true) {
                     updateCamera()
                 }
                 .onChange(of: context.date) {
                     if isAnimating, let startTime = animationStartTime {
                         let elapsed = Float(context.date.timeIntervalSinceReferenceDate - startTime)
-                        rotation = simd_quatf(angle: elapsed, axis: [0, 1, 0])
+                        constraint.angle = .radians(elapsed)
                     }
                 }
         }
     }
 
     func updateCamera() {
-        let position = cameraMatrix.translation
-        let rotationMatrix = rotation.matrix
-        cameraMatrix = rotationMatrix * simd_float4x4(translation: position)
+        let position = constraint.apply(to: .zero)
+        let forward = normalize(constraint.center - position)
+        let right = normalize(cross(forward, constraint.normal))
+        let up = cross(right, forward)
+        cameraMatrix = float4x4(
+            [right.x, up.x, -forward.x, 0],
+            [right.y, up.y, -forward.y, 0],
+            [right.z, up.z, -forward.z, 0],
+            [position.x, position.y, position.z, 1]
+        )
     }
 }
