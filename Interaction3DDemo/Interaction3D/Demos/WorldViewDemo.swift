@@ -56,7 +56,7 @@ class CityModel {
         } catch {
             preconditionFailure("Failed to load Beautiful_city.usdz: \(error)")
         }
-        scene.background.contents = NSColor.black
+        scene.background.contents = CGColor(red: 0, green: 0, blue: 0, alpha: 1)
 
         let originMarker = SCNNode(geometry: SCNSphere(radius: 0.1))
         scene.rootNode.addChildNode(originMarker)
@@ -67,7 +67,7 @@ class CityModel {
 
         // X axis (red)
         let xAxis = SCNCylinder(radius: axisThickness, height: axisLength)
-        xAxis.firstMaterial?.diffuse.contents = NSColor.red
+        xAxis.firstMaterial?.diffuse.contents = CGColor(red: 1, green: 0, blue: 0, alpha: 1)
         let xAxisNode = SCNNode(geometry: xAxis)
         xAxisNode.eulerAngles.z = .pi / 2
         xAxisNode.position = SCNVector3(axisLength / 2, 0, 0)
@@ -75,14 +75,14 @@ class CityModel {
 
         // Y axis (green)
         let yAxis = SCNCylinder(radius: axisThickness, height: axisLength)
-        yAxis.firstMaterial?.diffuse.contents = NSColor.green
+        yAxis.firstMaterial?.diffuse.contents = CGColor(red: 0, green: 1, blue: 0, alpha: 1)
         let yAxisNode = SCNNode(geometry: yAxis)
         yAxisNode.position = SCNVector3(0, axisLength / 2, 0)
         scene.rootNode.addChildNode(yAxisNode)
 
         // Z axis (blue)
         let zAxis = SCNCylinder(radius: axisThickness, height: axisLength)
-        zAxis.firstMaterial?.diffuse.contents = NSColor.blue
+        zAxis.firstMaterial?.diffuse.contents = CGColor(red: 0, green: 0, blue: 1, alpha: 1)
         let zAxisNode = SCNNode(geometry: zAxis)
         zAxisNode.eulerAngles.x = .pi / 2
         zAxisNode.position = SCNVector3(0, 0, axisLength / 2)

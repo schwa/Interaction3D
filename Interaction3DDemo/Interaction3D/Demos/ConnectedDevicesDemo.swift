@@ -150,20 +150,24 @@ private final class GameInputDeviceStore {
 
     private func startMonitoring() {
         let center = NotificationCenter.default
-        let names: [Notification.Name] = [
+        var names: [Notification.Name] = [
             .GCControllerDidConnect,
             .GCControllerDidDisconnect,
             .GCControllerDidBecomeCurrent,
             .GCControllerDidStopBeingCurrent,
             .GCKeyboardDidConnect,
             .GCKeyboardDidDisconnect,
-            .GCKeyboardDidBecomeCurrent,
-            .GCKeyboardDidStopBeingCurrent,
             .GCMouseDidConnect,
             .GCMouseDidDisconnect,
             .GCMouseDidBecomeCurrent,
             .GCMouseDidStopBeingCurrent
         ]
+        #if os(macOS)
+        names.append(contentsOf: [
+            .GCKeyboardDidBecomeCurrent,
+            .GCKeyboardDidStopBeingCurrent
+        ])
+        #endif
 
         observers = names.map { name in
             center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in

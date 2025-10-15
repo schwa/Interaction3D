@@ -1,3 +1,5 @@
+#if os(macOS)
+
 import Interaction3D
 import SceneKit
 import simd
@@ -260,3 +262,5 @@ public struct FPVMovementModifier: ViewModifier {
         .buttonStyle(.plain)
     }
 }
+
+#endif
