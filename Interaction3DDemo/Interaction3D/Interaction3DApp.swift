@@ -8,7 +8,9 @@ struct Interaction3DApp: App {
             ConnectedDevicesDemo.self,
             ToolDemoView.self,
             RotationWidgetDemoView.self,
-            WorldViewDemo.self
+            WorldViewDemo.self,
+            NewTurntableDemo.self,
+            DragDemo.self
         ])
         .handleDemoURL(scheme: "interaction3d")
     }
