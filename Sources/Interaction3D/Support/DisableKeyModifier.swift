@@ -11,7 +11,7 @@ struct DisableKeyModifier: ViewModifier {
     }
 }
 
-public extension View {
+extension View {
 
     func disableKeys(_ keys: Set<KeyEquivalent>) -> some View {
         modifier(DisableKeyModifier(keys: keys))

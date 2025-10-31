@@ -182,3 +182,41 @@ public struct RotationTransformer: Transformer {
         return result
     }
 }
+
+public struct ClampingTransformer <T>: Transformer where T: Comparable {
+    public var range: ClosedRange<T>
+
+    public init(range: ClosedRange<T>) {
+        self.range = range
+    }
+
+    public func transform(_ input: T) -> T {
+
+        return input.clamped(to: range)
+    }
+}
+
+public struct WrappingTransformer <T>: Transformer where T: FloatingPoint {
+    public var range: ClosedRange<T>
+
+    public init(range: ClosedRange<T>) {
+        self.range = range
+    }
+
+    public func transform(_ input: T) -> T {
+        return input.wrapped(to: range)
+    }
+}
+
+public struct ScalingTransformer <T>: Transformer where T: Numeric {
+    public var magnitude: T
+
+    public init(magnitude: T) {
+        self.magnitude = magnitude
+    }
+
+    public func transform(_ input: T) -> T {
+        return input * magnitude
+    }
+}
+

@@ -13,8 +13,9 @@ public enum DraggableValueAxis {
     case vertical
 }
 
-public extension View {
+extension View {
     // TODO: 'InteractiveValue'?
+    // TODO: Scale and Behavior are "transformers"
     func draggableValue(_ value: Binding<Double>, axis: DraggableValueAxis, scale: Double, behavior: DraggableValueBehavior, gestureKind: DraggableValueViewModifier.GestureKind = .drag) -> some View {
         self.modifier(DraggableValueViewModifier(value: value, axis: axis, scale: scale, behavior: behavior, gestureKind: gestureKind))
     }
@@ -22,8 +23,8 @@ public extension View {
 
 // TODO: #134 Make generic for any VectorArithmetic and add a transform closure for axis handling?
 // TODO: "GestureBasedValueModifier"/"InteractiveValueModifier"?
-public struct DraggableValueViewModifier: ViewModifier {
-    public enum GestureKind {
+struct DraggableValueViewModifier: ViewModifier {
+    enum GestureKind {
         case drag
         case magnify
     }
@@ -37,7 +38,7 @@ public struct DraggableValueViewModifier: ViewModifier {
     var axis: DraggableValueAxis
     var scale: Double
     var behavior: DraggableValueBehavior
-    var minimimDragDistance: Double
+    var minimumDragDistance: Double
     var predictedThreshold: Double
     var animationMaxDelay: TimeInterval
     var gestureKind: GestureKind
@@ -48,19 +49,19 @@ public struct DraggableValueViewModifier: ViewModifier {
     @State
     private var lastEventTime: TimeInterval?
 
-    public init(value: Binding<Double>, axis: DraggableValueAxis, scale: Double, behavior: DraggableValueBehavior, minimimDragDistance: Double = 10, predictedThreshold: Double = 10, animationMaxDelay: TimeInterval = 0.2, gestureKind: GestureKind = .drag) {
+    init(value: Binding<Double>, axis: DraggableValueAxis, scale: Double, behavior: DraggableValueBehavior, minimimDragDistance: Double = 10, predictedThreshold: Double = 10, animationMaxDelay: TimeInterval = 0.2, gestureKind: GestureKind = .drag) {
         self._value = value
         self.animatedValue = value.wrappedValue
         self.axis = axis
         self.scale = scale
         self.behavior = behavior
-        self.minimimDragDistance = minimimDragDistance
+        self.minimumDragDistance = minimimDragDistance
         self.predictedThreshold = predictedThreshold
         self.animationMaxDelay = animationMaxDelay
         self.gestureKind = gestureKind
     }
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content
             .simultaneousGesture(gestureKind == .drag ? dragGesture : nil)
             .simultaneousGesture(gestureKind == .magnify ? magnifyGesture : nil)
@@ -70,7 +71,7 @@ public struct DraggableValueViewModifier: ViewModifier {
     }
 
     var dragGesture: some Gesture {
-        DragGesture(minimumDistance: minimimDragDistance)
+        DragGesture(minimumDistance: minimumDragDistance)
             .onChanged { gesture in
                 if initialValue == nil {
                     initialValue = value
@@ -153,16 +154,16 @@ public struct DraggableValueViewModifier: ViewModifier {
 
 // MARK: -
 
-public struct AnimatableValueCallbackModifier <T>: ViewModifier, @preconcurrency Animatable where T: VectorArithmetic {
-    public var animatableData: T
+struct AnimatableValueCallbackModifier <T>: ViewModifier, @preconcurrency Animatable where T: VectorArithmetic {
+    var animatableData: T
     var callback: (T) -> Void
 
-    public init(initialValue: T, callback: @escaping (T) -> Void) {
+    init(initialValue: T, callback: @escaping (T) -> Void) {
         self.animatableData = initialValue
         self.callback = callback
     }
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content
             .onChange(of: animatableData) {
                 callback(animatableData)

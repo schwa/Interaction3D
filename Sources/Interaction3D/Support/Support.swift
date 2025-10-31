@@ -15,7 +15,7 @@ internal extension SIMD {
     }
 }
 
-internal extension simd_quatf {
+public extension simd_quatf {
     var matrix: simd_float4x4 {
         get {
             simd_float4x4(self)
@@ -47,7 +47,7 @@ internal extension SIMD3<Float> {
 }
 
 // TODO: Move to GeometryLite3D
-internal extension simd_float4x4 {
+public extension simd_float4x4 {
     /// Computes the yaw (rotation about Y-axis) from the transformation matrix.
     /// Assumes no shear and uniform scaling.
     var yaw: Float {
@@ -62,7 +62,14 @@ internal extension simd_float4x4 {
     }
 
     /// Helper function to clamp values.
+    // TODO: WHY IS THIS ON MATRIX?
     private func clamp(_ value: Float, min: Float, max: Float) -> Float {
         Swift.max(min, Swift.min(max, value))
+    }
+}
+
+public extension Comparable {
+    func clamped(to range: ClosedRange<Self>) -> Self {
+        min(max(self, range.lowerBound), range.upperBound)
     }
 }

@@ -28,7 +28,7 @@ extension ToolPickerModel {
 
 extension ToolPickerModel.Tool {
     @MainActor
-    public init(id: some Hashable, label: some View, modifier: @escaping () -> some ViewModifier, enabled: Bool) {
+    init(id: some Hashable, label: some View, modifier: @escaping () -> some ViewModifier, enabled: Bool) {
         self.id = AnyHashable(id)
         self.label = AnyView(label)
         self.modifier = { AnyViewModifier(modifier()) }

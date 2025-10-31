@@ -1,9 +1,13 @@
 import simd
 import SwiftUI
 
-internal extension Float {
+public extension Float {
     var double: Double {
-        get { Double(self) }
-        set { self = Float(newValue) }
+        get {
+            Double(self)
+        }
+        set {
+            self = Float(newValue)
+        }
     }
 }

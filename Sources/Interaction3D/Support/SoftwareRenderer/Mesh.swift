@@ -87,7 +87,7 @@ public extension Mesh.Face {
     }
 }
 
-public extension Mesh {
+extension Mesh {
     func calculateLookAt(at vertex: SIMD3<Float>) -> simd_quatf {
         let direction = simd_normalize(vertex - center)
         let yaw = atan2(direction.x, direction.z)
@@ -97,15 +97,15 @@ public extension Mesh {
     }
 }
 
-// public extension Mesh.Edge {
+// extension Mesh.Edge {
 //    init(start: Int, end: Int) {
 //        self.start = start
 //        self.end = end
 //    }
 // }
 
-public extension Mesh {
-    static let cube = Mesh(
+extension Mesh {
+    public static let cube = Mesh(
         vertices: [
             SIMD3<Float>(-1, -1, -1),
             SIMD3<Float>(1, -1, -1),
@@ -126,7 +126,7 @@ public extension Mesh {
         ]
     )
 
-    static let dodecahedron: Mesh = {
+    public static let dodecahedron: Mesh = {
         let phi: Float = (1.0 + sqrt(5.0)) / 2.0
         let invPhi: Float = 1.0 / phi
 
@@ -171,11 +171,11 @@ public extension Mesh {
         return Mesh(vertices: vertices, faces: faces)
     }()
 
-    static let tetrahedron = Mesh(vertices: [SIMD3<Float>(1, 1, 1), SIMD3<Float>(-1, -1, 1), SIMD3<Float>(-1, 1, -1), SIMD3<Float>(1, -1, -1)].map { simd_normalize($0) }, faces: [[0, 1, 2], [0, 3, 1], [0, 2, 3], [1, 3, 2]])
+    public static let tetrahedron = Mesh(vertices: [SIMD3<Float>(1, 1, 1), SIMD3<Float>(-1, -1, 1), SIMD3<Float>(-1, 1, -1), SIMD3<Float>(1, -1, -1)].map { simd_normalize($0) }, faces: [[0, 1, 2], [0, 3, 1], [0, 2, 3], [1, 3, 2]])
 
-    static let octahedron = Mesh(vertices: [SIMD3<Float>(1, 0, 0), SIMD3<Float>(-1, 0, 0), SIMD3<Float>(0, 1, 0), SIMD3<Float>(0, -1, 0), SIMD3<Float>(0, 0, 1), SIMD3<Float>(0, 0, -1)], faces: [[0, 2, 4], [0, 4, 3], [0, 3, 5], [0, 5, 2], [1, 2, 5], [1, 5, 3], [1, 3, 4], [1, 4, 2]])
+    public static let octahedron = Mesh(vertices: [SIMD3<Float>(1, 0, 0), SIMD3<Float>(-1, 0, 0), SIMD3<Float>(0, 1, 0), SIMD3<Float>(0, -1, 0), SIMD3<Float>(0, 0, 1), SIMD3<Float>(0, 0, -1)], faces: [[0, 2, 4], [0, 4, 3], [0, 3, 5], [0, 5, 2], [1, 2, 5], [1, 5, 3], [1, 3, 4], [1, 4, 2]])
 
-    static let icosahedron: Mesh = {
+    public static let icosahedron: Mesh = {
         let phi: Float = (1.0 + sqrt(5.0)) / 2.0
         let vertices: [SIMD3<Float>] = [SIMD3<Float>(-1, phi, 0), SIMD3<Float>(1, phi, 0), SIMD3<Float>(-1, -phi, 0), SIMD3<Float>(1, -phi, 0), SIMD3<Float>(0, -1, phi), SIMD3<Float>(0, 1, phi), SIMD3<Float>(0, -1, -phi), SIMD3<Float>(0, 1, -phi), SIMD3<Float>(phi, 0, -1), SIMD3<Float>(phi, 0, 1), SIMD3<Float>(-phi, 0, -1), SIMD3<Float>(-phi, 0, 1)].map { simd_normalize($0) }
         let faces: [[Int]] = [[0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11], [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8], [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9], [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1]]
@@ -219,16 +219,16 @@ public extension Mesh {
     }
 }
 
-public struct MeshRenderState {
-    public var rearFaces: [Mesh.Face] = []
-    public var frontFaces: [Mesh.Face] = []
-    public var rearEdges: Set<Mesh.Edge> = []
-    public var frontEdges: Set<Mesh.Edge> = []
-    public var rendererContext = SoftwareRendererContext()
+struct MeshRenderState {
+    var rearFaces: [Mesh.Face] = []
+    var frontFaces: [Mesh.Face] = []
+    var rearEdges: Set<Mesh.Edge> = []
+    var frontEdges: Set<Mesh.Edge> = []
+    var rendererContext = SoftwareRendererContext()
 
-    public init() {}
+    init() {}
 
-    public mutating func update(mesh: Mesh, rotation: simd_quatf, size: CGSize, verticalFOV: Double) {
+    mutating func update(mesh: Mesh, rotation: simd_quatf, size: CGSize, verticalFOV: Double) {
         rearFaces = []
         frontFaces = []
         rearEdges = []
@@ -254,7 +254,7 @@ public struct MeshRenderState {
         }
     }
 
-    public func color(for vector: SIMD3<Float>) -> Color? {
+    func color(for vector: SIMD3<Float>) -> Color? {
         switch normalize(vector).rounded() {
         case [1, 0, 0]:
             return .red
@@ -273,7 +273,7 @@ public struct MeshRenderState {
         }
     }
 
-    public func label(for vector: SIMD3<Float>) -> String? {
+    func label(for vector: SIMD3<Float>) -> String? {
         switch normalize(vector).rounded() {
         case [1, 0, 0]:
             return "+X"
