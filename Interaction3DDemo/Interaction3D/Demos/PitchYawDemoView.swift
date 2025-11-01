@@ -5,7 +5,7 @@ import simd
 import GeometryLite3D
 import SwiftFormats
 
-struct PitchYawDemo: View {
+struct PitchYawDemoView: View {
 
     @State
     var rotation: simd_quatf = simd_quatf(angle: 0, axis: [0, 1, 0])
@@ -157,7 +157,7 @@ struct PitchYawDemo: View {
     }
 }
 
-extension PitchYawDemo: DemoView {
+extension PitchYawDemoView: DemoView {
     static var metadata = DemoMetadata(
         name: "Pitch Yaw Demo"
     )

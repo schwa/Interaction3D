@@ -9,7 +9,7 @@ struct Interaction3DApp: App {
             ToolDemoView.self,
             RotationWidgetDemoView.self,
             WorldViewDemo.self,
-            PitchYawDemo.self,
+            PitchYawDemoView.self,
             DragDemo.self
         ])
         .handleDemoURL(scheme: "interaction3d")
