@@ -5,7 +5,7 @@ import simd
 import GeometryLite3D
 import SwiftFormats
 
-struct NewTurntableDemo: View {
+struct PitchYawDemo: View {
 
     @State
     var rotation: simd_quatf = simd_quatf(angle: 0, axis: [0, 1, 0])
@@ -53,7 +53,7 @@ struct NewTurntableDemo: View {
         }
 
         contentView
-            .modifier(NewTurntableCameraController(
+            .modifier(PitchYawDragViewModifier(
                 rotation: $rotation,
                 pitchTransform: verticalTransform,
                 yawTransform: horizontalTransform
@@ -157,9 +157,9 @@ struct NewTurntableDemo: View {
     }
 }
 
-extension NewTurntableDemo: DemoView {
+extension PitchYawDemo: DemoView {
     static var metadata = DemoMetadata(
-        name: "New Turntable Demo"
+        name: "Pitch Yaw Demo"
     )
 
 }

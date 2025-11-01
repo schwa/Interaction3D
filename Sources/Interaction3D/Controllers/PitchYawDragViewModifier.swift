@@ -3,7 +3,7 @@ import simd
 import SwiftUI
 import SwiftFormats
 
-public struct NewTurntableCameraController: ViewModifier {
+public struct PitchYawDragViewModifier: ViewModifier {
     @Binding
     var pitch: Angle
 
@@ -102,7 +102,7 @@ public struct NewTurntableCameraController: ViewModifier {
     }
 }
 
-public extension NewTurntableCameraController {
+public extension PitchYawDragViewModifier {
     init(rotation: Binding<simd_quatf>, pitchTransform: @escaping (Angle) -> Angle = { $0 }, yawTransform: @escaping (Angle) -> Angle = { $0 }) {
 
         let pitch = Binding<Angle>(

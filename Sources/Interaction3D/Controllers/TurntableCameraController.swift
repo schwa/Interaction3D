@@ -14,18 +14,59 @@ public struct TurntableCameraController: ViewModifier {
     }
 
     public func body(content: Content) -> some View {
+        // Convert DraggableValueBehavior to transform closures
+        let pitchTransform: (Angle) -> Angle = { angle in
+            switch constraint.pitchBehavior {
+            case .linear:
+                return angle
+            case .clamping(let range):
+                return Angle(degrees: angle.degrees.clamped(to: range))
+            case .wrapping(let range):
+                let rangeWidth = range.upperBound - range.lowerBound
+                var normalized = (angle.degrees - range.lowerBound).truncatingRemainder(dividingBy: rangeWidth)
+                if normalized < 0 {
+                    normalized += rangeWidth
+                }
+                return Angle(degrees: range.lowerBound + normalized)
+            }
+        }
+
+        let yawTransform: (Angle) -> Angle = { angle in
+            switch constraint.yawBehavior {
+            case .linear:
+                return angle
+            case .clamping(let range):
+                return Angle(degrees: angle.degrees.clamped(to: range))
+            case .wrapping(let range):
+                let rangeWidth = range.upperBound - range.lowerBound
+                var normalized = (angle.degrees - range.lowerBound).truncatingRemainder(dividingBy: rangeWidth)
+                if normalized < 0 {
+                    normalized += rangeWidth
+                }
+                return Angle(degrees: range.lowerBound + normalized)
+            }
+        }
+
+        let radiusTransform: (Double) -> Double = { value in
+            // DistanceGestureModifier works differently - it multiplies by (1.0 + transformedDelta)
+            // So we just return the delta as-is for linear behavior
+            return value
+        }
+
         content
-            .draggableValue(
-                $constraint.pitch.degrees, axis: .vertical, scale: 0.1, behavior: constraint.pitchBehavior
-            )
-            .draggableValue(
-                $constraint.yaw.degrees, axis: .horizontal, scale: 0.1, behavior: constraint.yawBehavior
-            )
-            // TODO: Should not need an axis for .magnify
-            .draggableValue(
-                $constraint.radius.double, axis: .vertical, scale: -10, behavior: .linear,
-                gestureKind: .magnify
-            )
+            .modifier(PitchYawDragViewModifier(
+                pitch: $constraint.pitch,
+                yaw: $constraint.yaw,
+                pitchTransform: pitchTransform,
+                yawTransform: yawTransform
+            ))
+            .modifier(DistanceGestureModifier(
+                distance: Binding(
+                    get: { Double(constraint.radius) },
+                    set: { constraint.radius = Float($0) }
+                ),
+                distanceTransform: radiusTransform
+            ))
             .onChange(of: constraint, initial: true) {
                 transform = constraint.transform
             }
