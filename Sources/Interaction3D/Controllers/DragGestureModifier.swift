@@ -138,9 +138,6 @@ public struct DragGestureModifier: ViewModifier {
                 }
 
                 if shouldAnimate {
-                    if let lastEventTime {
-                        print("Drag animation triggered - horizontalDelta: \(horizontalDelta), verticalDelta: \(verticalDelta), timeSinceLastEvent: \(Date.timeIntervalSinceReferenceDate - lastEventTime)")
-                    }
                     withAnimation(.linear(duration: 0.3)) {
                         if shiftPressed {
                             if dominantAxis == .vertical {
@@ -162,9 +159,6 @@ public struct DragGestureModifier: ViewModifier {
                 let verticalDelta = abs(predictedHeight - translation.height)
 
                 if horizontalDelta >= predictedThreshold || verticalDelta >= predictedThreshold {
-                    if let lastEventTime {
-                        print("Drag animation triggered - horizontalDelta: \(horizontalDelta), verticalDelta: \(verticalDelta), timeSinceLastEvent: \(Date.timeIntervalSinceReferenceDate - lastEventTime)")
-                    }
                     withAnimation(.linear(duration: 0.3)) {
                         animatedTranslation.width = predictedWidth
                         animatedTranslation.height = predictedHeight

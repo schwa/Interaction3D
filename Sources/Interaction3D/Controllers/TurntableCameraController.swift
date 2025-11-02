@@ -84,7 +84,7 @@ public struct TurntableControllerConstraint: Equatable {
     public var pitchBehavior: DraggableValueBehavior
     public var yawBehavior: DraggableValueBehavior
 
-    public init(target: SIMD3<Float> = .zero, radius: Float, pitchBehavior: DraggableValueBehavior = .clamping(-90...90), yawBehavior: DraggableValueBehavior = .linear) {
+    public init(target: SIMD3<Float> = .zero, radius: Float, pitchBehavior: DraggableValueBehavior = .clamping(-89.999...89.999), yawBehavior: DraggableValueBehavior = .linear) {
         self.target = target
         self.radius = radius
         self.pitchBehavior = pitchBehavior
