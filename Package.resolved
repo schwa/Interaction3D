@@ -1,5 +1,5 @@
 {
-  "originHash" : "01e5bdcb8a4ba4061fa732381e2050ce27d109bd5d55eeea22a7b23d37aa913e",
+  "originHash" : "40b73feb93dbb49f4888b91f0675b8d3cf65e78bfed3bc161f335b624fd5b18b",
   "pins" : [
     {
       "identity" : "geometrylite3d",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "2b63646cf7290361567cafaf89f82206ee0ff3e7",
         "version" : "0.1.0"
+      }
+    },
+    {
+      "identity" : "swift-algorithms",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-algorithms",
+      "state" : {
+        "revision" : "87e50f483c54e6efd60e885f7f5aa946cee68023",
+        "version" : "1.2.1"
       }
     },
     {
@@ -35,6 +44,15 @@
       "state" : {
         "revision" : "0c0290ff6b24942dadb83a929ffaaa1481df04a2",
         "version" : "1.1.1"
+      }
+    },
+    {
+      "identity" : "swiftformats",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/schwa/SwiftFormats",
+      "state" : {
+        "revision" : "6b51ccec7fccf2f1d4f28f03def6c6b97d17c05b",
+        "version" : "0.3.6"
       }
     }
   ],
