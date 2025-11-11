@@ -18,12 +18,7 @@ struct WorldViewDemo: View {
     var projection: any ProjectionProtocol = PerspectiveProjection()
 
     var body: some View {
-        WorldView(projection: $projection, cameraMatrix: $model.cameraNode.simdTransform, tools: [
-            .orbit,
-            .turntable,
-//            .fpvFlight,
-//            .rotationWidget
-        ]) {
+        WorldView(projection: $projection, cameraMatrix: $model.cameraNode.simdTransform) {
             SceneView(
                 scene: model.scene,
                 pointOfView: model.cameraNode,

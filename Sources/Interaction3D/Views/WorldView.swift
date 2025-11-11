@@ -3,7 +3,6 @@ import Interaction3D
 import simd
 import SwiftUI
 
-
 public struct WorldView<Content: View>: View {
     public enum Tool: String, CaseIterable, Sendable {
         case turntable
@@ -12,8 +11,7 @@ public struct WorldView<Content: View>: View {
         case fpvFlight
 
         public static var `default`: [Tool] {
-            //[.turntable, .orbit, .rotationWidget, .fpvFlight]
-            [.turntable]
+            [.turntable, .orbit, .rotationWidget, .fpvFlight]
         }
     }
 
