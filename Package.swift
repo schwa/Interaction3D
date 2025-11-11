@@ -16,6 +16,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/schwa/GeometryLite3D", from: "0.1.0"),
+        .package(url: "https://github.com/schwa/SwiftFormats", from: "0.1.0"),
         .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-collections", from: "1.0.0"),
     ],
@@ -24,6 +25,7 @@ let package = Package(
             name: "Interaction3D",
             dependencies: [
                 "GeometryLite3D",
+                "SwiftFormats",
                 .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 .product(name: "Collections", package: "swift-collections"),
             ]
