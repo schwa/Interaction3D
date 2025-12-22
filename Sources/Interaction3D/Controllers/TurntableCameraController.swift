@@ -75,6 +75,7 @@ public struct TurntableCameraController: ViewModifier {
 
 // MARK: -
 
+@MainActor
 public struct TurntableControllerConstraint: Equatable {
     public var target: SIMD3<Float>
     public var radius: Float
