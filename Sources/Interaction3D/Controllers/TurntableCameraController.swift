@@ -2,6 +2,7 @@ import GeometryLite3D
 import simd
 import SwiftUI
 
+@MainActor
 public struct TurntableCameraController: ViewModifier {
     @State private var constraint = TurntableControllerConstraint(target: .zero, radius: 10)
 
@@ -75,8 +76,7 @@ public struct TurntableCameraController: ViewModifier {
 
 // MARK: -
 
-@MainActor
-public struct TurntableControllerConstraint: Equatable {
+public struct TurntableControllerConstraint: Equatable, Sendable {
     public var target: SIMD3<Float>
     public var radius: Float
     public var pitch: Angle = .zero

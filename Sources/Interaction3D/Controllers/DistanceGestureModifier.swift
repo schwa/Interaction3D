@@ -3,6 +3,7 @@ import SwiftUI
 import AppKit
 #endif
 
+@MainActor
 public struct DistanceGestureModifier: ViewModifier {
     @Binding
     var distance: Double

@@ -3,6 +3,7 @@ import simd
 import SwiftUI
 import SwiftFormats
 
+@MainActor
 public struct PitchYawDragViewModifier: ViewModifier {
     @Binding
     var pitch: Angle
