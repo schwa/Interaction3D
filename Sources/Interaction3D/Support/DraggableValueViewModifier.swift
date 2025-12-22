@@ -1,14 +1,14 @@
 import SwiftUI
 
 // TODO: Move into modifier
-public enum DraggableValueBehavior: Equatable {
+public enum DraggableValueBehavior: Equatable, Sendable {
     case linear
     case clamping(ClosedRange<Double>)
     case wrapping(ClosedRange<Double>)
 }
 
 // TODO: Move into modifier GestureKind
-public enum DraggableValueAxis {
+public enum DraggableValueAxis: Sendable {
     case horizontal
     case vertical
 }
