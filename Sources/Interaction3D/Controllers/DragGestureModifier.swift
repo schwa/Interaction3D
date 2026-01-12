@@ -18,15 +18,12 @@ public struct DragGestureModifier: ViewModifier {
 
         public static let zero = DragState()
     }
+
     @Binding
     var state: DragState
 
-    // Keep translation binding for backward compatibility
-    @Binding
-    var translation: CGSize
-
     @State
-    private var animatedTranslation: CGSize = .zero
+    private var animatedState: DragState = .zero
 
     @State
     private var initialTranslation: CGSize?
@@ -43,20 +40,6 @@ public struct DragGestureModifier: ViewModifier {
 
     public init(state: Binding<DragState>, minimumDistance: Double = 10, predictedThreshold: Double = 10, animationMaxDelay: TimeInterval = 0.2) {
         self._state = state
-        self._translation = Binding(
-            get: { state.wrappedValue.translation },
-            set: { state.wrappedValue.translation = $0 }
-        )
-        self.animatedTranslation = state.wrappedValue.translation
-        self.minimumDistance = minimumDistance
-        self.predictedThreshold = predictedThreshold
-        self.animationMaxDelay = animationMaxDelay
-    }
-
-    public init(translation: Binding<CGSize>, minimumDistance: Double = 10, predictedThreshold: Double = 10, animationMaxDelay: TimeInterval = 0.2) {
-        self._state = .constant(.zero)
-        self._translation = translation
-        self.animatedTranslation = translation.wrappedValue
         self.minimumDistance = minimumDistance
         self.predictedThreshold = predictedThreshold
         self.animationMaxDelay = animationMaxDelay
@@ -65,11 +48,19 @@ public struct DragGestureModifier: ViewModifier {
     public func body(content: Content) -> some View {
         content
             .gesture(dragGesture)
-            .modifier(AnimatableValueCallbackModifier(initialValue: animatedTranslation.width) { newValue in
-                translation.width = newValue
+            // Animate translation
+            .modifier(AnimatableValueCallbackModifier(initialValue: animatedState.translation.width) { newValue in
+                state.translation.width = newValue
             })
-            .modifier(AnimatableValueCallbackModifier(initialValue: animatedTranslation.height) { newValue in
-                translation.height = newValue
+            .modifier(AnimatableValueCallbackModifier(initialValue: animatedState.translation.height) { newValue in
+                state.translation.height = newValue
+            })
+            // Animate currentLocation
+            .modifier(AnimatableValueCallbackModifier(initialValue: animatedState.currentLocation.x) { newValue in
+                state.currentLocation.x = newValue
+            })
+            .modifier(AnimatableValueCallbackModifier(initialValue: animatedState.currentLocation.y) { newValue in
+                state.currentLocation.y = newValue
             })
     }
 
@@ -77,12 +68,14 @@ public struct DragGestureModifier: ViewModifier {
         DragGesture(minimumDistance: minimumDistance)
             .onChanged { gesture in
                 if initialTranslation == nil {
-                    initialTranslation = translation
+                    initialTranslation = state.translation
                     dominantAxis = nil
                     state.startLocation = gesture.startLocation
+                    animatedState.startLocation = gesture.startLocation
                 }
 
                 state.currentLocation = gesture.location
+                animatedState.currentLocation = gesture.location
 
                 #if os(macOS)
                 let axisConstrained = NSEvent.modifierFlags.contains(.shift)
@@ -93,12 +86,10 @@ public struct DragGestureModifier: ViewModifier {
                 let newWidth = (initialTranslation?.width ?? 0) + gesture.translation.width
                 let newHeight = (initialTranslation?.height ?? 0) + gesture.translation.height
 
-                translation.width = newWidth
-                translation.height = newHeight
-
-                // Sync animated values during drag
-                animatedTranslation.width = newWidth
-                animatedTranslation.height = newHeight
+                state.translation.width = newWidth
+                state.translation.height = newHeight
+                animatedState.translation.width = newWidth
+                animatedState.translation.height = newHeight
 
                 // If axis constrained, determine dominant axis and zero out the other
                 if axisConstrained {
@@ -107,12 +98,12 @@ public struct DragGestureModifier: ViewModifier {
 
                     if horizontalMovement > verticalMovement {
                         dominantAxis = .horizontal
-                        translation.height = initialTranslation?.height ?? 0
-                        animatedTranslation.height = initialTranslation?.height ?? 0
+                        state.translation.height = initialTranslation?.height ?? 0
+                        animatedState.translation.height = initialTranslation?.height ?? 0
                     } else {
                         dominantAxis = .vertical
-                        translation.width = initialTranslation?.width ?? 0
-                        animatedTranslation.width = initialTranslation?.width ?? 0
+                        state.translation.width = initialTranslation?.width ?? 0
+                        animatedState.translation.width = initialTranslation?.width ?? 0
                     }
                 } else {
                     dominantAxis = nil
@@ -125,12 +116,15 @@ public struct DragGestureModifier: ViewModifier {
                     initialTranslation = nil
                     dominantAxis = nil
                     lastEventTime = nil
-                    state.startLocation = .zero
-                    state.currentLocation = .zero
                 }
 
                 // Check if enough time has passed since last event
                 if let lastEventTime, Date.timeIntervalSinceReferenceDate - lastEventTime > animationMaxDelay {
+                    // Reset without animation
+                    state.startLocation = .zero
+                    state.currentLocation = .zero
+                    animatedState.startLocation = .zero
+                    animatedState.currentLocation = .zero
                     return
                 }
 
@@ -140,12 +134,15 @@ public struct DragGestureModifier: ViewModifier {
                 let axisConstrained = false
                 #endif
 
-                // Calculate predicted end values
+                // Calculate predicted end values for translation
                 let predictedWidth = (initialTranslation?.width ?? 0) + gesture.predictedEndTranslation.width
                 let predictedHeight = (initialTranslation?.height ?? 0) + gesture.predictedEndTranslation.height
 
-                let horizontalDelta = abs(predictedWidth - translation.width)
-                let verticalDelta = abs(predictedHeight - translation.height)
+                // Calculate predicted end location
+                let predictedLocation = gesture.predictedEndLocation
+
+                let horizontalDelta = abs(predictedWidth - state.translation.width)
+                let verticalDelta = abs(predictedHeight - state.translation.height)
 
                 // Only animate if the predicted movement is significant
                 let shouldAnimate: Bool
@@ -167,17 +164,25 @@ public struct DragGestureModifier: ViewModifier {
                         if axisConstrained {
                             switch dominantAxis {
                             case .vertical:
-                                animatedTranslation.height = predictedHeight
+                                animatedState.translation.height = predictedHeight
                             case .horizontal:
-                                animatedTranslation.width = predictedWidth
+                                animatedState.translation.width = predictedWidth
                             case .none:
                                 break
                             }
                         } else {
-                            animatedTranslation.width = predictedWidth
-                            animatedTranslation.height = predictedHeight
+                            animatedState.translation.width = predictedWidth
+                            animatedState.translation.height = predictedHeight
                         }
+                        // Animate currentLocation to predicted end
+                        animatedState.currentLocation = predictedLocation
                     }
+                } else {
+                    // Reset locations without animation
+                    state.startLocation = .zero
+                    state.currentLocation = .zero
+                    animatedState.startLocation = .zero
+                    animatedState.currentLocation = .zero
                 }
             }
     }
