@@ -4,6 +4,24 @@ import AppKit
 #endif
 
 public struct DragGestureModifier: ViewModifier {
+
+    public struct DragState: Equatable, Sendable {
+        public var translation: CGSize
+        public var startLocation: CGPoint
+        public var currentLocation: CGPoint
+
+        public init(translation: CGSize = .zero, startLocation: CGPoint = .zero, currentLocation: CGPoint = .zero) {
+            self.translation = translation
+            self.startLocation = startLocation
+            self.currentLocation = currentLocation
+        }
+
+        public static let zero = DragState()
+    }
+    @Binding
+    var state: DragState
+
+    // Keep translation binding for backward compatibility
     @Binding
     var translation: CGSize
 
@@ -23,7 +41,20 @@ public struct DragGestureModifier: ViewModifier {
     var predictedThreshold: Double = 10
     var animationMaxDelay: TimeInterval = 0.2
 
+    public init(state: Binding<DragState>, minimumDistance: Double = 10, predictedThreshold: Double = 10, animationMaxDelay: TimeInterval = 0.2) {
+        self._state = state
+        self._translation = Binding(
+            get: { state.wrappedValue.translation },
+            set: { state.wrappedValue.translation = $0 }
+        )
+        self.animatedTranslation = state.wrappedValue.translation
+        self.minimumDistance = minimumDistance
+        self.predictedThreshold = predictedThreshold
+        self.animationMaxDelay = animationMaxDelay
+    }
+
     public init(translation: Binding<CGSize>, minimumDistance: Double = 10, predictedThreshold: Double = 10, animationMaxDelay: TimeInterval = 0.2) {
+        self._state = .constant(.zero)
         self._translation = translation
         self.animatedTranslation = translation.wrappedValue
         self.minimumDistance = minimumDistance
@@ -48,12 +79,17 @@ public struct DragGestureModifier: ViewModifier {
                 if initialTranslation == nil {
                     initialTranslation = translation
                     dominantAxis = nil
+                    state.startLocation = gesture.startLocation
                 }
 
-                #if os(macOS)
-                let shiftPressed = NSEvent.modifierFlags.contains(.shift)
+                state.currentLocation = gesture.location
 
-                // Always update both axes first
+                #if os(macOS)
+                let axisConstrained = NSEvent.modifierFlags.contains(.shift)
+                #else
+                let axisConstrained = false
+                #endif
+
                 let newWidth = (initialTranslation?.width ?? 0) + gesture.translation.width
                 let newHeight = (initialTranslation?.height ?? 0) + gesture.translation.height
 
@@ -64,39 +100,23 @@ public struct DragGestureModifier: ViewModifier {
                 animatedTranslation.width = newWidth
                 animatedTranslation.height = newHeight
 
-                // If shift is pressed, determine dominant axis and zero out the other
-                if shiftPressed {
+                // If axis constrained, determine dominant axis and zero out the other
+                if axisConstrained {
                     let horizontalMovement = abs(gesture.translation.width)
                     let verticalMovement = abs(gesture.translation.height)
 
-                    // Determine dominant axis based on current movement
                     if horizontalMovement > verticalMovement {
                         dominantAxis = .horizontal
-                        // Zero out vertical (keep it at initial value)
                         translation.height = initialTranslation?.height ?? 0
                         animatedTranslation.height = initialTranslation?.height ?? 0
                     } else {
                         dominantAxis = .vertical
-                        // Zero out horizontal (keep it at initial value)
                         translation.width = initialTranslation?.width ?? 0
                         animatedTranslation.width = initialTranslation?.width ?? 0
                     }
                 } else {
                     dominantAxis = nil
                 }
-                #else
-                let newWidth = (initialTranslation?.width ?? 0) + gesture.translation.width
-                let newHeight = (initialTranslation?.height ?? 0) + gesture.translation.height
-
-                translation.width = newWidth
-                translation.height = newHeight
-
-                // Sync animated values during drag
-                animatedTranslation.width = newWidth
-                animatedTranslation.height = newHeight
-
-                dominantAxis = nil
-                #endif
 
                 lastEventTime = Date().timeIntervalSinceReferenceDate
             }
@@ -105,6 +125,8 @@ public struct DragGestureModifier: ViewModifier {
                     initialTranslation = nil
                     dominantAxis = nil
                     lastEventTime = nil
+                    state.startLocation = .zero
+                    state.currentLocation = .zero
                 }
 
                 // Check if enough time has passed since last event
@@ -113,7 +135,10 @@ public struct DragGestureModifier: ViewModifier {
                 }
 
                 #if os(macOS)
-                let shiftPressed = NSEvent.modifierFlags.contains(.shift)
+                let axisConstrained = NSEvent.modifierFlags.contains(.shift)
+                #else
+                let axisConstrained = false
+                #endif
 
                 // Calculate predicted end values
                 let predictedWidth = (initialTranslation?.width ?? 0) + gesture.predictedEndTranslation.width
@@ -123,27 +148,30 @@ public struct DragGestureModifier: ViewModifier {
                 let verticalDelta = abs(predictedHeight - translation.height)
 
                 // Only animate if the predicted movement is significant
-                var shouldAnimate = false
-
-                if shiftPressed {
-                    if dominantAxis == .vertical && verticalDelta >= predictedThreshold {
-                        shouldAnimate = true
-                    } else if dominantAxis == .horizontal && horizontalDelta >= predictedThreshold {
-                        shouldAnimate = true
+                let shouldAnimate: Bool
+                if axisConstrained {
+                    switch dominantAxis {
+                    case .vertical:
+                        shouldAnimate = verticalDelta >= predictedThreshold
+                    case .horizontal:
+                        shouldAnimate = horizontalDelta >= predictedThreshold
+                    case .none:
+                        shouldAnimate = false
                     }
                 } else {
-                    if horizontalDelta >= predictedThreshold || verticalDelta >= predictedThreshold {
-                        shouldAnimate = true
-                    }
+                    shouldAnimate = horizontalDelta >= predictedThreshold || verticalDelta >= predictedThreshold
                 }
 
                 if shouldAnimate {
                     withAnimation(.linear(duration: 0.3)) {
-                        if shiftPressed {
-                            if dominantAxis == .vertical {
+                        if axisConstrained {
+                            switch dominantAxis {
+                            case .vertical:
                                 animatedTranslation.height = predictedHeight
-                            } else if dominantAxis == .horizontal {
+                            case .horizontal:
                                 animatedTranslation.width = predictedWidth
+                            case .none:
+                                break
                             }
                         } else {
                             animatedTranslation.width = predictedWidth
@@ -151,20 +179,6 @@ public struct DragGestureModifier: ViewModifier {
                         }
                     }
                 }
-                #else
-                let predictedWidth = (initialTranslation?.width ?? 0) + gesture.predictedEndTranslation.width
-                let predictedHeight = (initialTranslation?.height ?? 0) + gesture.predictedEndTranslation.height
-
-                let horizontalDelta = abs(predictedWidth - translation.width)
-                let verticalDelta = abs(predictedHeight - translation.height)
-
-                if horizontalDelta >= predictedThreshold || verticalDelta >= predictedThreshold {
-                    withAnimation(.linear(duration: 0.3)) {
-                        animatedTranslation.width = predictedWidth
-                        animatedTranslation.height = predictedHeight
-                    }
-                }
-                #endif
             }
     }
 }

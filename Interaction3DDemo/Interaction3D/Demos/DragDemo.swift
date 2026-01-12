@@ -6,7 +6,7 @@ import SwiftFormats
 struct DragDemo: View {
 
     @State
-    var rawTranslation: CGSize = .zero
+    var dragState: DragGestureModifier.DragState = .zero
 
     @State
     var translation: CGSize = .zero
@@ -73,6 +73,28 @@ struct DragDemo: View {
             )
             context.fill(Path(ellipseIn: circleRect), with: .color(.blue))
 
+            // Draw start location (green)
+            if dragState.startLocation != .zero {
+                let startRect = CGRect(
+                    x: dragState.startLocation.x - 8,
+                    y: dragState.startLocation.y - 8,
+                    width: 16,
+                    height: 16
+                )
+                context.stroke(Path(ellipseIn: startRect), with: .color(.green), lineWidth: 2)
+            }
+
+            // Draw current location (orange)
+            if dragState.currentLocation != .zero {
+                let currentRect = CGRect(
+                    x: dragState.currentLocation.x - 6,
+                    y: dragState.currentLocation.y - 6,
+                    width: 12,
+                    height: 12
+                )
+                context.fill(Path(ellipseIn: currentRect), with: .color(.orange))
+            }
+
             // Draw axes indicators
             context.draw(Text("X: \(translation.width, format: .number.precision(.fractionLength(1)))").font(.caption), at: CGPoint(x: 60, y: 20))
             context.draw(Text("Y: \(translation.height, format: .number.precision(.fractionLength(1)))").font(.caption), at: CGPoint(x: 60, y: 40))
@@ -80,9 +102,9 @@ struct DragDemo: View {
         .background(Color.black)
         .onGeometryChange(for: CGSize.self, of: \.size) { viewSize = $0 }
         .modifier(DragGestureModifier(
-            translation: $rawTranslation
+            state: $dragState
         ))
-        .onChange(of: rawTranslation) { oldValue, newValue in
+        .onChange(of: dragState.translation) { oldValue, newValue in
             // Apply scaling transforms
             translation = CGSize(
                 width: newValue.width * horizontalScale,
@@ -116,19 +138,38 @@ struct DragDemo: View {
         .onChange(of: horizontalScale) { oldValue, newValue in
             // Reapply transform when scale changes
             translation = CGSize(
-                width: rawTranslation.width * newValue,
-                height: rawTranslation.height * verticalScale
+                width: dragState.translation.width * newValue,
+                height: dragState.translation.height * verticalScale
             )
         }
         .onChange(of: verticalScale) { oldValue, newValue in
             // Reapply transform when scale changes
             translation = CGSize(
-                width: rawTranslation.width * horizontalScale,
-                height: rawTranslation.height * newValue
+                width: dragState.translation.width * horizontalScale,
+                height: dragState.translation.height * newValue
             )
         }
         .overlay(alignment: .bottom) {
             Form {
+                Section("Legend") {
+                    HStack {
+                        Circle().stroke(.green, lineWidth: 2).frame(width: 12, height: 12)
+                        Text("Start Location")
+                    }
+                    HStack {
+                        Circle().fill(.orange).frame(width: 12, height: 12)
+                        Text("Current Location")
+                    }
+                    HStack {
+                        Circle().fill(.blue).frame(width: 12, height: 12)
+                        Text("Scaled Translation")
+                    }
+                    HStack {
+                        Circle().fill(.white.opacity(0.3)).frame(width: 8, height: 8)
+                        Text("Breadcrumbs")
+                    }
+                }
+
                 LabeledContent("Translation") {
                     Text("[\(translation.width, format: .number.precision(.fractionLength(1))), \(translation.height, format: .number.precision(.fractionLength(1)))]")
                 }
