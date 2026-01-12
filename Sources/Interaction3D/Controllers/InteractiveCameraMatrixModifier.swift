@@ -70,15 +70,13 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
         isUpdatingStateFromMatrix = true
         defer { isUpdatingStateFromMatrix = false }
 
-        let rotationMatrix = simd_float3x3(
-            SIMD3<Float>(matrix.columns.0.x, matrix.columns.0.y, matrix.columns.0.z),
-            SIMD3<Float>(matrix.columns.1.x, matrix.columns.1.y, matrix.columns.1.z),
-            SIMD3<Float>(matrix.columns.2.x, matrix.columns.2.y, matrix.columns.2.z)
-        )
-        let rotation = simd_quaternion(rotationMatrix)
-        interactionState.rotation = simd_normalize(rotation)
+        guard let components = matrix.decompose else {
+            return
+        }
 
-        let position = matrix.columns.3.xyz
+        interactionState.rotation = simd_normalize(components.rotation)
+
+        let position = components.translate
 
         if !hasInitializedFromMatrix {
             let defaultTarget = SIMD3<Float>(repeating: 0)
@@ -103,18 +101,9 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
         defer { isUpdatingCameraMatrix = false }
 
         let forward = state.rotation.act(SIMD3<Float>(0, 0, -1))
-        let right = state.rotation.act(SIMD3<Float>(1, 0, 0))
-        let up = state.rotation.act(SIMD3<Float>(0, 1, 0))
         let position = state.target - forward * state.distance
 
-        let newMatrix = simd_float4x4(
-            SIMD4<Float>(right.x, right.y, right.z, 0),
-            SIMD4<Float>(up.x, up.y, up.z, 0),
-            SIMD4<Float>(-forward.x, -forward.y, -forward.z, 0),
-            SIMD4<Float>(position.x, position.y, position.z, 1)
-        )
-
-        cameraMatrix = newMatrix
+        cameraMatrix = state.rotation.matrix * float4x4(translation: position)
     }
 }
 
