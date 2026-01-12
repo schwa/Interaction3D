@@ -16,48 +16,13 @@ struct PitchYawDemoView: View {
     private var target: SIMD3<Float> = .zero
 
     @State
-    private var pitchScale: Double = 1.0
+    private var mode: InteractiveCameraModifier.Mode = .turntable()
 
     @State
-    private var yawScale: Double = 1.0
-
-    @State
-    private var zoomScale: Double = 1.0
-
-    @State
-    private var invertPitch: Bool = false
-
-    @State
-    private var invertYaw: Bool = false
-
-    @State
-    private var invertZoom: Bool = true
+    private var transforms: InteractionAxisTransforms = .default
 
     @State
     private var cubeScale: Float = 1.0
-
-    @State
-    private var selectedMode: Int = 0
-
-    private var mode: InteractiveCameraModifier.Mode {
-        switch selectedMode {
-        case 0: return .turntable()
-        case 1: return .arcball()
-        default: return .turntable()
-        }
-    }
-
-    private var transforms: InteractionAxisTransforms {
-        let pitchSign = invertPitch ? -1.0 : 1.0
-        let yawSign = invertYaw ? -1.0 : 1.0
-        let zoomSign = invertZoom ? -1.0 : 1.0
-        return InteractionAxisTransforms(
-            yaw: { $0 * 0.01 * yawScale * yawSign },
-            pitch: { $0 * 0.01 * pitchScale * pitchSign },
-            zoom: { $0 * 0.5 * zoomScale * zoomSign },
-            pan: { delta in SIMD3<Float>(Float(delta.x * 0.02), Float(-delta.y * 0.02), 0) }
-        )
-    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -81,84 +46,21 @@ struct PitchYawDemoView: View {
                 .padding()
         }
         .overlay(alignment: .bottom) {
-            controlsPanel
+            InteractiveCameraDebugView(
+                rotation: $rotation,
+                distance: $distance,
+                target: $target,
+                mode: $mode,
+                transforms: $transforms
+            )
+            .frame(width: 450)
+            .padding()
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+            .padding()
         }
         .overlay(alignment: .topLeading) {
             cubePanel
         }
-    }
-
-    private var controlsPanel: some View {
-        Form {
-            Section("State") {
-                LabeledContent("Distance") {
-                    HStack {
-                        Slider(value: Binding(
-                            get: { Double(distance) },
-                            set: { distance = Float($0) }
-                        ), in: 0.1...20)
-                        Text(Double(distance), format: .number.precision(.fractionLength(2)))
-                            .frame(width: 50, alignment: .trailing)
-                    }
-                }
-
-                LabeledContent("Target") {
-                    VectorEditor(value: $target, style: .number, semantic: .point)
-                }
-
-                LabeledContent("Rotation") {
-                    Text("[\(rotation.vector.x, format: .number.precision(.fractionLength(2))), \(rotation.vector.y, format: .number.precision(.fractionLength(2))), \(rotation.vector.z, format: .number.precision(.fractionLength(2))), \(rotation.vector.w, format: .number.precision(.fractionLength(2)))]")
-                }
-
-                Button("Reset") {
-                    rotation = simd_quatf(angle: 0, axis: [0, 1, 0])
-                    distance = 5.0
-                    target = .zero
-                }
-            }
-
-            Section("Mode") {
-                Picker("Interaction Mode", selection: $selectedMode) {
-                    Text("Turntable").tag(0)
-                    Text("Arcball").tag(1)
-                }
-                .pickerStyle(.segmented)
-            }
-
-            Section("Transform Options") {
-                LabeledContent("Pitch Scale") {
-                    HStack {
-                        Slider(value: $pitchScale, in: 0.1...5.0)
-                        Text(pitchScale, format: .number.precision(.fractionLength(2)))
-                            .frame(width: 50, alignment: .trailing)
-                    }
-                }
-
-                LabeledContent("Yaw Scale") {
-                    HStack {
-                        Slider(value: $yawScale, in: 0.1...5.0)
-                        Text(yawScale, format: .number.precision(.fractionLength(2)))
-                            .frame(width: 50, alignment: .trailing)
-                    }
-                }
-
-                LabeledContent("Zoom Scale") {
-                    HStack {
-                        Slider(value: $zoomScale, in: 0.1...5.0)
-                        Text(zoomScale, format: .number.precision(.fractionLength(2)))
-                            .frame(width: 50, alignment: .trailing)
-                    }
-                }
-
-                Toggle("Invert Pitch", isOn: $invertPitch)
-                Toggle("Invert Yaw", isOn: $invertYaw)
-                Toggle("Invert Zoom", isOn: $invertZoom)
-            }
-        }
-        .frame(width: 450)
-        .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
-        .padding()
     }
 
     private var cubePanel: some View {
