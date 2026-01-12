@@ -9,9 +9,10 @@ public struct WorldView<Content: View>: View {
         case orbit
         case rotationWidget
         case fpvFlight
+        case fpvFlightSim
 
         public static var `default`: [Tool] {
-            [.turntable, .orbit, .rotationWidget, .fpvFlight]
+            [.turntable, .orbit, .rotationWidget, .fpvFlight, .fpvFlightSim]
         }
     }
 
@@ -38,7 +39,8 @@ public struct WorldView<Content: View>: View {
                 .tool("Orbit", id: "orbit", enabled: tools.contains(.orbit), modifier: { OrbitRotationModifier(cameraMatrix: $cameraMatrix) })
                 .tool("Rotation Widget", id: "rotation-widget", enabled: tools.contains(.rotationWidget), modifier: { RotationWidgetToolModifier(cameraMatrix: $cameraMatrix) })
                 #if os(macOS)
-                .tool("FPV Flight", id: "fpv-flight", enabled: tools.contains(.fpvFlight), modifier: { FPVMovementModifier(cameraMatrix: $cameraMatrix, verticalFOV: verticalFOV) })
+                .tool("FPV", id: "fpv-flight", enabled: tools.contains(.fpvFlight), modifier: { FPVMovementModifier(cameraMatrix: $cameraMatrix) })
+                .tool("FPV Flight Sim", id: "fpv-flight-sim", enabled: tools.contains(.fpvFlightSim), modifier: { FPVFlightSimModifier(cameraMatrix: $cameraMatrix, verticalFOV: verticalFOV) })
                 #endif
         }
     }
@@ -47,6 +49,6 @@ public struct WorldView<Content: View>: View {
         if let perspectiveProjection = projection as? PerspectiveProjection {
             return CGFloat(perspectiveProjection.verticalAngleOfView.degrees)
         }
-        return 90
+        return 60
     }
 }

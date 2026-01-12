@@ -1,10 +1,13 @@
+import simd
 import SwiftUI
 
 public struct SpeedometerView: View {
-    @Environment(MovementController.self) var controller
+    public var linearVelocity: SIMD3<Float>
+    public var angularVelocity: SIMD3<Float>
 
-    public init() {
-        // This line intentionally left blank
+    public init(linearVelocity: SIMD3<Float>, angularVelocity: SIMD3<Float> = .zero) {
+        self.linearVelocity = linearVelocity
+        self.angularVelocity = angularVelocity
     }
 
     public var body: some View {
@@ -17,12 +20,12 @@ public struct SpeedometerView: View {
             context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.black))
 
             let velocities: [(String, Float, Color)] = [
-                ("Lateral", controller.linearVelocity.x, .blue),
-                ("Vertical", controller.linearVelocity.y, .orange),
-                ("Forward", controller.linearVelocity.z, .green),
-                ("Pitch", controller.angularVelocity.x, .yellow),
-                ("Yaw", controller.angularVelocity.y, .cyan),
-                ("Roll", controller.angularVelocity.z, .purple)
+                ("Lateral", linearVelocity.x, .blue),
+                ("Vertical", linearVelocity.y, .orange),
+                ("Forward", linearVelocity.z, .green),
+                ("Pitch", angularVelocity.x, .yellow),
+                ("Yaw", angularVelocity.y, .cyan),
+                ("Roll", angularVelocity.z, .purple)
             ]
 
             for (index, (label, value, color)) in velocities.enumerated() {
@@ -65,19 +68,9 @@ public struct SpeedometerView: View {
 }
 
 #Preview {
-    struct PreviewContainer: View {
-        @State private var controller = MovementController()
-
-        var body: some View {
-            SpeedometerView()
-                .environment(controller)
-                .frame(width: 300)
-                .onAppear {
-                    controller.linearVelocity.z = 5
-                    controller.angularVelocity.y = 2
-                }
-        }
-    }
-
-    return PreviewContainer()
+    SpeedometerView(
+        linearVelocity: [0, 0, 5],
+        angularVelocity: [0, 2, 0]
+    )
+    .frame(width: 300)
 }

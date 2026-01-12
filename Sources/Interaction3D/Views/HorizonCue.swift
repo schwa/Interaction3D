@@ -1,10 +1,15 @@
 import SwiftUI
 
-struct HorizonCue: View {
-    var pitch: Float
-    var verticalFOV: CGFloat
+public struct HorizonCue: View {
+    public var pitch: Float
+    public var verticalFOV: CGFloat
 
-    var body: some View {
+    public init(pitch: Float, verticalFOV: CGFloat) {
+        self.pitch = pitch
+        self.verticalFOV = verticalFOV
+    }
+
+    public var body: some View {
         GeometryReader { _ in
             Canvas { context, size in
                 let fovRadians = max(0.1, min(.pi - 0.1, Double(verticalFOV) * .pi / 180))
