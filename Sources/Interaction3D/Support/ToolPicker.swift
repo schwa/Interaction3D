@@ -45,18 +45,22 @@ public struct ToolPickerHost<Content: View>: View {
     }
 
     public var body: some View {
-        content
+        let enabledTools = Array(model.tools.values.filter { $0.enabled })
+
+        return content
             .environment(model)
             .toolbar {
-                Picker(selection: $model.activeTool, label: Text("Tools")) {
-                    ForEach(Array(model.tools.values.filter { $0.enabled })) { entry in
-                        entry.label.tag(entry.id)
+                if enabledTools.count > 1 {
+                    Picker(selection: $model.activeTool, label: Text("Tools")) {
+                        ForEach(enabledTools) { entry in
+                            entry.label.tag(entry.id)
+                        }
                     }
                 }
             }
             .onChange(of: model.tools.keys, initial: true) {
                 if model.activeTool == nil {
-                    model.activeTool = model.tools.values.first(where: { $0.enabled })?.id
+                    model.activeTool = enabledTools.first?.id
                 }
             }
             .modifier(model.activeToolModifier)

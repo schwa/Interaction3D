@@ -2,15 +2,15 @@
 import simd
 import Testing
 
-@Test func anyConstraintParameterStoresAndRetrievesValues() {
-    var constraint = LerpPositionTransformer(start: [1, 2, 3], end: [4, 5, 6], t: 0.5)
-    let param = AnyConstraintParameter(keyPath: \LerpPositionTransformer.start, name: "start")
+@Test func anyTransformerParameterStoresAndRetrievesValues() {
+    var transformer = LerpPositionTransformer(start: [1, 2, 3], end: [4, 5, 6], t: 0.5)
+    let param = AnyTransformerParameter<LerpPositionTransformer>(keyPath: \LerpPositionTransformer.start, name: "start")
 
-    let value = param.getValue(constraint) as! SIMD3<Float>
+    let value = param.getValue(transformer) as! SIMD3<Float>
     #expect(value == SIMD3<Float>(1, 2, 3))
 
-    param.setValue(&constraint, SIMD3<Float>(7, 8, 9))
-    #expect(constraint.start == SIMD3<Float>(7, 8, 9))
+    param.setValue(&transformer, SIMD3<Float>(7, 8, 9))
+    #expect(transformer.start == SIMD3<Float>(7, 8, 9))
 }
 
 @Test func lerpPositionConstraintParameters() {
