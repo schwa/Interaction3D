@@ -7,6 +7,7 @@ import SwiftUI
 public struct NewInteractionController: ViewModifier {
     public enum Mode {
         case turntable(TurntableTransformer = TurntableTransformer())
+        case arcball(ArcballTransformer = ArcballTransformer())
     }
 
     @Binding
@@ -21,7 +22,7 @@ public struct NewInteractionController: ViewModifier {
     var mode: Mode
 
     @State
-    private var rotationTranslation: CGSize = .zero
+    private var dragState: DragGestureModifier.DragState = .zero
 
     @State
     private var panTranslation: CGSize = .zero
@@ -37,6 +38,12 @@ public struct NewInteractionController: ViewModifier {
 
     @State
     private var lastZoomDelta: Double = 0
+
+    @State
+    private var viewSize: CGSize = .zero
+
+    @State
+    private var rotationAtDragStart: simd_quatf = simd_quatf(angle: 0, axis: [0, 1, 0])
 
     var rotationTransforms: InteractionAxisTransforms
     var panTransforms: InteractionAxisTransforms
@@ -63,10 +70,15 @@ public struct NewInteractionController: ViewModifier {
 
     public func body(content: Content) -> some View {
         content
-            .modifier(DragGestureModifier(translation: $rotationTranslation))
+            .onGeometryChange(for: CGSize.self, of: \.size) { viewSize = $0 }
+            .modifier(DragGestureModifier(state: $dragState))
             .simultaneousGesture(panGesture)
             .simultaneousGesture(zoomGesture)
-            .onChange(of: rotationTranslation) { _, _ in
+            .onChange(of: dragState) { oldValue, newValue in
+                // Capture rotation at drag start
+                if oldValue.startLocation == .zero && newValue.startLocation != .zero {
+                    rotationAtDragStart = rotation
+                }
                 applyInteraction()
             }
             .onChange(of: panTranslation) { _, _ in
@@ -101,6 +113,8 @@ public struct NewInteractionController: ViewModifier {
     }
 
     private func applyInteraction() {
+        let rotationTranslation = dragState.translation
+
         var rotationDelta = CGSize(
             width: rotationTranslation.width - lastRotationTranslation.width,
             height: rotationTranslation.height - lastRotationTranslation.height
@@ -129,14 +143,19 @@ public struct NewInteractionController: ViewModifier {
         lastPanTranslation = panTranslation
         lastZoomDelta = zoomDelta
 
-        guard rotationDelta != .zero || panDelta != .zero || zoomDeltaChange != 0 else {
+        let hasRotationInput = rotationDelta != .zero || dragState.startLocation != .zero
+        guard hasRotationInput || panDelta != .zero || zoomDeltaChange != 0 else {
             return
         }
 
         let input = InteractionInput(
             rotation: rotationDelta,
             pan: panDelta,
-            zoom: zoomDeltaChange
+            zoom: zoomDeltaChange,
+            startLocation: dragState.startLocation,
+            currentLocation: dragState.currentLocation,
+            viewSize: viewSize,
+            rotationAtDragStart: rotationAtDragStart
         )
 
         let state = InteractionState(rotation: rotation, distance: distance, target: target)
@@ -144,6 +163,11 @@ public struct NewInteractionController: ViewModifier {
         let updatedState: InteractionState
         switch mode {
         case .turntable(let transformer):
+            var transformer = transformer
+            transformer.input = input
+            transformer.transforms = rotationTransforms
+            updatedState = transformer.apply(to: state)
+        case .arcball(let transformer):
             var transformer = transformer
             transformer.input = input
             transformer.transforms = rotationTransforms

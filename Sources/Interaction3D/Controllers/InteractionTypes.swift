@@ -16,14 +16,33 @@ public struct InteractionState: Equatable, Sendable {
 }
 
 public struct InteractionInput: Equatable, Sendable {
+    // Deltas (turntable uses these)
     public var rotation: CGSize
     public var pan: CGSize
     public var zoom: Double
 
-    public init(rotation: CGSize = .zero, pan: CGSize = .zero, zoom: Double = 0) {
+    // Absolute positions (arcball uses these)
+    public var startLocation: CGPoint
+    public var currentLocation: CGPoint
+    public var viewSize: CGSize
+    public var rotationAtDragStart: simd_quatf
+
+    public init(
+        rotation: CGSize = .zero,
+        pan: CGSize = .zero,
+        zoom: Double = 0,
+        startLocation: CGPoint = .zero,
+        currentLocation: CGPoint = .zero,
+        viewSize: CGSize = .zero,
+        rotationAtDragStart: simd_quatf = simd_quatf(angle: 0, axis: [0, 1, 0])
+    ) {
         self.rotation = rotation
         self.pan = pan
         self.zoom = zoom
+        self.startLocation = startLocation
+        self.currentLocation = currentLocation
+        self.viewSize = viewSize
+        self.rotationAtDragStart = rotationAtDragStart
     }
 }
 

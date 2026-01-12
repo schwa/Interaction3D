@@ -36,8 +36,15 @@ struct PitchYawDemoView: View {
     @State
     private var cubeScale: Float = 1.0
 
+    @State
+    private var selectedMode: Int = 0
+
     private var mode: NewInteractionController.Mode {
-        return .turntable()
+        switch selectedMode {
+        case 0: return .turntable()
+        case 1: return .arcball()
+        default: return .turntable()
+        }
     }
 
     private var transforms: InteractionAxisTransforms {
@@ -108,6 +115,14 @@ struct PitchYawDemoView: View {
                     distance = 5.0
                     target = .zero
                 }
+            }
+
+            Section("Mode") {
+                Picker("Interaction Mode", selection: $selectedMode) {
+                    Text("Turntable").tag(0)
+                    Text("Arcball").tag(1)
+                }
+                .pickerStyle(.segmented)
             }
 
             Section("Transform Options") {
