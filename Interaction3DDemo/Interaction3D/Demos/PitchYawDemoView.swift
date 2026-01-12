@@ -39,7 +39,7 @@ struct PitchYawDemoView: View {
     @State
     private var selectedMode: Int = 0
 
-    private var mode: NewInteractionController.Mode {
+    private var mode: InteractiveCameraModifier.Mode {
         switch selectedMode {
         case 0: return .turntable()
         case 1: return .arcball()
@@ -66,7 +66,7 @@ struct PitchYawDemoView: View {
             }
             .background(Color.black)
         }
-        .newInteractionController(
+        .interactiveCamera(
             rotation: $rotation,
             distance: $distance,
             target: $target,

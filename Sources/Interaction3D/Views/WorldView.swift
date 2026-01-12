@@ -34,7 +34,7 @@ public struct WorldView<Content: View>: View {
         ToolPickerHost {
             content
                 .tool("Turntable", group: .interaction, id: "turntable", enabled: tools.contains(.turntable), modifier: {
-                    CameraMatrixInteractionController(
+                    InteractiveCameraMatrixModifier(
                         cameraMatrix: $cameraMatrix,
                         mode: .turntable()
                     )
