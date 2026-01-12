@@ -16,9 +16,6 @@ struct PitchYawDemoView: View {
     private var target: SIMD3<Float> = .zero
 
     @State
-    private var selectedMode: Int = 0
-
-    @State
     private var pitchScale: Double = 1.0
 
     @State
@@ -40,11 +37,7 @@ struct PitchYawDemoView: View {
     private var cubeScale: Float = 1.0
 
     private var mode: NewInteractionController.Mode {
-        switch selectedMode {
-        case 0: return .arcball()
-        case 1: return .trackball()
-        default: return .arcball()
-        }
+        return .trackball()
     }
 
     private var transforms: InteractionAxisTransforms {
@@ -115,14 +108,6 @@ struct PitchYawDemoView: View {
                     distance = 5.0
                     target = .zero
                 }
-            }
-
-            Section("Mode") {
-                Picker("Interaction Mode", selection: $selectedMode) {
-                    Text("Arcball").tag(0)
-                    Text("Trackball").tag(1)
-                }
-                .pickerStyle(.segmented)
             }
 
             Section("Transform Options") {
