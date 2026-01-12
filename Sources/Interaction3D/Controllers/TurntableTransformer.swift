@@ -1,10 +1,10 @@
 import simd
 import SwiftUI
 
-/// Trackball: rotation axes are fixed in world space (yaw around world Y, pitch around world X).
+/// Turntable: rotation axes are fixed in world space (yaw around world Y, pitch around world X).
 /// Like orbiting around a target - dragging left/right always rotates around world up.
 /// Pitch is clamped to ±90° to prevent flipping over the poles.
-public struct TrackballTransformer: InteractionTransformer {
+public struct TurntableTransformer: InteractionTransformer {
     public var input: InteractionInput
     public var transforms: InteractionAxisTransforms
 

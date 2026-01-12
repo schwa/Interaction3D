@@ -37,7 +37,7 @@ struct PitchYawDemoView: View {
     private var cubeScale: Float = 1.0
 
     private var mode: NewInteractionController.Mode {
-        return .trackball()
+        return .turntable()
     }
 
     private var transforms: InteractionAxisTransforms {

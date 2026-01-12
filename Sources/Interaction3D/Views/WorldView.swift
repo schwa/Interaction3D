@@ -4,13 +4,13 @@ import SwiftUI
 
 public struct WorldView<Content: View>: View {
     public enum Tool: String, CaseIterable, Sendable {
-        case trackball
+        case turntable
         case rotationWidget
         case fpvFlight
         case fpvFlightSim
 
         public static var `default`: [Tool] {
-            [.trackball, .rotationWidget, .fpvFlight, .fpvFlightSim]
+            [.turntable, .rotationWidget, .fpvFlight, .fpvFlightSim]
         }
     }
 
@@ -33,10 +33,10 @@ public struct WorldView<Content: View>: View {
     public var body: some View {
         ToolPickerHost {
             content
-                .tool("Trackball", group: .interaction, id: "trackball", enabled: tools.contains(.trackball), modifier: {
+                .tool("Turntable", group: .interaction, id: "turntable", enabled: tools.contains(.turntable), modifier: {
                     CameraMatrixInteractionController(
                         cameraMatrix: $cameraMatrix,
-                        mode: .trackball()
+                        mode: .turntable()
                     )
                 })
                 .tool("Rotation Widget", group: .interaction, id: "rotation-widget", enabled: tools.contains(.rotationWidget), modifier: { RotationWidgetToolModifier(cameraMatrix: $cameraMatrix) })

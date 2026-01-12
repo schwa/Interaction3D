@@ -71,7 +71,7 @@ public extension InteractionAxisTransforms {
         SIMD3<Float>(Float(delta.x * 0.01), Float(-delta.y * 0.01), 0)
     }
 
-    static let trackballDefault = InteractionAxisTransforms(
+    static let turntableDefault = InteractionAxisTransforms(
         yaw: { $0 * 0.01 },
         pitch: { $0 * 0.01 },
         zoom: { -$0 * 0.5 },
@@ -92,7 +92,7 @@ public protocol InteractionTransformer: TransformerProtocol where Value == Inter
 
 public struct NewInteractionController: ViewModifier {
     public enum Mode {
-        case trackball(TrackballTransformer = TrackballTransformer())
+        case turntable(TurntableTransformer = TurntableTransformer())
     }
 
     @Binding
@@ -131,7 +131,7 @@ public struct NewInteractionController: ViewModifier {
         rotation: Binding<simd_quatf>,
         distance: Binding<Float>,
         target: Binding<SIMD3<Float>>,
-        mode: Mode = .trackball(),
+        mode: Mode = .turntable(),
         transforms: InteractionAxisTransforms = .default
     ) {
         self._rotation = rotation
@@ -229,7 +229,7 @@ public struct NewInteractionController: ViewModifier {
 
         let updatedState: InteractionState
         switch mode {
-        case .trackball(let transformer):
+        case .turntable(let transformer):
             var transformer = transformer
             transformer.input = input
             transformer.transforms = rotationTransforms
@@ -247,7 +247,7 @@ public extension View {
         rotation: Binding<simd_quatf>,
         distance: Binding<Float>,
         target: Binding<SIMD3<Float>>,
-        mode: NewInteractionController.Mode = .trackball(),
+        mode: NewInteractionController.Mode = .turntable(),
         transforms: InteractionAxisTransforms = .default
     ) -> some View {
         modifier(NewInteractionController(rotation: rotation, distance: distance, target: target, mode: mode, transforms: transforms))
@@ -255,7 +255,7 @@ public extension View {
 
     func newInteractionController(
         cameraMatrix: Binding<simd_float4x4>,
-        mode: NewInteractionController.Mode = .trackball(),
+        mode: NewInteractionController.Mode = .turntable(),
         transforms: InteractionAxisTransforms = .default
     ) -> some View {
         modifier(CameraMatrixInteractionController(cameraMatrix: cameraMatrix, mode: mode, transforms: transforms))
