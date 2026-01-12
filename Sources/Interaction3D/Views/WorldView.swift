@@ -35,13 +35,15 @@ public struct WorldView<Content: View>: View {
     public var body: some View {
         ToolPickerHost {
             content
-                .tool("Turntable", id: "turntable", enabled: tools.contains(.turntable), modifier: { TurntableCameraController(transform: $cameraMatrix) })
-                .tool("Orbit", id: "orbit", enabled: tools.contains(.orbit), modifier: { OrbitRotationModifier(cameraMatrix: $cameraMatrix) })
-                .tool("Rotation Widget", id: "rotation-widget", enabled: tools.contains(.rotationWidget), modifier: { RotationWidgetToolModifier(cameraMatrix: $cameraMatrix) })
+                .tool("Turntable", group: .interaction, id: "turntable", enabled: tools.contains(.turntable), modifier: { TurntableCameraController(transform: $cameraMatrix) })
+                .tool("Orbit", group: .interaction, id: "orbit", enabled: tools.contains(.orbit), modifier: { OrbitRotationModifier(cameraMatrix: $cameraMatrix) })
+                .tool("Rotation Widget", group: .interaction, id: "rotation-widget", enabled: tools.contains(.rotationWidget), modifier: { RotationWidgetToolModifier(cameraMatrix: $cameraMatrix) })
                 #if os(macOS)
-                .tool("FPV", id: "fpv-flight", enabled: tools.contains(.fpvFlight), modifier: { FPVMovementModifier(cameraMatrix: $cameraMatrix) })
-                .tool("FPV Flight Sim", id: "fpv-flight-sim", enabled: tools.contains(.fpvFlightSim), modifier: { FPVFlightSimModifier(cameraMatrix: $cameraMatrix, verticalFOV: verticalFOV) })
+                .tool("FPV", group: .interaction, id: "fpv-flight", enabled: tools.contains(.fpvFlight), modifier: { FPVMovementModifier(cameraMatrix: $cameraMatrix) })
+                .tool("FPV Flight Sim", group: .interaction, id: "fpv-flight-sim", enabled: tools.contains(.fpvFlightSim), modifier: { FPVFlightSimModifier(cameraMatrix: $cameraMatrix, verticalFOV: verticalFOV) })
                 #endif
+                .tool("Off", group: .debug, id: "debug-off", modifier: { EmptyModifier() })
+                .tool("Overlay", group: .debug, id: "debug-overlay", modifier: { DebugOverlayToolModifier() })
         }
     }
 

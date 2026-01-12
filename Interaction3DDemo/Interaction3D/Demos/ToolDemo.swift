@@ -8,6 +8,8 @@ struct ToolDemoView: View {
             Text("Hello world")
                 .tool("Red", id: "red", modifier: { RedTool() })
                 .tool("Green", id: "green", modifier: { GreenTool() })
+                .tool("Off", group: .debug, id: "debug-off", modifier: { EmptyModifier() })
+                .tool("Overlay", group: .debug, id: "debug-overlay", modifier: { DebugOverlayToolModifier() })
         }
     }
 }

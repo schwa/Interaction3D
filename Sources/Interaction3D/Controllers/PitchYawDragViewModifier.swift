@@ -30,6 +30,9 @@ public struct PitchYawDragViewModifier: ViewModifier {
         self.yawTransform = yawTransform
     }
 
+    @Environment(\.debugOverlayEnabled)
+    private var debugOverlayEnabled
+
     public func body(content: Content) -> some View {
         let clampedTranslation = Binding<CGSize>(
             get: { rawTranslation },
@@ -77,7 +80,7 @@ public struct PitchYawDragViewModifier: ViewModifier {
                 }
             }
             .overlay(alignment: .topLeading) {
-                if ProcessInfo.processInfo.debugUI {
+                if debugOverlayEnabled || ProcessInfo.processInfo.debugUI {
                     Form {
                         LabeledContent("Pitch") {
                             Text(pitch, format: .angle)
