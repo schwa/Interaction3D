@@ -18,9 +18,9 @@ extension ToolDemoView: DemoView {
     static var metadata = DemoMetadata(
         name: "Tool Picker",
         systemImage: "wrench.and.screwdriver",
-        description: "A demo of the ToolPickerHost and ToolPickerButton views.",
-        group: "Interaction3D",
-        keywords: ["tool", "picker", "interaction3d"],
+        description: "Demo of the ToolPickerHost for switching between tools.",
+        group: "Widgets",
+        keywords: ["tool", "picker", "toolbar"],
         color: .accentColor
     )
 }

@@ -162,5 +162,5 @@ struct OrbitTransformerView: View {
 }
 
 extension ConstraintDemo: DemoView {
-    static var metadata = DemoMetadata(name: "Constraints", systemImage: "point.3.connected.trianglepath.dotted", description: "Interactive demonstration of position constraints", group: "Interaction3D", keywords: ["constraint", "lerp", "orbit", "interpolation"], color: .blue)
+    static var metadata = DemoMetadata(name: "Transformers", systemImage: "point.3.connected.trianglepath.dotted", description: "Interactive demonstration of position transformers.", group: "Transformers", keywords: ["transformer", "lerp", "orbit", "interpolation"], color: .blue)
 }

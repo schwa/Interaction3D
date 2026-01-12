@@ -92,5 +92,5 @@ struct AnimatedConstraintDemo: View {
 }
 
 extension AnimatedConstraintDemo: DemoView {
-    static var metadata = DemoMetadata(name: "Animated Constraint", systemImage: "arrow.triangle.2.circlepath", description: "Demonstrates constraint animation with different modes", group: "Interaction3D", keywords: ["constraint", "animation", "orbit"], color: .purple)
+    static var metadata = DemoMetadata(name: "Animated Transformer", systemImage: "arrow.triangle.2.circlepath", description: "Demonstrates transformer animation with different modes.", group: "Transformers", keywords: ["transformer", "animation", "orbit"], color: .purple)
 }

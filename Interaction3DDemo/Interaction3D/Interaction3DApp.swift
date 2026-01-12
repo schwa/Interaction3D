@@ -7,7 +7,6 @@ struct Interaction3DApp: App {
         DemoPickerScene(demos: [
             ConnectedDevicesDemo.self,
             ToolDemoView.self,
-            RotationWidgetDemoView.self,
             WorldViewDemo.self,
             PitchYawDemoView.self,
             DragDemo.self,

@@ -1,18 +1,17 @@
 import GeometryLite3D
-import Interaction3D
 import simd
 import SwiftUI
 
 public struct WorldView<Content: View>: View {
     public enum Tool: String, CaseIterable, Sendable {
-        case turntable
-        case orbit
+        case arcball
+        case trackball
         case rotationWidget
         case fpvFlight
         case fpvFlightSim
 
         public static var `default`: [Tool] {
-            [.turntable, .orbit, .rotationWidget, .fpvFlight, .fpvFlightSim]
+            [.arcball, .trackball, .rotationWidget, .fpvFlight, .fpvFlightSim]
         }
     }
 
@@ -35,8 +34,20 @@ public struct WorldView<Content: View>: View {
     public var body: some View {
         ToolPickerHost {
             content
-                .tool("Turntable", group: .interaction, id: "turntable", enabled: tools.contains(.turntable), modifier: { TurntableCameraController(transform: $cameraMatrix) })
-                .tool("Orbit", group: .interaction, id: "orbit", enabled: tools.contains(.orbit), modifier: { OrbitRotationModifier(cameraMatrix: $cameraMatrix) })
+                .tool("Arcball", group: .interaction, id: "arcball", enabled: tools.contains(.arcball), modifier: {
+                    CameraInteractionToolModifier(
+                        cameraMatrix: $cameraMatrix,
+                        mode: .arcball(),
+                        transforms: .arcballDefault
+                    )
+                })
+                .tool("Trackball", group: .interaction, id: "trackball", enabled: tools.contains(.trackball), modifier: {
+                    CameraInteractionToolModifier(
+                        cameraMatrix: $cameraMatrix,
+                        mode: .trackball(),
+                        transforms: .trackballDefault
+                    )
+                })
                 .tool("Rotation Widget", group: .interaction, id: "rotation-widget", enabled: tools.contains(.rotationWidget), modifier: { RotationWidgetToolModifier(cameraMatrix: $cameraMatrix) })
                 #if os(macOS)
                 .tool("FPV", group: .interaction, id: "fpv-flight", enabled: tools.contains(.fpvFlight), modifier: { FPVMovementModifier(cameraMatrix: $cameraMatrix) })

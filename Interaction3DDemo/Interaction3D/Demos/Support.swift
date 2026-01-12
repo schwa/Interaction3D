@@ -30,6 +30,9 @@ func renderColoredCube(context: GraphicsContext, size: CGSize, rotation: simd_qu
 
     let rendererContext = SoftwareRendererContext(viewMatrix: viewMatrix, projectionMatrix: projectionMatrix, clipToScreenMatrix: clipToScreenMatrix)
 
+    // Render world axes at origin
+    renderWorldAxes(context: context, rendererContext: rendererContext)
+
     let mesh = Mesh.cube
 
     // Render back faces first
@@ -59,5 +62,43 @@ func renderColoredCube(context: GraphicsContext, size: CGSize, rotation: simd_qu
             let color = colorForFace(face)
             context.fill(path, with: .color(color))
         }
+    }
+}
+
+func renderWorldAxes(context: GraphicsContext, rendererContext: SoftwareRendererContext, axisLength: Float = 3.0) {
+    let xStart = SIMD3<Float>(-axisLength, 0, 0)
+    let xEnd = SIMD3<Float>(axisLength, 0, 0)
+    let yStart = SIMD3<Float>(0, -axisLength, 0)
+    let yEnd = SIMD3<Float>(0, axisLength, 0)
+    let zStart = SIMD3<Float>(0, 0, -axisLength)
+    let zEnd = SIMD3<Float>(0, 0, axisLength)
+
+    let identityMatrix = matrix_identity_float4x4
+
+    // X axis (red)
+    if let xStartScreen = rendererContext.project(xStart, modelMatrix: identityMatrix),
+       let xEndScreen = rendererContext.project(xEnd, modelMatrix: identityMatrix) {
+        var path = Path()
+        path.move(to: xStartScreen)
+        path.addLine(to: xEndScreen)
+        context.stroke(path, with: .color(.red), lineWidth: 2)
+    }
+
+    // Y axis (green)
+    if let yStartScreen = rendererContext.project(yStart, modelMatrix: identityMatrix),
+       let yEndScreen = rendererContext.project(yEnd, modelMatrix: identityMatrix) {
+        var path = Path()
+        path.move(to: yStartScreen)
+        path.addLine(to: yEndScreen)
+        context.stroke(path, with: .color(.green), lineWidth: 2)
+    }
+
+    // Z axis (blue)
+    if let zStartScreen = rendererContext.project(zStart, modelMatrix: identityMatrix),
+       let zEndScreen = rendererContext.project(zEnd, modelMatrix: identityMatrix) {
+        var path = Path()
+        path.move(to: zStartScreen)
+        path.addLine(to: zEndScreen)
+        context.stroke(path, with: .color(.blue), lineWidth: 2)
     }
 }

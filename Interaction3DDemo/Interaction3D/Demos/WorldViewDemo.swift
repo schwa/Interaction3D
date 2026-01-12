@@ -30,7 +30,11 @@ struct WorldViewDemo: View {
 
 extension WorldViewDemo: DemoView {
     static var metadata = DemoMetadata(
-        name: "World View"
+        name: "World View",
+        systemImage: "globe",
+        description: "3D scene view with camera interaction tools.",
+        group: "Interaction",
+        keywords: ["world", "scene", "camera", "3d"]
     )
 }
 

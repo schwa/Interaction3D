@@ -1,77 +1,78 @@
-import SwiftUI
-import Interaction3D
 import DemoKit
-import simd
 import GeometryLite3D
+import Interaction3D
+import simd
 import SwiftFormats
+import SwiftUI
 
 struct PitchYawDemoView: View {
+    @State
+    private var rotation: simd_quatf = simd_quatf(angle: 0, axis: [0, 1, 0])
 
     @State
-    var rotation: simd_quatf = simd_quatf(angle: 0, axis: [0, 1, 0])
+    private var distance: Float = 5.0
 
     @State
-    var distance: Double = 10.0
-
-    // Transform options
-    @State
-    var pitchScale: Double = 1.0
+    private var target: SIMD3<Float> = .zero
 
     @State
-    var yawScale: Double = 1.0
+    private var selectedMode: Int = 0
 
     @State
-    var distanceScale: Double = 1.0
+    private var pitchScale: Double = 1.0
 
     @State
-    var pitchClamping: Bool = true
+    private var yawScale: Double = 1.0
 
     @State
-    var pitchClampRange: ClosedRange<Double> = -90...90
+    private var zoomScale: Double = 1.0
 
-    init() {
+    @State
+    private var invertPitch: Bool = false
+
+    @State
+    private var invertYaw: Bool = false
+
+    @State
+    private var invertZoom: Bool = true
+
+    @State
+    private var cubeScale: Float = 1.0
+
+    private var mode: NewInteractionController.Mode {
+        switch selectedMode {
+        case 0: return .arcball()
+        case 1: return .trackball()
+        default: return .arcball()
+        }
     }
 
-    @ViewBuilder
-    func applyModifier<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        let contentView = content()
-
-        let verticalTransform: (Angle) -> Angle = { angle in
-            let scaled = angle.degrees * pitchScale
-            if pitchClamping {
-                return Angle(degrees: scaled.clamped(to: pitchClampRange))
-            }
-            return Angle(degrees: scaled)
-        }
-
-        let horizontalTransform: (Angle) -> Angle = { angle in
-            Angle(degrees: angle.degrees * yawScale)
-        }
-
-        let distanceTransform: (Double) -> Double = { value in
-            value * distanceScale
-        }
-
-        contentView
-            .modifier(PitchYawDragViewModifier(
-                rotation: $rotation,
-                pitchTransform: verticalTransform,
-                yawTransform: horizontalTransform
-            ))
-            .modifier(DistanceGestureModifier(
-                distance: $distance,
-                distanceTransform: distanceTransform
-            ))
+    private var transforms: InteractionAxisTransforms {
+        let pitchSign = invertPitch ? -1.0 : 1.0
+        let yawSign = invertYaw ? -1.0 : 1.0
+        let zoomSign = invertZoom ? -1.0 : 1.0
+        return InteractionAxisTransforms(
+            yaw: { $0 * 0.01 * yawScale * yawSign },
+            pitch: { $0 * 0.01 * pitchScale * pitchSign },
+            zoom: { $0 * 0.5 * zoomScale * zoomSign },
+            pan: { delta in SIMD3<Float>(Float(delta.x * 0.02), Float(-delta.y * 0.02), 0) }
+        )
     }
 
     var body: some View {
-        applyModifier {
         GeometryReader { geometry in
             Canvas { context, size in
-                renderColoredCube(context: context, size: size, rotation: rotation, distance: Float(distance))
+                renderColoredCube(context: context, size: size, rotation: rotation, distance: distance, modelMatrix: float4x4(scale: [cubeScale, cubeScale, cubeScale]))
             }
             .background(Color.black)
         }
+        .newInteractionController(
+            rotation: $rotation,
+            distance: $distance,
+            target: $target,
+            mode: mode,
+            transforms: transforms
+        )
         .overlay(alignment: .topTrailing) {
             RotationWidget(rotation: $rotation)
                 .frame(width: 120, height: 120)
@@ -79,93 +80,113 @@ struct PitchYawDemoView: View {
                 .background(Color.black, in: RoundedRectangle(cornerRadius: 8))
                 .padding()
         }
-        }
         .overlay(alignment: .bottom) {
-            Form {
+            controlsPanel
+        }
+        .overlay(alignment: .topLeading) {
+            cubePanel
+        }
+    }
+
+    private var controlsPanel: some View {
+        Form {
+            Section("State") {
                 LabeledContent("Distance") {
-                    VStack {
-                        Slider(value: $distance, in: 0.001 ... 50)
-                        Text(distance, format: .number)
+                    HStack {
+                        Slider(value: Binding(
+                            get: { Double(distance) },
+                            set: { distance = Float($0) }
+                        ), in: 0.1...20)
+                        Text(Double(distance), format: .number.precision(.fractionLength(2)))
+                            .frame(width: 50, alignment: .trailing)
                     }
                 }
+
+                LabeledContent("Target") {
+                    VectorEditor(value: $target, style: .number, semantic: .point)
+                }
+
                 LabeledContent("Rotation") {
                     Text("[\(rotation.vector.x, format: .number.precision(.fractionLength(2))), \(rotation.vector.y, format: .number.precision(.fractionLength(2))), \(rotation.vector.z, format: .number.precision(.fractionLength(2))), \(rotation.vector.w, format: .number.precision(.fractionLength(2)))]")
                 }
 
-                Section("Transform Options") {
-                    LabeledContent("Pitch Scale") {
-                        HStack {
-                            Slider(value: $pitchScale, in: -5.0...5.0)
-                            Text(pitchScale, format: .number.precision(.fractionLength(2)))
-                                .frame(width: 50, alignment: .trailing)
-                        }
-                    }
-
-                    LabeledContent("Yaw Scale") {
-                        HStack {
-                            Slider(value: $yawScale, in: -5.0...5.0)
-                            Text(yawScale, format: .number.precision(.fractionLength(2)))
-                                .frame(width: 50, alignment: .trailing)
-                        }
-                    }
-
-                    LabeledContent("Distance Scale") {
-                        HStack {
-                            Slider(value: $distanceScale, in: -20.0...20.0)
-                            Text(distanceScale, format: .number.precision(.fractionLength(2)))
-                                .frame(width: 50, alignment: .trailing)
-                        }
-                    }
-
-                    Toggle("Clamp Pitch", isOn: $pitchClamping)
-
-                    if pitchClamping {
-                        LabeledContent("Clamp Range") {
-                            VStack(spacing: 4) {
-                                HStack {
-                                    Text("Min:")
-                                    Slider(value: Binding(
-                                        get: { pitchClampRange.lowerBound },
-                                        set: { newValue in
-                                            pitchClampRange = min(newValue, pitchClampRange.upperBound)...pitchClampRange.upperBound
-                                        }
-                                    ), in: -180...180)
-                                    Text(pitchClampRange.lowerBound, format: .number.precision(.fractionLength(0)))
-                                        .frame(width: 40, alignment: .trailing)
-                                }
-                                HStack {
-                                    Text("Max:")
-                                    Slider(value: Binding(
-                                        get: { pitchClampRange.upperBound },
-                                        set: { newValue in
-                                            pitchClampRange = pitchClampRange.lowerBound...max(newValue, pitchClampRange.lowerBound)
-                                        }
-                                    ), in: -180...180)
-                                    Text(pitchClampRange.upperBound, format: .number.precision(.fractionLength(0)))
-                                        .frame(width: 40, alignment: .trailing)
-                                }
-                            }
-                        }
-                    }
+                Button("Reset") {
+                    rotation = simd_quatf(angle: 0, axis: [0, 1, 0])
+                    distance = 5.0
+                    target = .zero
                 }
             }
-            .frame(width: 450)
-            .padding()
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
-            .padding()
+
+            Section("Mode") {
+                Picker("Interaction Mode", selection: $selectedMode) {
+                    Text("Arcball").tag(0)
+                    Text("Trackball").tag(1)
+                }
+                .pickerStyle(.segmented)
+            }
+
+            Section("Transform Options") {
+                LabeledContent("Pitch Scale") {
+                    HStack {
+                        Slider(value: $pitchScale, in: 0.1...5.0)
+                        Text(pitchScale, format: .number.precision(.fractionLength(2)))
+                            .frame(width: 50, alignment: .trailing)
+                    }
+                }
+
+                LabeledContent("Yaw Scale") {
+                    HStack {
+                        Slider(value: $yawScale, in: 0.1...5.0)
+                        Text(yawScale, format: .number.precision(.fractionLength(2)))
+                            .frame(width: 50, alignment: .trailing)
+                    }
+                }
+
+                LabeledContent("Zoom Scale") {
+                    HStack {
+                        Slider(value: $zoomScale, in: 0.1...5.0)
+                        Text(zoomScale, format: .number.precision(.fractionLength(2)))
+                            .frame(width: 50, alignment: .trailing)
+                    }
+                }
+
+                Toggle("Invert Pitch", isOn: $invertPitch)
+                Toggle("Invert Yaw", isOn: $invertYaw)
+                Toggle("Invert Zoom", isOn: $invertZoom)
+            }
         }
+        .frame(width: 450)
+        .padding()
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+        .padding()
+    }
+
+    private var cubePanel: some View {
+        Form {
+            LabeledContent("Cube Scale") {
+                HStack {
+                    Slider(value: Binding(
+                        get: { Double(cubeScale) },
+                        set: { cubeScale = Float($0) }
+                    ), in: 0.1...5.0)
+                    Text(Double(cubeScale), format: .number.precision(.fractionLength(2)))
+                        .frame(width: 50, alignment: .trailing)
+                }
+            }
+        }
+        .frame(width: 300)
+        .padding()
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+        .padding()
     }
 }
 
 extension PitchYawDemoView: DemoView {
     static var metadata = DemoMetadata(
-        name: "Pitch Yaw Demo"
+        name: "Interaction Controller",
+        systemImage: "rotate.3d",
+        description: "Demo of the interaction controller with arcball, trackball, and first-person modes.",
+        group: "Interaction",
+        keywords: ["interaction", "arcball", "trackball", "rotation", "zoom"]
     )
-
-}
-
-extension Angle {
-    init(radians: Float) {
-        self.init(radians: Double(radians))
-    }
 }
