@@ -72,7 +72,9 @@ public struct InteractiveCameraModifier: ViewModifier {
         content
             .onGeometryChange(for: CGSize.self, of: \.size) { viewSize = $0 }
             .modifier(DragGestureModifier(state: $dragState))
+            #if os(macOS)
             .simultaneousGesture(panGesture)
+            #endif
             .simultaneousGesture(zoomGesture)
             .onChange(of: dragState) { oldValue, newValue in
                 // Capture rotation at drag start
@@ -89,6 +91,7 @@ public struct InteractiveCameraModifier: ViewModifier {
             }
     }
 
+    #if os(macOS)
     private var panGesture: some Gesture {
         DragGesture(minimumDistance: 10)
             .modifiers(.command)
@@ -100,6 +103,7 @@ public struct InteractiveCameraModifier: ViewModifier {
                 panTranslation = .zero
             }
     }
+    #endif
 
     private var zoomGesture: some Gesture {
         MagnifyGesture()

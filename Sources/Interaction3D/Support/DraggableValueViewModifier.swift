@@ -156,9 +156,9 @@ struct DraggableValueViewModifier: ViewModifier {
 
 struct AnimatableValueCallbackModifier <T>: ViewModifier, Animatable where T: VectorArithmetic, T: Sendable {
     var animatableData: T
-    var callback: @MainActor (T) -> Void
+    var callback: (T) -> Void
 
-    init(initialValue: T, callback: @escaping @MainActor (T) -> Void) {
+    init(initialValue: T, callback: @escaping (T) -> Void) {
         self.animatableData = initialValue
         self.callback = callback
     }
@@ -166,10 +166,7 @@ struct AnimatableValueCallbackModifier <T>: ViewModifier, Animatable where T: Ve
     func body(content: Content) -> some View {
         content
             .onChange(of: animatableData) {
-                let value = animatableData
-                Task { @MainActor in
-                    callback(value)
-                }
+                callback(animatableData)
             }
     }
 }
