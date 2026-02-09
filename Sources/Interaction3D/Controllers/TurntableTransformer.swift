@@ -57,7 +57,8 @@ public struct TurntableTransformer: InteractionTransformer {
         let pitch = asin(clamp(forward.y, min: -1, max: 1))
         
         // Yaw is the angle in the XZ plane
-        let yaw = atan2(forward.x, forward.z)
+        // Use -forward.z so that identity (forward = 0,0,-1) gives yaw = 0
+        let yaw = atan2(-forward.x, -forward.z)
         
         return (yaw, pitch)
     }

@@ -16,12 +16,6 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
     private var interactionState = InteractionState()
 
     @State
-    private var isUpdatingCameraMatrix = false
-
-    @State
-    private var isUpdatingStateFromMatrix = false
-
-    @State
     private var hasInitializedFromMatrix = false
 
     public init(
@@ -36,75 +30,50 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
 
     public func body(content: Content) -> some View {
         content
-            .onChange(of: cameraMatrix, initial: true) { _, newValue in
-                synchronizeState(from: newValue)
-            }
             .modifier(
                 InteractiveCameraModifier(
-                    rotation: Binding(
-                        get: { interactionState.rotation },
-                        set: { interactionState.rotation = $0 }
-                    ),
-                    distance: Binding(
-                        get: { interactionState.distance },
-                        set: { interactionState.distance = max($0, 0.01) }
-                    ),
-                    target: Binding(
-                        get: { interactionState.target },
-                        set: { interactionState.target = $0 }
-                    ),
+                    rotation: $interactionState.rotation,
+                    distance: $interactionState.distance,
+                    target: $interactionState.target,
                     mode: mode,
                     transforms: transforms
                 )
             )
             .onChange(of: interactionState) { _, newValue in
-                updateCameraMatrix(from: newValue)
+                guard hasInitializedFromMatrix else { return }
+                updateCameraMatrixFromInteraction()
+            }
+            .onAppear {
+                guard !hasInitializedFromMatrix else { return }
+                initializeStateFromMatrix()
             }
     }
-
-    private func synchronizeState(from matrix: simd_float4x4) {
-        guard !isUpdatingCameraMatrix else {
+    
+    private func initializeStateFromMatrix() {
+        guard let components = cameraMatrix.decompose else {
             return
         }
-
-        isUpdatingStateFromMatrix = true
-        defer { isUpdatingStateFromMatrix = false }
-
-        guard let components = matrix.decompose else {
-            return
-        }
-
-        interactionState.rotation = simd_normalize(components.rotation)
-
+        
+        let rotation = simd_normalize(components.rotation)
         let position = components.translate
-
-        if !hasInitializedFromMatrix {
-            let defaultTarget = SIMD3<Float>(repeating: 0)
-            let distance = max(length(defaultTarget - position), 0.01)
-            interactionState.distance = distance
-            interactionState.target = defaultTarget
-            hasInitializedFromMatrix = true
-        }
-        else {
-            let forward = interactionState.rotation.act(SIMD3<Float>(0, 0, -1))
-            let target = position + forward * interactionState.distance
-            interactionState.target = target
-        }
+        let defaultTarget = SIMD3<Float>(repeating: 0)
+        let distance = max(length(defaultTarget - position), 0.01)
+        
+        interactionState = InteractionState(rotation: rotation, distance: distance, target: defaultTarget)
+        hasInitializedFromMatrix = true
+    }
+    
+    private func updateCameraMatrixFromInteraction() {
+        let rotation = interactionState.rotation
+        let forward = rotation.act(SIMD3<Float>(0, 0, -1))
+        let position = interactionState.target - forward * interactionState.distance
+        
+        var newMatrix = rotation.matrix
+        newMatrix.columns.3 = SIMD4<Float>(position, 1)
+        
+        cameraMatrix = newMatrix
     }
 
-    private func updateCameraMatrix(from state: InteractionState) {
-        guard !isUpdatingStateFromMatrix else {
-            return
-        }
-
-        isUpdatingCameraMatrix = true
-        defer { isUpdatingCameraMatrix = false }
-
-        let forward = state.rotation.act(SIMD3<Float>(0, 0, -1))
-        let position = state.target - forward * state.distance
-
-        cameraMatrix = state.rotation.matrix * float4x4(translation: position)
-    }
 }
 
 // MARK: - View Extension
