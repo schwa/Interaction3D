@@ -31,6 +31,9 @@ public struct InteractiveCameraModifier: ViewModifier {
     private var zoomDelta: Double = 0
 
     @State
+    private var scrollWheelDelta: Double = 0
+
+    @State
     private var lastRotationTranslation: CGSize = .zero
 
     @State
@@ -74,6 +77,7 @@ public struct InteractiveCameraModifier: ViewModifier {
             .modifier(DragGestureModifier(state: $dragState))
             #if os(macOS)
             .simultaneousGesture(panGesture)
+            .onScrollWheel(delta: $scrollWheelDelta)
             #endif
             .simultaneousGesture(zoomGesture)
             .onChange(of: dragState) { oldValue, newValue in
@@ -87,6 +91,9 @@ public struct InteractiveCameraModifier: ViewModifier {
                 applyInteraction()
             }
             .onChange(of: zoomDelta) { _, _ in
+                applyInteraction()
+            }
+            .onChange(of: scrollWheelDelta) { _, _ in
                 applyInteraction()
             }
     }
@@ -142,6 +149,10 @@ public struct InteractiveCameraModifier: ViewModifier {
         if zoomDelta == 0 && lastZoomDelta != 0 {
             zoomDeltaChange = 0
         }
+
+        // Scroll wheel delta is cumulative — consume it all each frame
+        zoomDeltaChange += scrollWheelDelta
+        scrollWheelDelta = 0
 
         lastRotationTranslation = rotationTranslation
         lastPanTranslation = panTranslation
