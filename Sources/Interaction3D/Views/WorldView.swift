@@ -8,6 +8,7 @@ public struct WorldView<Content: View>: View {
         case rotationWidget
         case fpvFlight
         case fpvFlightSim
+        case debugOverlay
 
         public static var `default`: [Tool] {
             [.turntable, .rotationWidget, .fpvFlight, .fpvFlightSim]
@@ -44,8 +45,8 @@ public struct WorldView<Content: View>: View {
                 .tool("FPV", group: .interaction, id: "fpv-flight", enabled: tools.contains(.fpvFlight), modifier: { FPVMovementModifier(cameraMatrix: $cameraMatrix) })
                 .tool("FPV Flight Sim", group: .interaction, id: "fpv-flight-sim", enabled: tools.contains(.fpvFlightSim), modifier: { FPVFlightSimModifier(cameraMatrix: $cameraMatrix, verticalFOV: verticalFOV) })
                 #endif
-                .tool("Off", group: .debug, id: "debug-off", modifier: { EmptyModifier() })
-                .tool("Overlay", group: .debug, id: "debug-overlay", modifier: { DebugOverlayToolModifier() })
+                .tool("Off", group: .debug, id: "debug-off", enabled: tools.contains(.debugOverlay), modifier: { EmptyModifier() })
+                .tool("Overlay", group: .debug, id: "debug-overlay", enabled: tools.contains(.debugOverlay), modifier: { DebugOverlayToolModifier() })
         }
     }
 
