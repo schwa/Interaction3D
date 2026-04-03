@@ -54,11 +54,19 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
             return
         }
         
-        let rotation = simd_normalize(components.rotation)
         let position = components.translate
         let defaultTarget = SIMD3<Float>(repeating: 0)
         let distance = max(length(defaultTarget - position), 0.01)
-        
+
+        // Compute a lookAt rotation from position toward the target
+        let forward = normalize(defaultTarget - position)
+        let worldUp = SIMD3<Float>(0, 1, 0)
+        let right = normalize(cross(forward, worldUp))
+        let up = cross(right, forward)
+        // Build a rotation matrix where -Z is forward (camera convention)
+        let rotationMatrix = simd_float3x3(columns: (right, up, -forward))
+        let rotation = simd_normalize(simd_quatf(rotationMatrix))
+
         interactionState = InteractionState(rotation: rotation, distance: distance, target: defaultTarget)
         hasInitializedFromMatrix = true
     }
