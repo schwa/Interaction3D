@@ -12,3 +12,13 @@ Currently every demo in MetalSprocketsExamples that uses [0, 2, 6] as initial ca
 
 ---
 
+## 2: Remove or disable debug overlay tools from WorldView
+status: new
+priority: medium
+kind: bug
+created: 2026-04-03T00:05:57.273927+00:00
+
+WorldView unconditionally adds 'Off' and 'Overlay' debug tools (lines 47-48 of WorldView.swift). These should either be removed, gated behind a parameter (like the interaction tools), or disabled by default so they don't appear in every app that uses WorldView.
+
+---
+
