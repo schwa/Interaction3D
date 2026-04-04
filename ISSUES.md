@@ -2,9 +2,9 @@
 status: closed
 priority: medium
 kind: bug
-created: 2026-04-02T23:13:03.288055+00:00
-updated: 2026-04-03T00:24:35.413166+00:00
-closed: 2026-04-03T00:24:35.413166+00:00
+created: 2026-04-02T23:13:03Z
+updated: 2026-04-03T00:24:35Z
+closed: 2026-04-03T00:24:35Z
 
 When initializeStateFromMatrix() decomposes a pure translation matrix (e.g. simd_float4x4(translation: [0, 2, 6])), it gets identity rotation because there's no rotation encoded in the matrix. But the turntable target defaults to [0,0,0], so the camera should be looking AT the origin — not straight along -Z.
 
@@ -12,7 +12,7 @@ The fix: when initializing, compute a rotation quaternion that looks from the ca
 
 Currently every demo in MetalSprocketsExamples that uses [0, 2, 6] as initial camera position shows the teapot in the upper half with empty space below because the camera looks level instead of down at the origin.
 
-- 2026-04-03T00:24:35.414862+00:00: Compute lookAt rotation from camera position toward target instead of using decomposed matrix rotation
+- `2026-04-03T00:24:35Z`: Compute lookAt rotation from camera position toward target instead of using decomposed matrix rotation
 
 ---
 
@@ -20,13 +20,13 @@ Currently every demo in MetalSprocketsExamples that uses [0, 2, 6] as initial ca
 status: closed
 priority: medium
 kind: bug
-created: 2026-04-03T00:05:57.273927+00:00
-updated: 2026-04-03T00:12:10.078148+00:00
-closed: 2026-04-03T00:12:10.078148+00:00
+created: 2026-04-03T00:05:57Z
+updated: 2026-04-03T00:12:10Z
+closed: 2026-04-03T00:12:10Z
 
 WorldView unconditionally adds 'Off' and 'Overlay' debug tools (lines 47-48 of WorldView.swift). These should either be removed, gated behind a parameter (like the interaction tools), or disabled by default so they don't appear in every app that uses WorldView.
 
-- 2026-04-03T00:12:10.079293+00:00: Gated debug overlay tools behind .debugOverlay tool option, hidden by default
+- `2026-04-03T00:12:10Z`: Gated debug overlay tools behind .debugOverlay tool option, hidden by default
 
 ---
 
@@ -34,9 +34,19 @@ WorldView unconditionally adds 'Off' and 'Overlay' debug tools (lines 47-48 of W
 status: new
 priority: low
 kind: none
-created: 2026-04-03T00:16:43.946212+00:00
+created: 2026-04-03T00:16:43Z
 
 The default target in InteractiveCameraMatrixModifier is hardcoded to [0,0,0]. Add a parameter to allow callers to specify a custom target point for the turntable orbit.
+
+---
+
+## 4: WorldView should expose turntable target parameter
+status: new
+priority: low
+kind: none
+created: 2026-04-04T01:32:13Z
+
+WorldView wraps InteractiveCameraMatrixModifier but doesn't expose the turntable target (pivot point). This means the turntable always orbits around the origin (0,0,0). Users who need to orbit around a different point (e.g. the centre of a scene) have to work around this by translating their geometry instead. WorldView should accept an optional target binding and pass it through to the turntable.
 
 ---
 
