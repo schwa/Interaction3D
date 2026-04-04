@@ -6,10 +6,10 @@ struct ToolDemoView: View {
     var body: some View {
         ToolPickerHost {
             Text("Hello world")
-                .tool("Red", id: "red", modifier: { RedTool() })
-                .tool("Green", id: "green", modifier: { GreenTool() })
-                .tool("Off", group: .debug, id: "debug-off", modifier: { EmptyModifier() })
-                .tool("Overlay", group: .debug, id: "debug-overlay", modifier: { DebugOverlayToolModifier() })
+                .tool("Red", id: "red") { RedTool() }
+                .tool("Green", id: "green") { GreenTool() }
+                .tool("Off", group: .debug, id: "debug-off") { EmptyModifier() }
+                .tool("Overlay", group: .debug, id: "debug-overlay") { DebugOverlayToolModifier() }
         }
     }
 }

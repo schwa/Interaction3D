@@ -6,6 +6,7 @@ import Testing
     var transformer = LerpPositionTransformer(start: [1, 2, 3], end: [4, 5, 6], t: 0.5)
     let param = AnyTransformerParameter<LerpPositionTransformer>(keyPath: \LerpPositionTransformer.start, name: "start")
 
+    // swiftlint:disable:next force_cast
     let value = param.getValue(transformer) as! SIMD3<Float>
     #expect(value == SIMD3<Float>(1, 2, 3))
 

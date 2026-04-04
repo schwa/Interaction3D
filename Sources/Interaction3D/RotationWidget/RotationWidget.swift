@@ -29,14 +29,20 @@ public struct RotationWidget: View {
     private var slerpTo: simd_quatf = .identity
 
     public var body: some View {
-        RotationWidgetCanvas(mesh: mesh, rotation: $rotation, isDragging: $isDragging, onRotateTo: { target in
-            slerpFrom = rotation
-            slerpTo = target
-            slerpProgress = 0
-            withAnimation(.easeInOut(duration: 0.5)) {
-                slerpProgress = 1.0
-            }
-        }, verticalFOV: verticalFOV)
+        RotationWidgetCanvas(
+            mesh: mesh,
+            rotation: $rotation,
+            isDragging: $isDragging,
+            onRotateTo: { target in
+                slerpFrom = rotation
+                slerpTo = target
+                slerpProgress = 0
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    slerpProgress = 1.0
+                }
+            },
+            verticalFOV: verticalFOV
+        )
         .modifier(PitchYawDragModifier(rotation: $rotation, isDragging: $isDragging))
         .modifier(SlerpModifier(progress: slerpProgress) { progress in
             if !isDragging {
@@ -106,8 +112,8 @@ private struct RotationWidgetCanvas: View {
                     context.stroke(path, with: .color(color))
                 }
             }
-            .onGeometryChange(for: CGSize.self, of: \.size) {
-                size = $0
+            .onGeometryChange(for: CGSize.self, of: \.size) { newSize in
+                size = newSize
                 update()
             }
 
@@ -134,7 +140,7 @@ private struct RotationWidgetCanvas: View {
     }
 
     func update() {
-        leastVertex = mesh.vertices.reduce([Float.greatestFiniteMagnitude, Float.greatestFiniteMagnitude, Float.greatestFiniteMagnitude]) { min($0, $1) }
+        leastVertex = mesh.vertices.reduce(into: SIMD3<Float>(repeating: Float.greatestFiniteMagnitude)) { $0 = min($0, $1) }
         renderState.update(mesh: mesh, rotation: rotation, size: size, verticalFOV: verticalFOV)
 
         hoverAreas = []
@@ -252,6 +258,7 @@ struct HoverArea: View {
             if let activePath, let index = actions.firstIndex(where: { $0.0 == activePath }) {
                 activePath.fill(actions[index].1)
                     .contentShape(activePath)
+                    .accessibilityAddTraits(.isButton)
                     .onTapGesture {
                         actions[index].2()
                     }

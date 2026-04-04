@@ -24,7 +24,9 @@ public struct TransformerAnimator<Transformer: ParameterizedTransformerProtocol,
             startTime = currentTime
         }
 
-        guard let start = startTime else { return }
+        guard let start = startTime else {
+            return
+        }
 
         let elapsed = currentTime - start
         let t = timingTransformer.apply(to: elapsed)
@@ -68,7 +70,9 @@ public struct AnyTransformerAnimator<Transformer: ParameterizedTransformerProtoc
             startTime = currentTime
         }
 
-        guard let start = startTime else { return }
+        guard let start = startTime else {
+            return
+        }
 
         let elapsed = currentTime - start
         let t = applyTiming(elapsed)

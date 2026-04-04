@@ -16,7 +16,7 @@ public struct DragGestureModifier: ViewModifier {
             self.currentLocation = currentLocation
         }
 
-        public static let zero = DragState()
+        public static let zero = Self()
     }
 
     @Binding

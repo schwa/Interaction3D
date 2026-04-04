@@ -22,7 +22,7 @@ extension LerpPositionTransformer: ParameterizedTransformerProtocol {
         [
             AnyTransformerParameter(keyPath: \LerpPositionTransformer.start, name: "start", metadata: .vector()),
             AnyTransformerParameter(keyPath: \LerpPositionTransformer.end, name: "end", metadata: .vector()),
-            AnyTransformerParameter(keyPath: \LerpPositionTransformer.t, name: "t", metadata: .floatingPoint(range: 0...1)),
+            AnyTransformerParameter(keyPath: \LerpPositionTransformer.t, name: "t", metadata: .floatingPoint(range: 0...1))
         ]
     }
 }

@@ -1,7 +1,9 @@
 import SwiftUI
 
 public struct DebugOverlayToolModifier: ViewModifier {
-    public init() {}
+    public init() {
+        // No configuration needed
+    }
 
     public func body(content: Content) -> some View {
         content

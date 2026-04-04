@@ -115,7 +115,6 @@ public struct MeasurementDial <U>: View where U: Dimension {
 }
 
 #Preview {
-    let speed = Measurement(value: 15, unit: UnitSpeed.metersPerSecond)
     SpeedometerDialView(
         measurement: .init(value: 5, unit: .metersPerSecond),
         maxMeasurement: .init(value: 50, unit: .milesPerHour),

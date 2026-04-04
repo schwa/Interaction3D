@@ -1,5 +1,4 @@
 import GeometryLite3D
-import Interaction3D
 import SceneKit
 import simd
 import SwiftUI

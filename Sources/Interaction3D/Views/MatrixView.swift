@@ -12,7 +12,7 @@ public struct MatrixView<Value, Style>: View where Value: Matrix, Style: FormatS
         self.colorize = colorize
     }
 
-    private func styleForPosition(row: Int, column: Int) -> ShapeStyle {
+    private func styleForPosition(row: Int, column: Int) -> any ShapeStyle {
         guard colorize else {
             return .foreground
         }

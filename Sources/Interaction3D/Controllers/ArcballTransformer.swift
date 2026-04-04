@@ -20,7 +20,7 @@ public struct ArcballTransformer: InteractionTransformer {
         var state = value
 
         // Compute arcball rotation from absolute positions
-        if input.startLocation != .zero && input.currentLocation != .zero && input.viewSize != .zero {
+        if input.startLocation != .zero, input.currentLocation != .zero, input.viewSize != .zero {
             let from = projectToSphere(input.startLocation)
             let to = projectToSphere(input.currentLocation)
             let dragRotation = quaternionFromSpherePoints(from: from, to: to)
@@ -67,11 +67,10 @@ private extension ArcballTransformer {
             x *= scale
             y *= scale
             return SIMD3<Float>(x, y, 0)
-        } else {
-            // On the sphere - compute Z
-            let z = sqrt(1.0 - magSquared)
-            return SIMD3<Float>(x, y, z)
         }
+        // On the sphere - compute Z
+        let z = sqrt(1.0 - magSquared)
+        return SIMD3<Float>(x, y, z)
     }
 
     /// Compute quaternion rotation from two points on the unit sphere.

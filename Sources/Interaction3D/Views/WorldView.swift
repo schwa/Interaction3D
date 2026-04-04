@@ -10,7 +10,7 @@ public struct WorldView<Content: View>: View {
         case fpvFlightSim
         case debugOverlay
 
-        public static var `default`: [Tool] {
+        public static var `default`: [Self] {
             [.turntable, .rotationWidget, .fpvFlight, .fpvFlightSim]
         }
     }
@@ -34,19 +34,19 @@ public struct WorldView<Content: View>: View {
     public var body: some View {
         ToolPickerHost {
             content
-                .tool("Turntable", group: .interaction, id: "turntable", enabled: tools.contains(.turntable), modifier: {
+                .tool("Turntable", group: .interaction, id: "turntable", enabled: tools.contains(.turntable)) {
                     InteractiveCameraMatrixModifier(
                         cameraMatrix: $cameraMatrix,
                         mode: .turntable()
                     )
-                })
-                .tool("Rotation Widget", group: .interaction, id: "rotation-widget", enabled: tools.contains(.rotationWidget), modifier: { RotationWidgetToolModifier(cameraMatrix: $cameraMatrix) })
+                }
+                .tool("Rotation Widget", group: .interaction, id: "rotation-widget", enabled: tools.contains(.rotationWidget)) { RotationWidgetToolModifier(cameraMatrix: $cameraMatrix) }
                 #if os(macOS)
-                .tool("FPV", group: .interaction, id: "fpv-flight", enabled: tools.contains(.fpvFlight), modifier: { FPVMovementModifier(cameraMatrix: $cameraMatrix) })
-                .tool("FPV Flight Sim", group: .interaction, id: "fpv-flight-sim", enabled: tools.contains(.fpvFlightSim), modifier: { FPVFlightSimModifier(cameraMatrix: $cameraMatrix, verticalFOV: verticalFOV) })
+                .tool("FPV", group: .interaction, id: "fpv-flight", enabled: tools.contains(.fpvFlight)) { FPVMovementModifier(cameraMatrix: $cameraMatrix) }
+                .tool("FPV Flight Sim", group: .interaction, id: "fpv-flight-sim", enabled: tools.contains(.fpvFlightSim)) { FPVFlightSimModifier(cameraMatrix: $cameraMatrix, verticalFOV: verticalFOV) }
                 #endif
-                .tool("Off", group: .debug, id: "debug-off", enabled: tools.contains(.debugOverlay), modifier: { EmptyModifier() })
-                .tool("Overlay", group: .debug, id: "debug-overlay", enabled: tools.contains(.debugOverlay), modifier: { DebugOverlayToolModifier() })
+                .tool("Off", group: .debug, id: "debug-off", enabled: tools.contains(.debugOverlay)) { EmptyModifier() }
+                .tool("Overlay", group: .debug, id: "debug-overlay", enabled: tools.contains(.debugOverlay)) { DebugOverlayToolModifier() }
         }
     }
 

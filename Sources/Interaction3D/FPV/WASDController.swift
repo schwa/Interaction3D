@@ -94,16 +94,10 @@ public final class WASDController: @unchecked Sendable {
     }
 
     private func setupKeyboardHandling() {
-        keyboardObservationTask = Task { @Sendable [weak self] in
-            for await notification in NotificationCenter.default.notifications(named: .GCKeyboardDidConnect) {
-                if let keyboard = notification.object as? GCKeyboard {
-                    // This line intentionally left blank
-                }
+        keyboardObservationTask = Task { @Sendable in
+            for await _ in NotificationCenter.default.notifications(named: .GCKeyboardDidConnect) {
+                // Keyboard connected — no additional setup needed
             }
-        }
-
-        if let keyboard = GCKeyboard.coalesced {
-            // This line intentionally left blank
         }
     }
 
@@ -178,8 +172,8 @@ public final class WASDController: @unchecked Sendable {
         guard !isMouseCaptured else {
             return
         }
-        let hideResult = CGDisplayHideCursor(CGMainDisplayID())
-        let associateResult = CGAssociateMouseAndMouseCursorPosition(0)
+        CGDisplayHideCursor(CGMainDisplayID())
+        CGAssociateMouseAndMouseCursorPosition(0)
         isMouseCaptured = true
     }
 
@@ -189,9 +183,8 @@ public final class WASDController: @unchecked Sendable {
             return
         }
 
-        let showResult = CGDisplayShowCursor(CGMainDisplayID())
-
-        let associateResult = CGAssociateMouseAndMouseCursorPosition(1)
+        CGDisplayShowCursor(CGMainDisplayID())
+        CGAssociateMouseAndMouseCursorPosition(1)
 
         isMouseCaptured = false
     }

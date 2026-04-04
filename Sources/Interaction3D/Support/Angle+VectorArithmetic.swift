@@ -1,6 +1,6 @@
 import SwiftUI
 
-extension Angle: VectorArithmetic {
+extension Angle: @retroactive VectorArithmetic {
     public static var zero: Angle {
         .radians(0)
     }

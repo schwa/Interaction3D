@@ -7,7 +7,7 @@ import SwiftUI
 
 struct PitchYawDemoView: View {
     @State
-    private var rotation: simd_quatf = simd_quatf(angle: 0, axis: [0, 1, 0])
+    private var rotation = simd_quatf(angle: 0, axis: [0, 1, 0])
 
     @State
     private var distance: Float = 5.0

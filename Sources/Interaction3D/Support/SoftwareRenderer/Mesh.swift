@@ -35,10 +35,8 @@ public extension Mesh {
         var result: [Edge] = []
 
         for face in faces {
-            for edge in face.edges {
-                if unique.insert(edge).inserted {
-                    result.append(edge)
-                }
+            for edge in face.edges where unique.insert(edge).inserted {
+                result.append(edge)
             }
         }
         return result
@@ -60,11 +58,11 @@ public extension Mesh.Edge {
 
 public extension Mesh.Face {
     var edges: [Mesh.Edge] {
-        guard vertices.count > 1 else {
+        guard let first = vertices.first, vertices.count > 1 else {
             return []
         }
         var result: [Mesh.Edge] = []
-        let wrapped = vertices + [vertices.first!]
+        let wrapped = vertices + [first]
         for i in 0..<(wrapped.count - 1) {
             result.append(Mesh.Edge(start: wrapped[i], end: wrapped[i + 1]))
         }
@@ -104,8 +102,8 @@ extension Mesh {
 //    }
 // }
 
-extension Mesh {
-    public static let cube = Mesh(
+public extension Mesh {
+    static let cube = Mesh(
         vertices: [
             SIMD3<Float>(-1, -1, -1),
             SIMD3<Float>(1, -1, -1),
@@ -126,7 +124,7 @@ extension Mesh {
         ]
     )
 
-    public static let dodecahedron: Mesh = {
+    static let dodecahedron: Mesh = {
         let phi: Float = (1.0 + sqrt(5.0)) / 2.0
         let invPhi: Float = 1.0 / phi
 
@@ -171,11 +169,11 @@ extension Mesh {
         return Mesh(vertices: vertices, faces: faces)
     }()
 
-    public static let tetrahedron = Mesh(vertices: [SIMD3<Float>(1, 1, 1), SIMD3<Float>(-1, -1, 1), SIMD3<Float>(-1, 1, -1), SIMD3<Float>(1, -1, -1)].map { simd_normalize($0) }, faces: [[0, 1, 2], [0, 3, 1], [0, 2, 3], [1, 3, 2]])
+    static let tetrahedron = Mesh(vertices: [SIMD3<Float>(1, 1, 1), SIMD3<Float>(-1, -1, 1), SIMD3<Float>(-1, 1, -1), SIMD3<Float>(1, -1, -1)].map { simd_normalize($0) }, faces: [[0, 1, 2], [0, 3, 1], [0, 2, 3], [1, 3, 2]])
 
-    public static let octahedron = Mesh(vertices: [SIMD3<Float>(1, 0, 0), SIMD3<Float>(-1, 0, 0), SIMD3<Float>(0, 1, 0), SIMD3<Float>(0, -1, 0), SIMD3<Float>(0, 0, 1), SIMD3<Float>(0, 0, -1)], faces: [[0, 2, 4], [0, 4, 3], [0, 3, 5], [0, 5, 2], [1, 2, 5], [1, 5, 3], [1, 3, 4], [1, 4, 2]])
+    static let octahedron = Mesh(vertices: [SIMD3<Float>(1, 0, 0), SIMD3<Float>(-1, 0, 0), SIMD3<Float>(0, 1, 0), SIMD3<Float>(0, -1, 0), SIMD3<Float>(0, 0, 1), SIMD3<Float>(0, 0, -1)], faces: [[0, 2, 4], [0, 4, 3], [0, 3, 5], [0, 5, 2], [1, 2, 5], [1, 5, 3], [1, 3, 4], [1, 4, 2]])
 
-    public static let icosahedron: Mesh = {
+    static let icosahedron: Mesh = {
         let phi: Float = (1.0 + sqrt(5.0)) / 2.0
         let vertices: [SIMD3<Float>] = [SIMD3<Float>(-1, phi, 0), SIMD3<Float>(1, phi, 0), SIMD3<Float>(-1, -phi, 0), SIMD3<Float>(1, -phi, 0), SIMD3<Float>(0, -1, phi), SIMD3<Float>(0, 1, phi), SIMD3<Float>(0, -1, -phi), SIMD3<Float>(0, 1, -phi), SIMD3<Float>(phi, 0, -1), SIMD3<Float>(phi, 0, 1), SIMD3<Float>(-phi, 0, -1), SIMD3<Float>(-phi, 0, 1)].map { simd_normalize($0) }
         let faces: [[Int]] = [[0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11], [1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8], [3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9], [4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1]]
@@ -225,8 +223,6 @@ struct MeshRenderState {
     var rearEdges: Set<Mesh.Edge> = []
     var frontEdges: Set<Mesh.Edge> = []
     var rendererContext = SoftwareRendererContext()
-
-    init() {}
 
     mutating func update(mesh: Mesh, rotation: simd_quatf, size: CGSize, verticalFOV: Double) {
         rearFaces = []
@@ -292,4 +288,3 @@ struct MeshRenderState {
         }
     }
 }
-

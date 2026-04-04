@@ -22,12 +22,14 @@ public enum ParameterMetadata {
 public protocol TransformerParameterProtocol {
     associatedtype Transformer: TransformerProtocol
     associatedtype Value
+
     var keyPath: WritableKeyPath<Transformer, Value> { get }
     var name: String { get }
     var metadata: ParameterMetadata? { get }
 }
 
 public struct TransformerParameter<Transformer, T>: TransformerParameterProtocol where Transformer: TransformerProtocol {
+
     public var keyPath: WritableKeyPath<Transformer, T>
     public var name: String
     public var metadata: ParameterMetadata?
@@ -35,12 +37,15 @@ public struct TransformerParameter<Transformer, T>: TransformerParameterProtocol
 
 public struct AnyTransformerParameter<Transformer>: TransformerParameterProtocol where Transformer: TransformerProtocol {
     public typealias Value = Any
+
     public var keyPath: WritableKeyPath<Transformer, Any> {
         get { fatalError("keyPath not directly accessible") }
+        // swiftlint:disable:next unused_setter_value
         set { fatalError("keyPath not directly accessible") }
     }
     public var name: String
     public var metadata: ParameterMetadata?
+
     public let getValue: (Transformer) -> Any
     public let setValue: (inout Transformer, Any) -> Void
 }
@@ -50,8 +55,7 @@ public extension AnyTransformerParameter {
         self.name = name
         self.metadata = metadata
         self.getValue = { $0[keyPath: keyPath] }
+        // swiftlint:disable:next force_cast
         self.setValue = { $0[keyPath: keyPath] = $1 as! T }
     }
 }
-
-

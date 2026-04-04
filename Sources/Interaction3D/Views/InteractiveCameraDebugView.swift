@@ -111,8 +111,8 @@ public struct InteractiveCameraDebugView: View {
                 case .arcball: return 1
                 }
             },
-            set: {
-                switch $0 {
+            set: { newValue in
+                switch newValue {
                 case 0: mode = .turntable()
                 case 1: mode = .arcball()
                 default: mode = .turntable()
@@ -157,10 +157,13 @@ public struct InteractiveCameraDebugView: View {
         let pitchSign = invertPitch ? -1.0 : 1.0
         let yawSign = invertYaw ? -1.0 : 1.0
         let zoomSign = invertZoom ? -1.0 : 1.0
+        let capturedYawScale = yawScale
+        let capturedPitchScale = pitchScale
+        let capturedZoomScale = zoomScale
         transforms = InteractionAxisTransforms(
-            yaw: { $0 * 0.01 * yawScale * yawSign },
-            pitch: { $0 * 0.01 * pitchScale * pitchSign },
-            zoom: { $0 * 0.5 * zoomScale * zoomSign },
+            yaw: { $0 * 0.01 * capturedYawScale * yawSign },
+            pitch: { $0 * 0.01 * capturedPitchScale * pitchSign },
+            zoom: { $0 * 0.5 * capturedZoomScale * zoomSign },
             pan: { delta in SIMD3<Float>(Float(delta.x * 0.02), Float(-delta.y * 0.02), 0) }
         )
     }

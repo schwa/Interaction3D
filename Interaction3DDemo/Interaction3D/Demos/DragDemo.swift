@@ -1,33 +1,34 @@
-import SwiftUI
-import Interaction3D
 import DemoKit
+import Interaction3D
 import SwiftFormats
+import SwiftUI
 
 struct DragDemo: View {
 
     @State
-    var dragState: DragGestureModifier.DragState = .zero
+    private var dragState: DragGestureModifier.DragState = .zero
 
     @State
-    var translation: CGSize = .zero
+    private var translation: CGSize = .zero
 
     @State
-    var breadcrumbs: [CGPoint] = []
+    private var breadcrumbs: [CGPoint] = []
 
     @State
-    var isDragging: Bool = false
+    private var isDragging: Bool = false
 
     @State
-    var viewSize: CGSize = .zero
+    private var viewSize: CGSize = .zero
 
     // Transform options
     @State
-    var horizontalScale: Double = 0.2
+    private var horizontalScale: Double = 0.2
 
     @State
-    var verticalScale: Double = 0.2
+    private var verticalScale: Double = 0.2
 
     init() {
+        // No configuration needed
     }
 
     var body: some View {
@@ -113,7 +114,7 @@ struct DragDemo: View {
         }
         .onChange(of: translation) { oldValue, newValue in
             // Detect start of new drag
-            if oldValue == .zero && newValue != .zero {
+            if oldValue == .zero, newValue != .zero {
                 // Clear breadcrumbs when new drag starts
                 breadcrumbs.removeAll()
                 isDragging = true
@@ -130,7 +131,7 @@ struct DragDemo: View {
                 )
                 breadcrumbs.append(point)
                 // Limit breadcrumbs to last 1000 points
-                if breadcrumbs.count > 1000 {
+                if breadcrumbs.count > 1_000 {
                     breadcrumbs.removeFirst()
                 }
             }

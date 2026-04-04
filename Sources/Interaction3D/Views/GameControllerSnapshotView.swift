@@ -5,6 +5,7 @@ public struct GameControllerSnapshotView: View {
     @State private var display = SnapshotDisplay.empty
 
     public init() {
+        // No configuration needed
     }
 
     public var body: some View {
@@ -15,7 +16,7 @@ public struct GameControllerSnapshotView: View {
                 case .none:
                     Text("No controller connected")
                         .font(.headline)
-                case .extended, .standard, .micro:
+                case .extended, .micro:
                     Text(display.title)
                         .font(.headline)
                     ForEach(display.entries) { entry in
@@ -35,7 +36,6 @@ private struct SnapshotDisplay {
     enum Kind {
         case none
         case extended
-        case standard
         case micro
     }
 
@@ -59,7 +59,7 @@ private struct SnapshotDisplay {
         let rawName = controller.vendorName?.trimmingCharacters(in: .whitespacesAndNewlines)
         let name = (rawName?.isEmpty == false ? rawName : nil) ?? "Game Controller"
 
-        if let snapshot = controller.extendedGamepad?.saveSnapshot() {
+        if let snapshot = controller.extendedGamepad?.capture() {
             let entries: [Entry] = [
                 Entry(label: "LeftStick X", value: format(snapshot.leftThumbstick.xAxis.value)),
                 Entry(label: "LeftStick Y", value: format(snapshot.leftThumbstick.yAxis.value)),
@@ -79,21 +79,7 @@ private struct SnapshotDisplay {
             return Self(kind: .extended, title: "\(name) (Extended)", entries: entries)
         }
 
-        if let snapshot = controller.gamepad?.saveSnapshot() {
-            let entries: [Entry] = [
-                Entry(label: "DPad X", value: format(snapshot.dpad.xAxis.value)),
-                Entry(label: "DPad Y", value: format(snapshot.dpad.yAxis.value)),
-                Entry(label: "L1", value: format(snapshot.leftShoulder.value)),
-                Entry(label: "R1", value: format(snapshot.rightShoulder.value)),
-                Entry(label: "Button A", value: format(snapshot.buttonA.value)),
-                Entry(label: "Button B", value: format(snapshot.buttonB.value)),
-                Entry(label: "Button X", value: format(snapshot.buttonX.value)),
-                Entry(label: "Button Y", value: format(snapshot.buttonY.value))
-            ]
-            return Self(kind: .standard, title: "\(name) (Standard)", entries: entries)
-        }
-
-        if let snapshot = controller.microGamepad?.saveSnapshot() {
+        if let snapshot = controller.microGamepad?.capture() {
             let entries: [Entry] = [
                 Entry(label: "DPad X", value: format(snapshot.dpad.xAxis.value)),
                 Entry(label: "DPad Y", value: format(snapshot.dpad.yAxis.value)),

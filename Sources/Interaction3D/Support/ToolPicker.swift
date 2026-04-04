@@ -20,21 +20,21 @@ public struct ToolPickerGroup: Hashable, Equatable {
     }
 
     @MainActor
-    public static let `default` = ToolPickerGroup("default", label: "Tools")
+    public static let `default` = Self("default", label: "Tools")
     @MainActor
-    public static let interaction = ToolPickerGroup("interaction", label: "Interaction")
+    public static let interaction = Self("interaction", label: "Interaction")
     @MainActor
-    public static let debug = ToolPickerGroup("debug", label: "Debug")
+    public static let debug = Self("debug", label: "Debug")
 
-    public func label(_ label: LocalizedStringKey) -> ToolPickerGroup {
-        ToolPickerGroup(id, label: label)
+    public func label(_ label: LocalizedStringKey) -> Self {
+        Self(id, label: label)
     }
 
-    public func label(_ label: String) -> ToolPickerGroup {
-        ToolPickerGroup(id, label: label)
+    public func label(_ label: String) -> Self {
+        Self(id, label: label)
     }
 
-    public static func == (lhs: ToolPickerGroup, rhs: ToolPickerGroup) -> Bool {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id
     }
 
@@ -154,7 +154,7 @@ public struct ToolPickerHost<Content: View>: View {
 
     @MainActor
     private func currentEnabledTools() -> [ToolPickerModel.Tool] {
-        Array(model.tools.values.filter { $0.enabled })
+        Array(model.tools.values.filter(\.enabled))
     }
 
     @MainActor

@@ -25,7 +25,7 @@ extension AngleF: Interpolatable {
 }
 
 extension SIMD3<Float>: Interpolatable {
-    public static func interpolate(from: Self, to: Self , t: Double) -> SIMD3<Float> {
+    public static func interpolate(from: Self, to: Self, t: Double) -> SIMD3<Float> {
         simd_mix(from, to, SIMD3<Float>(repeating: Float(t)))
     }
 }

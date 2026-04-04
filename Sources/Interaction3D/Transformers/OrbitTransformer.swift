@@ -20,8 +20,7 @@ public struct OrbitTransformer: TransformerProtocol, Equatable {
         let up = abs(dot(normalizedNormal, [0, 1, 0])) < 0.999 ? SIMD3<Float>([0, 1, 0]) : SIMD3<Float>([1, 0, 0])
         let right = normalize(cross(up, normalizedNormal))
         let forward = cross(normalizedNormal, right)
-        let x = center + right * (radius * cos(angle.radians)) + forward * (radius * sin(angle.radians))
-        return x
+        return center + right * (radius * cos(angle.radians)) + forward * (radius * sin(angle.radians))
     }
 }
 
@@ -31,7 +30,7 @@ extension OrbitTransformer: ParameterizedTransformerProtocol {
             AnyTransformerParameter(keyPath: \OrbitTransformer.center, name: "center", metadata: .vector()),
             AnyTransformerParameter(keyPath: \OrbitTransformer.radius, name: "radius", metadata: .floatingPoint(range: 0...200)),
             AnyTransformerParameter(keyPath: \OrbitTransformer.angle, name: "angle", metadata: .angle),
-            AnyTransformerParameter(keyPath: \OrbitTransformer.normal, name: "normal", metadata: .vector()),
+            AnyTransformerParameter(keyPath: \OrbitTransformer.normal, name: "normal", metadata: .vector())
         ]
     }
 }

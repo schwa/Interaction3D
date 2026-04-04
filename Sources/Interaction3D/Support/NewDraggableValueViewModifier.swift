@@ -106,7 +106,7 @@ struct NewDraggableValueViewModifier: ViewModifier {
 
     func newValue(for input: CGFloat) -> Double {
         // Identity mapping - no scale or behavior transformations
-        return (initialValue ?? value) + input
+        (initialValue ?? value) + input
     }
 
     func newValue(for translation: CGSize) -> Double {

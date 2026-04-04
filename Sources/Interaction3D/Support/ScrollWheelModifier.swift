@@ -30,12 +30,12 @@ private struct ScrollWheelView: NSViewRepresentable {
 
     func makeNSView(context: Context) -> ScrollWheelNSView {
         let view = ScrollWheelNSView()
-        view.onScroll = { self.delta += $0 }
+        view.onScroll = { delta += $0 }
         return view
     }
 
     func updateNSView(_ nsView: ScrollWheelNSView, context: Context) {
-        nsView.onScroll = { self.delta += $0 }
+        nsView.onScroll = { delta += $0 }
     }
 }
 
@@ -43,7 +43,7 @@ private struct ScrollWheelView: NSViewRepresentable {
 
 final class ScrollWheelNSView: NSView {
     var onScroll: ((Double) -> Void)?
-    private var monitor: Any?
+    nonisolated(unsafe) private var monitor: Any?
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
@@ -55,7 +55,9 @@ final class ScrollWheelNSView: NSView {
     }
 
     private func startMonitoring() {
-        guard monitor == nil else { return }
+        guard monitor == nil else {
+            return
+        }
         monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
             self?.handleScrollEvent(event)
             return event  // always return the event so other views still get it
@@ -71,12 +73,19 @@ final class ScrollWheelNSView: NSView {
 
     private func handleScrollEvent(_ event: NSEvent) {
         // Only handle if the mouse is over this view's frame in window coordinates
-        guard let window else { return }
+        guard let window else {
+            return
+        }
         let mouseInWindow = window.mouseLocationOutsideOfEventStream
         let mouseInView = convert(mouseInWindow, from: nil)
-        guard bounds.contains(mouseInView) else { return }
+        guard bounds.contains(mouseInView) else {
+            return
+        }
 
-        guard event.momentumPhase == [] || event.momentumPhase == .changed else { return }
+        guard event.momentumPhase.isEmpty || event.momentumPhase == .changed else {
+            return
+        }
+
         let dy = event.hasPreciseScrollingDeltas
             ? Double(event.scrollingDeltaY)
             : Double(event.deltaY) * 10
@@ -85,10 +94,13 @@ final class ScrollWheelNSView: NSView {
 
     // Invisible to hit testing - all mouse/drag events pass through
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
     override var acceptsFirstResponder: Bool { false }
 
     deinit {
-        stopMonitoring()
+        if let monitor {
+            NSEvent.removeMonitor(monitor)
+        }
     }
 }
 #endif

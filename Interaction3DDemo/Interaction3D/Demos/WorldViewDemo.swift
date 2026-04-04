@@ -1,21 +1,16 @@
-import SwiftUI
 import DemoKit
-import Interaction3D
 import GeometryLite3D
-import simd
-import SceneKit
-import DemoKit
+import Interaction3D
 import Observation
 import SceneKit
 import simd
 import Spatial
 import SwiftUI
-
 struct WorldViewDemo: View {
     @State private var model = CityModel()
 
     @State
-    var projection: any ProjectionProtocol = PerspectiveProjection()
+    private var projection: any ProjectionProtocol = PerspectiveProjection()
 
     var body: some View {
         WorldView(projection: $projection, cameraMatrix: $model.cameraNode.simdTransform) {

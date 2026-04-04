@@ -58,10 +58,10 @@ public struct InteractionAxisTransforms: Sendable {
     public var pan: PanTransform
 
     public init(
-        yaw: @escaping AxisTransform = InteractionAxisTransforms.defaultYaw,
-        pitch: @escaping AxisTransform = InteractionAxisTransforms.defaultPitch,
-        zoom: @escaping AxisTransform = InteractionAxisTransforms.defaultZoom,
-        pan: @escaping PanTransform = InteractionAxisTransforms.defaultPan
+        yaw: @escaping AxisTransform = Self.defaultYaw,
+        pitch: @escaping AxisTransform = Self.defaultPitch,
+        zoom: @escaping AxisTransform = Self.defaultZoom,
+        pan: @escaping PanTransform = Self.defaultPan
     ) {
         self.yaw = yaw
         self.pitch = pitch

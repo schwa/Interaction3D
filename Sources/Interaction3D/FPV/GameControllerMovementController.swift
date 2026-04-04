@@ -134,20 +134,12 @@ public final class GameControllerMovementController: @unchecked Sendable {
 
         if let gamepad = controller.extendedGamepad {
             configureExtendedGamepad(gamepad)
-        } else if let gamepad = controller.gamepad {
-            configureGamepad(gamepad)
         } else if let microGamepad = controller.microGamepad {
             configureMicroGamepad(microGamepad)
         }
     }
 
     private func configureExtendedGamepad(_ gamepad: GCExtendedGamepad) {
-        gamepad.valueChangedHandler = { [weak self] _, _ in
-            self?.lastInputTimestamp = Date()
-        }
-    }
-
-    private func configureGamepad(_ gamepad: GCGamepad) {
         gamepad.valueChangedHandler = { [weak self] _, _ in
             self?.lastInputTimestamp = Date()
         }
@@ -249,7 +241,7 @@ public final class GameControllerMovementController: @unchecked Sendable {
             return (.zero, .zero, 0, false)
         }
 
-        if let snapshot = controller.extendedGamepad?.saveSnapshot() {
+        if let snapshot = controller.extendedGamepad?.capture() {
             lastInputTimestamp = Date()
             let move = SIMD2(Float(snapshot.leftThumbstick.xAxis.value), Float(snapshot.leftThumbstick.yAxis.value))
             let look = SIMD2(Float(snapshot.rightThumbstick.xAxis.value), Float(snapshot.rightThumbstick.yAxis.value))
@@ -257,14 +249,7 @@ public final class GameControllerMovementController: @unchecked Sendable {
             return (move, look, altitude, true)
         }
 
-        if let snapshot = controller.gamepad?.saveSnapshot() {
-            lastInputTimestamp = Date()
-            let move = SIMD2(Float(snapshot.dpad.xAxis.value), Float(snapshot.dpad.yAxis.value))
-            let altitude = Float(snapshot.rightShoulder.value) - Float(snapshot.leftShoulder.value)
-            return (move, .zero, altitude, true)
-        }
-
-        if let snapshot = controller.microGamepad?.saveSnapshot() {
+        if let snapshot = controller.microGamepad?.capture() {
             lastInputTimestamp = Date()
             let move = SIMD2(Float(snapshot.dpad.xAxis.value), Float(snapshot.dpad.yAxis.value))
             return (move, .zero, 0, true)

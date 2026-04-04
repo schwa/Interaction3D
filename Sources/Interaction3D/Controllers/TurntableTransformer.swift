@@ -25,7 +25,7 @@ public struct TurntableTransformer: InteractionTransformer {
 
             // Apply deltas
             let newYaw = currentYaw - yawDelta
-            
+
             // Clamp pitch to ±89°
             let maxPitch = Float.pi / 2 - 0.02
             let newPitch = max(-maxPitch, min(maxPitch, currentPitch - pitchDelta))
@@ -52,14 +52,14 @@ public struct TurntableTransformer: InteractionTransformer {
     private func decomposeYawPitch(_ q: simd_quatf) -> (yaw: Float, pitch: Float) {
         // Get the forward vector
         let forward = q.act(SIMD3<Float>(0, 0, -1))
-        
+
         // Pitch is the angle from the horizontal plane
         let pitch = asin(clamp(forward.y, min: -1, max: 1))
-        
+
         // Yaw is the angle in the XZ plane
         // Use -forward.z so that identity (forward = 0,0,-1) gives yaw = 0
         let yaw = atan2(-forward.x, -forward.z)
-        
+
         return (yaw, pitch)
     }
 
@@ -71,6 +71,6 @@ public struct TurntableTransformer: InteractionTransformer {
     }
 
     private func clamp(_ value: Float, min minVal: Float, max maxVal: Float) -> Float {
-        return max(minVal, min(maxVal, value))
+        max(minVal, min(maxVal, value))
     }
 }

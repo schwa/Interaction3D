@@ -40,20 +40,24 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
                 )
             )
             .onChange(of: interactionState) { _, newValue in
-                guard hasInitializedFromMatrix else { return }
+                guard hasInitializedFromMatrix else {
+                    return
+                }
                 updateCameraMatrixFromInteraction()
             }
             .onAppear {
-                guard !hasInitializedFromMatrix else { return }
+                guard !hasInitializedFromMatrix else {
+                    return
+                }
                 initializeStateFromMatrix()
             }
     }
-    
+
     private func initializeStateFromMatrix() {
         guard let components = cameraMatrix.decompose else {
             return
         }
-        
+
         let position = components.translate
         let defaultTarget = SIMD3<Float>(repeating: 0)
         let distance = max(length(defaultTarget - position), 0.01)
@@ -70,15 +74,15 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
         interactionState = InteractionState(rotation: rotation, distance: distance, target: defaultTarget)
         hasInitializedFromMatrix = true
     }
-    
+
     private func updateCameraMatrixFromInteraction() {
         let rotation = interactionState.rotation
         let forward = rotation.act(SIMD3<Float>(0, 0, -1))
         let position = interactionState.target - forward * interactionState.distance
-        
+
         var newMatrix = rotation.matrix
         newMatrix.columns.3 = SIMD4<Float>(position, 1)
-        
+
         cameraMatrix = newMatrix
     }
 

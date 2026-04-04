@@ -192,7 +192,7 @@ public struct ClampingTransformer <T>: Transformer where T: Comparable {
 
     public func transform(_ input: T) -> T {
 
-        return input.clamped(to: range)
+        input.clamped(to: range)
     }
 }
 
@@ -204,7 +204,7 @@ public struct WrappingTransformer <T>: Transformer where T: FloatingPoint {
     }
 
     public func transform(_ input: T) -> T {
-        return input.wrapped(to: range)
+        input.wrapped(to: range)
     }
 }
 
@@ -216,7 +216,6 @@ public struct ScalingTransformer <T>: Transformer where T: Numeric {
     }
 
     public func transform(_ input: T) -> T {
-        return input * magnitude
+        input * magnitude
     }
 }
-

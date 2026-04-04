@@ -46,7 +46,7 @@ public struct InteractiveCameraModifier: ViewModifier {
     private var viewSize: CGSize = .zero
 
     @State
-    private var rotationAtDragStart: simd_quatf = simd_quatf(angle: 0, axis: [0, 1, 0])
+    private var rotationAtDragStart = simd_quatf(angle: 0, axis: [0, 1, 0])
 
     var rotationTransforms: InteractionAxisTransforms
     var panTransforms: InteractionAxisTransforms
@@ -82,7 +82,7 @@ public struct InteractiveCameraModifier: ViewModifier {
             .simultaneousGesture(zoomGesture)
             .onChange(of: dragState) { oldValue, newValue in
                 // Capture rotation at drag start
-                if oldValue.startLocation == .zero && newValue.startLocation != .zero {
+                if oldValue.startLocation == .zero, newValue.startLocation != .zero {
                     rotationAtDragStart = rotation
                 }
                 applyInteraction()
@@ -123,6 +123,7 @@ public struct InteractiveCameraModifier: ViewModifier {
             }
     }
 
+    // swiftlint:disable:next function_body_length
     private func applyInteraction() {
         let rotationTranslation = dragState.translation
 
@@ -131,7 +132,7 @@ public struct InteractiveCameraModifier: ViewModifier {
             height: rotationTranslation.height - lastRotationTranslation.height
         )
 
-        if rotationTranslation == .zero && lastRotationTranslation != .zero {
+        if rotationTranslation == .zero, lastRotationTranslation != .zero {
             rotationDelta = .zero
         }
 
@@ -140,13 +141,13 @@ public struct InteractiveCameraModifier: ViewModifier {
             height: panTranslation.height - lastPanTranslation.height
         )
 
-        if panTranslation == .zero && lastPanTranslation != .zero {
+        if panTranslation == .zero, lastPanTranslation != .zero {
             panDelta = .zero
         }
 
         var zoomDeltaChange = zoomDelta - lastZoomDelta
 
-        if zoomDelta == 0 && lastZoomDelta != 0 {
+        if zoomDelta == 0, lastZoomDelta != 0 {
             zoomDeltaChange = 0
         }
 

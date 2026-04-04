@@ -61,8 +61,8 @@ public extension simd_float4x4 {
         return asin(clamp(value, min: -1.0, max: 1.0))
     }
 
-    /// Helper function to clamp values.
     // TODO: WHY IS THIS ON MATRIX?
+    /// Helper function to clamp values.
     private func clamp(_ value: Float, min: Float, max: Float) -> Float {
         Swift.max(min, Swift.min(max, value))
     }
