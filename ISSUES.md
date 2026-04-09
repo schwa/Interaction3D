@@ -1,3 +1,7 @@
+# ISSUES.md
+
+---
+
 ## 1: InteractiveCameraMatrixModifier should compute lookAt rotation when initializing from matrix
 status: closed
 priority: medium
@@ -47,6 +51,36 @@ kind: none
 created: 2026-04-04T01:32:13Z
 
 WorldView wraps InteractiveCameraMatrixModifier but doesn't expose the turntable target (pivot point). This means the turntable always orbits around the origin (0,0,0). Users who need to orbit around a different point (e.g. the centre of a scene) have to work around this by translating their geometry instead. WorldView should accept an optional target binding and pass it through to the turntable.
+
+---
+
+## 5: Investigate scroll wheel zoom not working with physical scroll wheel mice
+status: new
+priority: medium
+kind: bug
+created: 2026-04-09T20:24:50Z
+
+ScrollWheelModifier uses NSEvent.addLocalMonitorForEvents(.scrollWheel) to capture scroll events. Works with trackpad but reportedly doesn't work with physical scroll wheel mice. May be an issue with the momentumPhase filter:
+
+```swift
+guard event.momentumPhase.isEmpty || event.momentumPhase == .changed else {
+    return
+}
+```
+
+Physical scroll wheel mice may not set momentumPhase the same way as trackpads. Also the hasPreciseScrollingDeltas check determines the delta multiplier — scroll wheel mice use deltaY * 10 while trackpads use scrollingDeltaY.
+
+Used in InteractiveCameraModifier via .onScrollWheel(delta:).
+
+---
+
+## 6: MagnifyGesture zoom should use absolute magnification on visionOS
+status: new
+priority: medium
+kind: enhancement
+created: 2026-04-09T21:43:38Z
+
+InteractiveCameraModifier diffs MagnifyGesture magnification per-frame (zoomDelta - lastZoomDelta), giving tiny deltas even when hands move far apart. On visionOS with hand tracking, pinch-to-zoom feels like holding a distance — absolute magnification maps naturally to zoom distance. Per-frame deltas work for trackpad swiping but feel unresponsive with hand tracking. Consider using absolute magnification relative to start distance on visionOS, or at least a platform-specific multiplier.
 
 ---
 
