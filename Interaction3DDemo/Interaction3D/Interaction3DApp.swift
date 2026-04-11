@@ -11,7 +11,8 @@ struct Interaction3DApp: App {
             PitchYawDemoView.self,
             DragDemo.self,
             ConstraintDemo.self,
-            AnimatedConstraintDemo.self
+            AnimatedConstraintDemo.self,
+            WidgetsDemo.self
         ])
         .handleDemoURL(scheme: "interaction3d")
     }

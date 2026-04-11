@@ -17,11 +17,8 @@ struct ToolDemoView: View {
 extension ToolDemoView: DemoView {
     static var metadata = DemoMetadata(
         name: "Tool Picker",
-        systemImage: "wrench.and.screwdriver",
         description: "Demo of the ToolPickerHost for switching between tools.",
-        group: "Widgets",
-        keywords: ["tool", "picker", "toolbar"],
-        color: .accentColor
+        group: "Old"
     )
 }
 

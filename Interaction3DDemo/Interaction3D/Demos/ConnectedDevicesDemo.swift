@@ -6,11 +6,8 @@ import SwiftUI
 struct ConnectedDevicesDemo: DemoView {
     static var metadata = DemoMetadata(
         name: "Input Devices",
-        systemImage: "gamecontroller",
         description: "Inspect all GameController devices currently attached to this Mac.",
-        group: "Diagnostics",
-        keywords: ["controller", "keyboard", "mouse", "game controller", "input"],
-        color: .purple
+        group: "Old"
     )
 
     var body: some View {

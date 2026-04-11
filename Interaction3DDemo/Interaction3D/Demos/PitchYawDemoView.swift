@@ -86,9 +86,7 @@ struct PitchYawDemoView: View {
 extension PitchYawDemoView: DemoView {
     static var metadata = DemoMetadata(
         name: "Interaction Controller",
-        systemImage: "rotate.3d",
         description: "Demo of the interaction controller with arcball, trackball, and first-person modes.",
-        group: "Interaction",
-        keywords: ["interaction", "arcball", "trackball", "rotation", "zoom"]
+        group: "Old"
     )
 }

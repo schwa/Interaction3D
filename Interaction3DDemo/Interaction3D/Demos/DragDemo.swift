@@ -204,9 +204,7 @@ struct DragDemo: View {
 extension DragDemo: DemoView {
     static var metadata = DemoMetadata(
         name: "Drag Gesture",
-        systemImage: "hand.draw",
         description: "Low-level drag gesture debugging with visual feedback.",
-        group: "Interaction",
-        keywords: ["drag", "gesture", "input"]
+        group: "Old"
     )
 }
