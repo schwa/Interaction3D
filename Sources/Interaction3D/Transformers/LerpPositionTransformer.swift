@@ -1,7 +1,7 @@
 import Foundation
 import simd
 
-public struct LerpPositionTransformer: TransformerProtocol, Equatable {
+public struct LerpPositionTransformer: Transformer, Equatable {
     public var start: SIMD3<Float>
     public var end: SIMD3<Float>
     public var t: Float
@@ -12,12 +12,12 @@ public struct LerpPositionTransformer: TransformerProtocol, Equatable {
         self.t = t
     }
 
-    public func apply(to value: SIMD3<Float>) -> SIMD3<Float> {
+    public func transform(_ value: SIMD3<Float>) -> SIMD3<Float> {
         simd_mix(start, end, SIMD3<Float>(repeating: t))
     }
 }
 
-extension LerpPositionTransformer: ParameterizedTransformerProtocol {
+extension LerpPositionTransformer: ParameterizedTransformer {
     public static var parameters: [AnyTransformerParameter<LerpPositionTransformer>] {
         [
             AnyTransformerParameter(keyPath: \LerpPositionTransformer.start, name: "start", metadata: .vector()),

@@ -18,14 +18,14 @@ func colorForFace(_ face: Mesh.Face) -> Color {
     return .blue.opacity(0.7)
 }
 
-func renderColoredCube(context: GraphicsContext, size: CGSize, rotation: simd_quatf, distance: Float, modelMatrix: simd_float4x4 = float4x4(scale: [2, 2, 2])) {
+func renderColoredCube(context: GraphicsContext, size: CGSize, rotation: simd_quatf, distance: Float, target: SIMD3<Float> = .zero, modelMatrix: simd_float4x4 = float4x4(scale: [2, 2, 2])) {
     // Set up perspective projection
     let perspectiveProjection = PerspectiveProjection(verticalAngleOfView: .degrees(60))
     let projectionMatrix = perspectiveProjection.projectionMatrix(width: Float(size.width), height: Float(size.height))
     let clipToScreenMatrix = float4x4.clipToScreen(width: Float(size.width), height: Float(size.height))
 
-    // Set up camera
-    let cameraMatrix = rotation.matrix * float4x4(translation: [0, 0, distance])
+    // Set up camera: translate to target, apply rotation, then pull back by distance
+    let cameraMatrix = float4x4(translation: target) * rotation.matrix * float4x4(translation: [0, 0, distance])
     let viewMatrix = cameraMatrix.inverse
 
     let rendererContext = SoftwareRendererContext(viewMatrix: viewMatrix, projectionMatrix: projectionMatrix, clipToScreenMatrix: clipToScreenMatrix)

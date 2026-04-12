@@ -3,6 +3,12 @@ import SwiftUI
 import AppKit
 #endif
 
+/// A view modifier that wraps `DragGesture` with enhanced behavior:
+/// - Momentum animation on release using predicted end translation
+/// - Shift-key axis constraining (locks drag to dominant horizontal or vertical axis)
+/// - Animated state tracking that smoothly interpolates translation and location values
+///
+/// On macOS, command-drags are ignored to avoid conflicts with pan gestures.
 public struct DragGestureModifier: ViewModifier {
 
     public struct DragState: Equatable, Sendable {
@@ -67,6 +73,12 @@ public struct DragGestureModifier: ViewModifier {
     var dragGesture: some Gesture {
         DragGesture(minimumDistance: minimumDistance)
             .onChanged { gesture in
+                #if os(macOS)
+                guard !NSEvent.modifierFlags.contains(.command) else {
+                    return
+                }
+                #endif
+
                 if initialTranslation == nil {
                     initialTranslation = state.translation
                     dominantAxis = nil
@@ -112,6 +124,12 @@ public struct DragGestureModifier: ViewModifier {
                 lastEventTime = Date().timeIntervalSinceReferenceDate
             }
             .onEnded { gesture in
+                #if os(macOS)
+                guard !NSEvent.modifierFlags.contains(.command) else {
+                    return
+                }
+                #endif
+
                 defer {
                     initialTranslation = nil
                     dominantAxis = nil

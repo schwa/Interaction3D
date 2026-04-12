@@ -1,7 +1,7 @@
 import GeometryLite3D
 import SwiftUI
 
-public struct TransformerParameterEditor<Transformer>: View where Transformer: ParameterizedTransformerProtocol {
+public struct TransformerParameterEditor<Transformer>: View where Transformer: ParameterizedTransformer {
     @Binding
     var transformer: Transformer
 
@@ -18,7 +18,7 @@ public struct TransformerParameterEditor<Transformer>: View where Transformer: P
     }
 }
 
-struct ParameterControl<Transformer>: View where Transformer: ParameterizedTransformerProtocol {
+struct ParameterControl<Transformer>: View where Transformer: ParameterizedTransformer {
     @Binding
     var transformer: Transformer
     let parameter: AnyTransformerParameter<Transformer>
@@ -38,7 +38,7 @@ struct ParameterControl<Transformer>: View where Transformer: ParameterizedTrans
     }
 }
 
-struct ParameterMetadataEditorView<Transformer>: View where Transformer: ParameterizedTransformerProtocol {
+struct ParameterMetadataEditorView<Transformer>: View where Transformer: ParameterizedTransformer {
     @Binding
     var transformer: Transformer
     let parameter: AnyTransformerParameter<Transformer>

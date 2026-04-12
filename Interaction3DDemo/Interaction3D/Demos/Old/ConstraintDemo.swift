@@ -75,7 +75,7 @@ struct LerpConstraintView: View {
             VStack(spacing: 16) {
                 TransformerParameterEditor(transformer: $constraint)
                     .onChange(of: constraint) {
-                        position = constraint.apply(to: position)
+                        position = constraint.transform(position)
                     }
 
                 Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 8) {
@@ -100,7 +100,7 @@ struct LerpConstraintView: View {
             .padding()
         }
         .onAppear {
-            position = constraint.apply(to: position)
+            position = constraint.transform(position)
         }
     }
 }
@@ -136,7 +136,7 @@ struct OrbitTransformerView: View {
             VStack(spacing: 16) {
                 TransformerParameterEditor(transformer: $constraint)
                     .onChange(of: constraint) {
-                        position = constraint.apply(to: position)
+                        position = constraint.transform(position)
                     }
 
                 Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 8) {
@@ -156,7 +156,7 @@ struct OrbitTransformerView: View {
             .padding()
         }
         .onAppear {
-            position = constraint.apply(to: position)
+            position = constraint.transform(position)
         }
     }
 }

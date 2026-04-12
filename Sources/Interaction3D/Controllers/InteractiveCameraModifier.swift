@@ -4,6 +4,7 @@ import SwiftUI
 
 // MARK: - Interactive Camera Modifier
 
+/// Orchestrates all camera interaction gestures (drag, pan, scroll, magnify) and delegates to a ``TurntableTransformer`` or ``ArcballTransformer`` to update camera state.
 public struct InteractiveCameraModifier: ViewModifier {
     public enum Mode {
         case turntable(TurntableTransformer = TurntableTransformer())
@@ -182,12 +183,12 @@ public struct InteractiveCameraModifier: ViewModifier {
             var transformer = transformer
             transformer.input = input
             transformer.transforms = rotationTransforms
-            updatedState = transformer.apply(to: state)
+            updatedState = transformer.transform(state)
         case .arcball(let transformer):
             var transformer = transformer
             transformer.input = input
             transformer.transforms = rotationTransforms
-            updatedState = transformer.apply(to: state)
+            updatedState = transformer.transform(state)
         }
 
         rotation = updatedState.rotation

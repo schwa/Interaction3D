@@ -84,3 +84,33 @@ InteractiveCameraModifier diffs MagnifyGesture magnification per-frame (zoomDelt
 
 ---
 
+## 7: TransformerProtocol should support different input and output types
+status: new
+priority: medium
+kind: enhancement
+created: 2026-04-12T04:51:55Z
+
+Currently TransformerProtocol is Value -> Value (same type in and out). The gesture manager prototype needed a separate GestureTransformerProtocol with Input -> Output. TransformerProtocol should be generalized to support different input/output types.
+
+---
+
+## 8: Rename TransformerProtocol.apply(to:) to transform(_:)
+status: new
+priority: low
+kind: enhancement
+created: 2026-04-12T05:00:26Z
+
+apply(to:) reads awkwardly. transform(_:) is more natural for a TransformerProtocol.
+
+---
+
+## 9: Unify Transformer and TransformerProtocol
+status: new
+priority: medium
+kind: enhancement
+created: 2026-04-12T05:37:42Z
+
+Two separate transformer protocols exist: Transformer (transform(_:)) and TransformerProtocol (apply(to:)). They're functionally identical with Input/Output associated types. Consolidate into one protocol. See also #8 for renaming apply(to:) to transform(_:).
+
+---
+

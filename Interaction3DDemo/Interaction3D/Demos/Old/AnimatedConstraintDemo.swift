@@ -84,7 +84,7 @@ struct AnimatedConstraintDemo: View {
             .onChange(of: context.date) {
                 if isAnimating {
                     animator.update(at: context.date.timeIntervalSinceReferenceDate)
-                    position = animator.transformer.apply(to: position)
+                    position = animator.transformer.transform(position)
                 }
             }
         }

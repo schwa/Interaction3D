@@ -2,7 +2,7 @@ import Foundation
 import GeometryLite3D
 import simd
 
-public struct OrbitTransformer: TransformerProtocol, Equatable {
+public struct OrbitTransformer: Transformer, Equatable {
     public var center: SIMD3<Float>
     public var radius: Float
     public var angle: AngleF
@@ -15,7 +15,7 @@ public struct OrbitTransformer: TransformerProtocol, Equatable {
         self.normal = normalize(normal)
     }
 
-    public func apply(to value: SIMD3<Float>) -> SIMD3<Float> {
+    public func transform(_ value: SIMD3<Float>) -> SIMD3<Float> {
         let normalizedNormal = normalize(normal)
         let up = abs(dot(normalizedNormal, [0, 1, 0])) < 0.999 ? SIMD3<Float>([0, 1, 0]) : SIMD3<Float>([1, 0, 0])
         let right = normalize(cross(up, normalizedNormal))
@@ -24,7 +24,7 @@ public struct OrbitTransformer: TransformerProtocol, Equatable {
     }
 }
 
-extension OrbitTransformer: ParameterizedTransformerProtocol {
+extension OrbitTransformer: ParameterizedTransformer {
     public static var parameters: [AnyTransformerParameter<OrbitTransformer>] {
         [
             AnyTransformerParameter(keyPath: \OrbitTransformer.center, name: "center", metadata: .vector()),

@@ -1,16 +1,16 @@
 import Foundation
 
-public struct TransformerAnimator<Transformer: ParameterizedTransformerProtocol, TimingTransformer: TransformerProtocol, Value: Interpolatable> where TimingTransformer.Value == TimeInterval {
-    public var transformer: Transformer
-    public var parameter: WritableKeyPath<Transformer, Value>
+public struct TransformerAnimator<Base: ParameterizedTransformer, Timing: Transformer, Value: Interpolatable> where Timing.Input == TimeInterval, Timing.Output == TimeInterval {
+    public var transformer: Base
+    public var parameter: WritableKeyPath<Base, Value>
     public var fromValue: Value
     public var toValue: Value
-    public var timingTransformer: TimingTransformer
+    public var timingTransformer: Timing
     public var duration: TimeInterval
 
     private var startTime: TimeInterval?
 
-    public init(transformer: Transformer, parameter: WritableKeyPath<Transformer, Value>, from: Value, to: Value, duration: TimeInterval, timingTransformer: TimingTransformer) {
+    public init(transformer: Base, parameter: WritableKeyPath<Base, Value>, from: Value, to: Value, duration: TimeInterval, timingTransformer: Timing) {
         self.duration = duration
         self.transformer = transformer
         self.parameter = parameter
@@ -29,7 +29,7 @@ public struct TransformerAnimator<Transformer: ParameterizedTransformerProtocol,
         }
 
         let elapsed = currentTime - start
-        let t = timingTransformer.apply(to: elapsed)
+        let t = timingTransformer.transform(elapsed)
 
         interpolateParameter(t: t)
     }
@@ -46,9 +46,9 @@ public struct TransformerAnimator<Transformer: ParameterizedTransformerProtocol,
 
 // MARK: -
 
-public struct AnyTransformerAnimator<Transformer: ParameterizedTransformerProtocol, Value: Interpolatable> {
-    public var transformer: Transformer
-    public var parameter: WritableKeyPath<Transformer, Value>
+public struct AnyTransformerAnimator<Base: ParameterizedTransformer, Value: Interpolatable> {
+    public var transformer: Base
+    public var parameter: WritableKeyPath<Base, Value>
     public var fromValue: Value
     public var toValue: Value
     public var duration: TimeInterval
@@ -56,13 +56,13 @@ public struct AnyTransformerAnimator<Transformer: ParameterizedTransformerProtoc
     private var startTime: TimeInterval?
     private var applyTiming: (TimeInterval) -> Double
 
-    public init<TimingTransformer: TransformerProtocol>(transformer: Transformer, parameter: WritableKeyPath<Transformer, Value>, from: Value, to: Value, duration: TimeInterval, timingTransformer: TimingTransformer) where TimingTransformer.Value == TimeInterval {
+    public init<Timing: Transformer>(transformer: Base, parameter: WritableKeyPath<Base, Value>, from: Value, to: Value, duration: TimeInterval, timingTransformer: Timing) where Timing.Input == TimeInterval, Timing.Output == TimeInterval {
         self.duration = duration
         self.transformer = transformer
         self.parameter = parameter
         self.fromValue = from
         self.toValue = to
-        self.applyTiming = { timingTransformer.apply(to: $0) }
+        self.applyTiming = { timingTransformer.transform($0) }
     }
 
     public mutating func update(at currentTime: TimeInterval) {

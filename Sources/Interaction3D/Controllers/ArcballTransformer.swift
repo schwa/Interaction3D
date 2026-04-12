@@ -16,7 +16,7 @@ public struct ArcballTransformer: InteractionTransformer {
         self.transforms = transforms
     }
 
-    public func apply(to value: InteractionState) -> InteractionState {
+    public func transform(_ value: InteractionState) -> InteractionState {
         var state = value
 
         // Compute arcball rotation from absolute positions

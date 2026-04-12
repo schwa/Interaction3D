@@ -3,6 +3,7 @@ import SwiftUI
 
 // MARK: - Interaction State & Inputs
 
+/// Camera state for interactive orbit controls: rotation quaternion, distance from target, and target point.
 public struct InteractionState: Equatable, Sendable {
     public var rotation: simd_quatf
     public var distance: Float
@@ -15,6 +16,7 @@ public struct InteractionState: Equatable, Sendable {
     }
 }
 
+/// Per-frame input deltas from gestures: rotation, pan, and zoom deltas plus absolute positions for arcball.
 public struct InteractionInput: Equatable, Sendable {
     // Deltas (turntable uses these)
     public var rotation: CGSize
@@ -48,6 +50,7 @@ public struct InteractionInput: Equatable, Sendable {
 
 // MARK: - Axis Transforms
 
+/// Sensitivity and scaling closures for each interaction axis (yaw, pitch, zoom, pan).
 public struct InteractionAxisTransforms: Sendable {
     public typealias AxisTransform = @Sendable (Double) -> Double
     public typealias PanTransform = @Sendable (SIMD2<Double>) -> SIMD3<Float>
@@ -99,7 +102,8 @@ public extension InteractionAxisTransforms {
 
 // MARK: - Transformers Protocol
 
-public protocol InteractionTransformer: TransformerProtocol where Value == InteractionState {
+/// A transformer that takes interaction input and applies it to camera state, returning updated state.
+public protocol InteractionTransformer: Transformer where Input == InteractionState, Output == InteractionState {
     var input: InteractionInput { get set }
     var transforms: InteractionAxisTransforms { get set }
 }

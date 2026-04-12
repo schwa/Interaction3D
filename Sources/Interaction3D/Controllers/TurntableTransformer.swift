@@ -13,7 +13,7 @@ public struct TurntableTransformer: InteractionTransformer {
         self.transforms = transforms
     }
 
-    public func apply(to value: InteractionState) -> InteractionState {
+    public func transform(_ value: InteractionState) -> InteractionState {
         var state = value
 
         let yawDelta = Float(transforms.yaw(Double(input.rotation.width)))
