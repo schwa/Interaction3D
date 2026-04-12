@@ -1,11 +1,3 @@
-//
-//  ChainedTransformer.swift
-//  Interaction3D
-//
-//  Created by Jonathan Wight on 4/11/26.
-//
-
-
 public struct ChainedTransformer<A: Transformer, B: Transformer>: Transformer where A.Output == B.Input {
     public let first: A
     public let second: B

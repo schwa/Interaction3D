@@ -40,8 +40,7 @@ public final class GameControllerMovementController: @unchecked Sendable {
     private let altitudeTransformer: AnyTransformer<Float, Float>
 
     private static func makeDefaultAltitudeTransformer() -> AnyTransformer<Float, Float> {
-        let pipeline = CompositeTransformer(DeadzoneTransformer(deadzone: 0.05))
-            .then(ClampTransformer(min: -1, max: 1))
+        let pipeline = DeadzoneTransformer(deadzone: 0.05) | ClampTransformer(min: -1, max: 1)
         return AnyTransformer(pipeline)
     }
 

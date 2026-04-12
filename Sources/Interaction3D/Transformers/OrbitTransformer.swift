@@ -1,4 +1,3 @@
-import Foundation
 import GeometryLite3D
 import simd
 

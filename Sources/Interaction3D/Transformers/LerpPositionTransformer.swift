@@ -1,4 +1,3 @@
-import Foundation
 import simd
 
 public struct LerpPositionTransformer: Transformer, Equatable {
