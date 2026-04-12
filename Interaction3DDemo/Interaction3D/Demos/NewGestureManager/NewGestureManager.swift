@@ -8,7 +8,7 @@ import SwiftUI
 
 /// Low-level drag gesture filtered by modifier keys.
 /// `modifiers`: nil = don't care, [] = no modifiers, [.command] = exactly command, etc.
-private struct CoreDragModifier: ViewModifier {
+private struct NewCoreDragModifier: ViewModifier {
     let modifiers: EventModifiers?
     let minimumDistance: CGFloat
     let onChanged: (CGSize) -> Void
@@ -77,7 +77,7 @@ private struct CoreDragModifier: ViewModifier {
 // MARK: - Accumulating Drag Gesture Modifier
 
 /// Accumulates drag translation via a transformer. Supports momentum animation on release.
-struct AccumulatingDragGestureModifier<T: Transformer>: ViewModifier where T.Input == CGSize, T.Output: AdditiveArithmetic & VectorArithmetic {
+struct NewAccumulatingDragGestureModifier<T: Transformer>: ViewModifier where T.Input == CGSize, T.Output: AdditiveArithmetic & VectorArithmetic {
     let modifiers: EventModifiers?
     let transformer: T
     let momentum: Bool
@@ -89,7 +89,7 @@ struct AccumulatingDragGestureModifier<T: Transformer>: ViewModifier where T.Inp
 
     func body(content: Content) -> some View {
         content
-            .modifier(CoreDragModifier(modifiers: modifiers, minimumDistance: 10) { translation in
+            .modifier(NewCoreDragModifier(modifiers: modifiers, minimumDistance: 10) { translation in
                 if !isDragging {
                     valueAtDragStart = value
                     isDragging = true
@@ -122,7 +122,7 @@ struct AccumulatingDragGestureModifier<T: Transformer>: ViewModifier where T.Inp
 // MARK: - Scroll Gesture Modifier
 
 #if os(macOS)
-struct ScrollGestureModifier<T: Transformer>: ViewModifier where T.Input == Double, T.Output: AdditiveArithmetic {
+struct NewScrollGestureModifier<T: Transformer>: ViewModifier where T.Input == Double, T.Output: AdditiveArithmetic {
     let transformer: T
     @Binding var value: T.Output
 
@@ -143,7 +143,7 @@ struct ScrollGestureModifier<T: Transformer>: ViewModifier where T.Input == Doub
 
 // MARK: - Magnify Gesture Modifier
 
-struct MagnifyGestureModifier<T: Transformer>: ViewModifier where T.Input == Double, T.Output: AdditiveArithmetic {
+struct NewMagnifyGestureModifier<T: Transformer>: ViewModifier where T.Input == Double, T.Output: AdditiveArithmetic {
     let transformer: T
     @Binding var value: T.Output
 
@@ -168,17 +168,17 @@ struct MagnifyGestureModifier<T: Transformer>: ViewModifier where T.Input == Dou
 // MARK: - View Extensions
 
 extension View {
-    func dragGesture<T: Transformer>(_ modifiers: EventModifiers? = nil, momentum: Bool = true, transformer: T, writes value: Binding<T.Output>) -> some View where T.Input == CGSize, T.Output: AdditiveArithmetic & VectorArithmetic {
-        modifier(AccumulatingDragGestureModifier(modifiers: modifiers, transformer: transformer, momentum: momentum, value: value))
+    func newDragGesture<T: Transformer>(_ modifiers: EventModifiers? = nil, momentum: Bool = true, transformer: T, writes value: Binding<T.Output>) -> some View where T.Input == CGSize, T.Output: AdditiveArithmetic & VectorArithmetic {
+        modifier(NewAccumulatingDragGestureModifier(modifiers: modifiers, transformer: transformer, momentum: momentum, value: value))
     }
 
     #if os(macOS)
-    func scrollGesture<T: Transformer>(transformer: T, writes value: Binding<T.Output>) -> some View where T.Input == Double, T.Output: AdditiveArithmetic {
-        modifier(ScrollGestureModifier(transformer: transformer, value: value))
+    func newScrollGesture<T: Transformer>(transformer: T, writes value: Binding<T.Output>) -> some View where T.Input == Double, T.Output: AdditiveArithmetic {
+        modifier(NewScrollGestureModifier(transformer: transformer, value: value))
     }
     #endif
 
-    func magnifyGesture<T: Transformer>(transformer: T, writes value: Binding<T.Output>) -> some View where T.Input == Double, T.Output: AdditiveArithmetic {
-        modifier(MagnifyGestureModifier(transformer: transformer, value: value))
+    func newMagnifyGesture<T: Transformer>(transformer: T, writes value: Binding<T.Output>) -> some View where T.Input == Double, T.Output: AdditiveArithmetic {
+        modifier(NewMagnifyGestureModifier(transformer: transformer, value: value))
     }
 }

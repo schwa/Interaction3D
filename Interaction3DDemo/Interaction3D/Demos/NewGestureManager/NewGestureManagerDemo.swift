@@ -2,7 +2,7 @@ import DemoKit
 import Interaction3D
 import SwiftUI
 
-struct GestureManagerDemo: View {
+struct NewGestureManagerDemo: View {
     @State private var drag: CGSize = .zero
     @State private var commandDrag: CGSize = .zero
     @State private var optionDragX: CGFloat = 0
@@ -53,15 +53,15 @@ struct GestureManagerDemo: View {
             }
         }
         .background(Color.black)
-        .dragGesture([], transformer: widthTransformer, writes: $drag.width)
-        .dragGesture([], transformer: heightTransformer, writes: $drag.height)
-        .dragGesture(.command, transformer: widthTransformer, writes: $commandDrag.width)
-        .dragGesture(.command, transformer: heightTransformer, writes: $commandDrag.height)
-        .dragGesture(.option, transformer: clampedWidthTransformer, writes: $optionDragX)
+        .newDragGesture([], transformer: widthTransformer, writes: $drag.width)
+        .newDragGesture([], transformer: heightTransformer, writes: $drag.height)
+        .newDragGesture(.command, transformer: widthTransformer, writes: $commandDrag.width)
+        .newDragGesture(.command, transformer: heightTransformer, writes: $commandDrag.height)
+        .newDragGesture(.option, transformer: clampedWidthTransformer, writes: $optionDragX)
         #if os(macOS)
-        .scrollGesture(transformer: ScalingTransformer(magnitude: scrollSensitivity), writes: lockZoom ? $scrollValue.synced(to: $magnifyValue) : $scrollValue)
+        .newScrollGesture(transformer: ScalingTransformer(magnitude: scrollSensitivity), writes: lockZoom ? $scrollValue.synced(to: $magnifyValue) : $scrollValue)
         #endif
-        .magnifyGesture(transformer: ScalingTransformer(magnitude: magnifySensitivity), writes: lockZoom ? $magnifyValue.synced(to: $scrollValue) : $magnifyValue)
+        .newMagnifyGesture(transformer: ScalingTransformer(magnitude: magnifySensitivity), writes: lockZoom ? $magnifyValue.synced(to: $scrollValue) : $magnifyValue)
         .overlay(alignment: .bottom) {
             VStack(spacing: 4) {
                 Text("Drag horizontally")
@@ -180,7 +180,7 @@ private extension Binding where Value: AdditiveArithmetic {
     }
 }
 
-extension GestureManagerDemo: DemoView {
+extension NewGestureManagerDemo: DemoView {
     static var metadata = DemoMetadata(
         name: "Gesture Manager",
         description: "Composable gesture-to-binding system using ViewModifier chaining.",
