@@ -85,32 +85,48 @@ InteractiveCameraModifier diffs MagnifyGesture magnification per-frame (zoomDelt
 ---
 
 ## 7: TransformerProtocol should support different input and output types
-status: new
+status: closed
 priority: medium
 kind: enhancement
 created: 2026-04-12T04:51:55Z
+updated: 2026-04-12T18:31:44Z
+closed: 2026-04-12T18:31:44Z
 
 Currently TransformerProtocol is Value -> Value (same type in and out). The gesture manager prototype needed a separate GestureTransformerProtocol with Input -> Output. TransformerProtocol should be generalized to support different input/output types.
 
 ---
 
 ## 8: Rename TransformerProtocol.apply(to:) to transform(_:)
-status: new
+status: closed
 priority: low
 kind: enhancement
 created: 2026-04-12T05:00:26Z
+updated: 2026-04-12T18:31:44Z
+closed: 2026-04-12T18:31:44Z
 
 apply(to:) reads awkwardly. transform(_:) is more natural for a TransformerProtocol.
 
 ---
 
 ## 9: Unify Transformer and TransformerProtocol
-status: new
+status: closed
 priority: medium
 kind: enhancement
 created: 2026-04-12T05:37:42Z
+updated: 2026-04-12T18:31:44Z
+closed: 2026-04-12T18:31:44Z
 
 Two separate transformer protocols exist: Transformer (transform(_:)) and TransformerProtocol (apply(to:)). They're functionally identical with Input/Output associated types. Consolidate into one protocol. See also #8 for renaming apply(to:) to transform(_:).
+
+---
+
+## 10: Inspector and overlays take up too much space on iPadOS
+status: new
+priority: medium
+kind: bug
+created: 2026-04-12T20:36:52Z
+
+Both .inspector() and .overlay() hint text may dominate the screen on iPadOS, especially in compact width. Inspector likely takes over the full screen instead of appearing as a sidebar. The hint overlay at the bottom could also obscure too much content. Need to test on iPad and consider adaptive layouts or popovers.
 
 ---
 
