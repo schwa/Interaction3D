@@ -8,7 +8,7 @@ import SwiftUI
 
 /// Low-level drag gesture filtered by modifier keys.
 /// `modifiers`: nil = don't care, [] = no modifiers, [.command] = exactly command, etc.
-private struct NewCoreDragModifier: ViewModifier {
+struct NewCoreDragModifier: ViewModifier {
     let modifiers: EventModifiers?
     let minimumDistance: CGFloat
     let onChanged: (CGSize) -> Void
