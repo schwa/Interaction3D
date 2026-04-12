@@ -70,30 +70,6 @@ private struct CoreDragModifier: ViewModifier {
 
 // MARK: - Drag Gesture Modifier (Generic over Transformer)
 
-/// Binds a drag gesture to a binding via a transformer.
-/// The transformer converts `CGSize` (drag translation) to the binding's type.
-struct DragGestureModifier2<T: Transformer>: ViewModifier where T.Input == CGSize {
-    let modifiers: EventModifiers?
-    let transformer: T
-    @Binding var value: T.Output
-
-    @State private var valueAtDragStart: T.Output?
-    @State private var isDragging = false
-
-    func body(content: Content) -> some View {
-        content.modifier(CoreDragModifier(modifiers: modifiers, minimumDistance: 10) { translation in
-            if !isDragging {
-                valueAtDragStart = value
-                isDragging = true
-            }
-            value = transformer.transform(translation)
-        } onEnded: {
-            isDragging = false
-            valueAtDragStart = nil
-        })
-    }
-}
-
 // MARK: - Accumulating Drag Gesture Modifier
 
 /// Like DragGestureModifier2 but accumulates: adds transformer output to the value at drag start.
@@ -187,27 +163,4 @@ extension View {
     }
 }
 
-// MARK: - Binding Helpers
-
-extension Binding where Value: AdditiveArithmetic {
-    func synced(to other: Binding<Value>) -> Binding<Value> {
-        Binding(
-            get: { self.wrappedValue },
-            set: { newValue in
-                self.wrappedValue = newValue
-                other.wrappedValue = newValue
-            }
-        )
-    }
-}
-
-extension CGSize: @retroactive AdditiveArithmetic {
-    public static func + (lhs: CGSize, rhs: CGSize) -> CGSize {
-        CGSize(width: lhs.width + rhs.width, height: lhs.height + rhs.height)
-    }
-
-    public static func - (lhs: CGSize, rhs: CGSize) -> CGSize {
-        CGSize(width: lhs.width - rhs.width, height: lhs.height - rhs.height)
-    }
-}
 

@@ -141,6 +141,18 @@ private struct InspectorValueRow: View {
     }
 }
 
+private extension Binding where Value: AdditiveArithmetic {
+    func synced(to other: Binding<Value>) -> Binding<Value> {
+        Binding(
+            get: { self.wrappedValue },
+            set: { newValue in
+                self.wrappedValue = newValue
+                other.wrappedValue = newValue
+            }
+        )
+    }
+}
+
 extension GestureManagerDemo: DemoView {
     static var metadata = DemoMetadata(
         name: "Gesture Manager",
