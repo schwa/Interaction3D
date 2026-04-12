@@ -10,9 +10,24 @@ struct GestureManagerDemo: View {
     @State private var magnifyValue: Double = 1.0
     @State private var lockZoom = true
     @State private var showInspector = true
+    @State private var dragSensitivity: CGFloat = 0.02
+    @State private var scrollSensitivity: Double = 0.05
+    @State private var magnifySensitivity: Double = 2.0
 
     private let gridSize = 10
     private let dotSpacing: CGFloat = 30
+
+    private var widthTransformer: some Transformer<CGSize, CGFloat> {
+        KeyPathTransformer(keyPath: \CGSize.width) | ScalingTransformer(magnitude: dragSensitivity)
+    }
+
+    private var heightTransformer: some Transformer<CGSize, CGFloat> {
+        KeyPathTransformer(keyPath: \CGSize.height) | ScalingTransformer(magnitude: dragSensitivity)
+    }
+
+    private var clampedWidthTransformer: some Transformer<CGSize, CGFloat> {
+        KeyPathTransformer(keyPath: \CGSize.width) | ScalingTransformer(magnitude: dragSensitivity) | ClampingTransformer(range: CGFloat(-5)...5)
+    }
 
     var body: some View {
         Canvas { context, size in
@@ -38,15 +53,15 @@ struct GestureManagerDemo: View {
             }
         }
         .background(Color.black)
-        .dragGesture([], transformer: KeyPathTransformer(keyPath: \CGSize.width) | ScalingTransformer(magnitude: 0.02), writes: $drag.width)
-        .dragGesture([], transformer: KeyPathTransformer(keyPath: \CGSize.height) | ScalingTransformer(magnitude: 0.02), writes: $drag.height)
-        .dragGesture(.command, transformer: KeyPathTransformer(keyPath: \CGSize.width) | ScalingTransformer(magnitude: 0.02), writes: $commandDrag.width)
-        .dragGesture(.command, transformer: KeyPathTransformer(keyPath: \CGSize.height) | ScalingTransformer(magnitude: 0.02), writes: $commandDrag.height)
-        .dragGesture(.option, transformer: KeyPathTransformer(keyPath: \CGSize.width) | ScalingTransformer(magnitude: 0.02) | ClampingTransformer(range: -5.0...5.0), writes: $optionDragX)
+        .dragGesture([], transformer: widthTransformer, writes: $drag.width)
+        .dragGesture([], transformer: heightTransformer, writes: $drag.height)
+        .dragGesture(.command, transformer: widthTransformer, writes: $commandDrag.width)
+        .dragGesture(.command, transformer: heightTransformer, writes: $commandDrag.height)
+        .dragGesture(.option, transformer: clampedWidthTransformer, writes: $optionDragX)
         #if os(macOS)
-        .scrollGesture(transformer: ScalingTransformer(magnitude: 0.05), writes: lockZoom ? $scrollValue.synced(to: $magnifyValue) : $scrollValue)
+        .scrollGesture(transformer: ScalingTransformer(magnitude: scrollSensitivity), writes: lockZoom ? $scrollValue.synced(to: $magnifyValue) : $scrollValue)
         #endif
-        .magnifyGesture(transformer: ScalingTransformer(magnitude: 2.0), writes: lockZoom ? $magnifyValue.synced(to: $scrollValue) : $magnifyValue)
+        .magnifyGesture(transformer: ScalingTransformer(magnitude: magnifySensitivity), writes: lockZoom ? $magnifyValue.synced(to: $scrollValue) : $magnifyValue)
         .overlay(alignment: .bottom) {
             VStack(spacing: 4) {
                 Text("Drag horizontally")
@@ -76,6 +91,18 @@ struct GestureManagerDemo: View {
                     InspectorValueRow(label: "Scroll", value: scrollValue)
                     Toggle("Lock", isOn: $lockZoom)
                     InspectorValueRow(label: "Magnify", value: magnifyValue)
+                }
+
+                Section("Sensitivity") {
+                    LabeledContent("Drag") {
+                        Slider(value: $dragSensitivity, in: 0.001...0.1)
+                    }
+                    LabeledContent("Scroll") {
+                        Slider(value: $scrollSensitivity, in: 0.01...0.5)
+                    }
+                    LabeledContent("Magnify") {
+                        Slider(value: $magnifySensitivity, in: 0.1...10.0)
+                    }
                 }
 
                 Section("Actions") {
