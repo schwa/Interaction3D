@@ -12,10 +12,9 @@ private struct CoreDragModifier: ViewModifier {
     let modifiers: EventModifiers?
     let minimumDistance: CGFloat
     let onChanged: (CGSize) -> Void
-    let onEnded: () -> Void
+    let onEnded: (CGSize) -> Void  // receives predictedEndTranslation
 
     /// Tracks whether this modifier "claimed" the current drag.
-    /// Set on the first onChanged, cleared on onEnded.
     @State private var claimed: Bool?
 
     #if os(macOS)
@@ -40,14 +39,13 @@ private struct CoreDragModifier: ViewModifier {
                 DragGesture(minimumDistance: minimumDistance)
                     .modifiers(modifiers)
                     .onChanged { value in onChanged(value.translation) }
-                    .onEnded { _ in onEnded() }
+                    .onEnded { value in onEnded(value.predictedEndTranslation) }
             )
         } else {
             content.simultaneousGesture(
                 DragGesture(minimumDistance: minimumDistance)
                     .onChanged { value in
                         #if os(macOS)
-                        // Decide on first event, stick with it for the whole drag
                         if claimed == nil {
                             claimed = modifiersMatchNow()
                         }
@@ -55,45 +53,61 @@ private struct CoreDragModifier: ViewModifier {
                         #endif
                         onChanged(value.translation)
                     }
-                    .onEnded { _ in
+                    .onEnded { value in
                         #if os(macOS)
                         let wasClaimed = claimed == true
                         claimed = nil
                         guard wasClaimed else { return }
                         #endif
-                        onEnded()
+                        onEnded(value.predictedEndTranslation)
                     }
             )
         }
     }
 }
 
-// MARK: - Drag Gesture Modifier (Generic over Transformer)
-
 // MARK: - Accumulating Drag Gesture Modifier
 
-/// Like DragGestureModifier2 but accumulates: adds transformer output to the value at drag start.
-struct AccumulatingDragGestureModifier<T: Transformer>: ViewModifier where T.Input == CGSize, T.Output: AdditiveArithmetic {
+/// Accumulates drag translation via a transformer. Supports momentum animation on release.
+struct AccumulatingDragGestureModifier<T: Transformer>: ViewModifier where T.Input == CGSize, T.Output: AdditiveArithmetic & VectorArithmetic {
     let modifiers: EventModifiers?
     let transformer: T
+    let momentum: Bool
     @Binding var value: T.Output
 
     @State private var valueAtDragStart: T.Output?
     @State private var isDragging = false
+    @State private var animatedTranslation: CGSize = .zero
 
     func body(content: Content) -> some View {
-        content.modifier(CoreDragModifier(modifiers: modifiers, minimumDistance: 10) { translation in
-            if !isDragging {
-                valueAtDragStart = value
-                isDragging = true
-            }
-            if let start = valueAtDragStart {
-                value = start + transformer.transform(translation)
-            }
-        } onEnded: {
-            isDragging = false
-            valueAtDragStart = nil
-        })
+        content
+            .modifier(CoreDragModifier(modifiers: modifiers, minimumDistance: 10) { translation in
+                if !isDragging {
+                    valueAtDragStart = value
+                    isDragging = true
+                }
+                animatedTranslation = translation
+                if let start = valueAtDragStart {
+                    value = start + transformer.transform(translation)
+                }
+            } onEnded: { predictedEnd in
+                if momentum, let start = valueAtDragStart {
+                    // Check if predicted movement is significant
+                    let currentTranslation = animatedTranslation
+                    let dx = abs(predictedEnd.width - currentTranslation.width)
+                    let dy = abs(predictedEnd.height - currentTranslation.height)
+                    if dx > 10 || dy > 10 {
+                        // Animate to predicted end
+                        let targetValue = start + transformer.transform(predictedEnd)
+                        withAnimation(.easeOut(duration: 0.3)) {
+                            value = targetValue
+                        }
+                    }
+                }
+                isDragging = false
+                valueAtDragStart = nil
+                animatedTranslation = .zero
+            })
     }
 }
 
@@ -143,13 +157,11 @@ struct MagnifyGestureModifier<T: Transformer>: ViewModifier where T.Input == Dou
     }
 }
 
-
-
 // MARK: - View Extensions
 
 extension View {
-    func dragGesture<T: Transformer>(_ modifiers: EventModifiers? = nil, transformer: T, writes value: Binding<T.Output>) -> some View where T.Input == CGSize, T.Output: AdditiveArithmetic {
-        modifier(AccumulatingDragGestureModifier(modifiers: modifiers, transformer: transformer, value: value))
+    func dragGesture<T: Transformer>(_ modifiers: EventModifiers? = nil, momentum: Bool = true, transformer: T, writes value: Binding<T.Output>) -> some View where T.Input == CGSize, T.Output: AdditiveArithmetic & VectorArithmetic {
+        modifier(AccumulatingDragGestureModifier(modifiers: modifiers, transformer: transformer, momentum: momentum, value: value))
     }
 
     #if os(macOS)
@@ -162,5 +174,3 @@ extension View {
         modifier(MagnifyGestureModifier(transformer: transformer, value: value))
     }
 }
-
-
