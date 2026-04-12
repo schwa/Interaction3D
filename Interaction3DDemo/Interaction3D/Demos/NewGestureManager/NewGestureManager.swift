@@ -4,20 +4,61 @@ import AppKit
 import Interaction3D
 import SwiftUI
 
+// MARK: - Animated CGSize Helper
+
+/// Bridges SwiftUI animation to a CGSize callback, interpolating frame-by-frame.
+private struct AnimatedSizeModifier: ViewModifier, Animatable {
+    var width: CGFloat
+    var height: CGFloat
+    var onChange: (CGSize) -> Void
+
+    var animatableData: AnimatablePair<CGFloat, CGFloat> {
+        get { AnimatablePair(width, height) }
+        set {
+            width = newValue.first
+            height = newValue.second
+            onChange(CGSize(width: width, height: height))
+        }
+    }
+
+    func body(content: Content) -> some View {
+        content
+    }
+}
+
 // MARK: - Core Drag Modifier
 
 /// Low-level drag gesture filtered by modifier keys.
+/// Supports momentum: on release, animates from last translation to predicted end,
+/// calling `onChanged` each frame during the animation.
 /// `modifiers`: nil = don't care, [] = no modifiers, [.command] = exactly command, etc.
 struct NewCoreDragModifier: ViewModifier {
     let modifiers: EventModifiers?
     let minimumDistance: CGFloat
+    let momentum: Bool
     let onChanged: (CGSize) -> Void
-    let onEnded: (CGSize) -> Void  // receives predictedEndTranslation
+    let onEnded: () -> Void
 
-    /// Tracks whether this modifier "claimed" the current drag.
     enum ClaimState { case unclaimed, claimed, rejected }
 
     @State private var claimState: ClaimState = .unclaimed
+    @State private var lastTranslation: CGSize = .zero
+    @State private var animatingToTranslation: CGSize = .zero
+    @State private var isAnimating = false
+
+    init(
+        modifiers: EventModifiers? = nil,
+        minimumDistance: CGFloat = 10,
+        momentum: Bool = true,
+        onChanged: @escaping (CGSize) -> Void,
+        onEnded: @escaping () -> Void
+    ) {
+        self.modifiers = modifiers
+        self.minimumDistance = minimumDistance
+        self.momentum = momentum
+        self.onChanged = onChanged
+        self.onEnded = onEnded
+    }
 
     #if os(macOS)
     private func modifiersMatchNow() -> Bool {
@@ -38,15 +79,32 @@ struct NewCoreDragModifier: ViewModifier {
     #endif
 
     func body(content: Content) -> some View {
+        content
+            .modifier(AnimatedSizeModifier(
+                width: animatingToTranslation.width,
+                height: animatingToTranslation.height
+            ) { size in
+                if isAnimating {
+                    onChanged(size)
+                }
+            })
+            .simultaneousGesture(dragGesture)
+    }
+
+    private var dragGesture: some Gesture {
         if let modifiers, !modifiers.isEmpty {
-            content.simultaneousGesture(
+            return AnyGesture(
                 DragGesture(minimumDistance: minimumDistance)
                     .modifiers(modifiers)
-                    .onChanged { value in onChanged(value.translation) }
-                    .onEnded { value in onEnded(value.predictedEndTranslation) }
+                    .onChanged { value in
+                        handleChanged(value.translation)
+                    }
+                    .onEnded { value in
+                        handleEnded(value.translation, predicted: value.predictedEndTranslation)
+                    }
             )
         } else {
-            content.simultaneousGesture(
+            return AnyGesture(
                 DragGesture(minimumDistance: minimumDistance)
                     .onChanged { value in
                         #if os(macOS)
@@ -57,7 +115,7 @@ struct NewCoreDragModifier: ViewModifier {
                             return
                         }
                         #endif
-                        onChanged(value.translation)
+                        handleChanged(value.translation)
                     }
                     .onEnded { value in
                         #if os(macOS)
@@ -67,16 +125,43 @@ struct NewCoreDragModifier: ViewModifier {
                             return
                         }
                         #endif
-                        onEnded(value.predictedEndTranslation)
+                        handleEnded(value.translation, predicted: value.predictedEndTranslation)
                     }
             )
         }
+    }
+
+    private func handleChanged(_ translation: CGSize) {
+        isAnimating = false
+        lastTranslation = translation
+        animatingToTranslation = translation
+        onChanged(translation)
+    }
+
+    private func handleEnded(_ translation: CGSize, predicted: CGSize) {
+        if momentum {
+            let dx = abs(predicted.width - translation.width)
+            let dy = abs(predicted.height - translation.height)
+            if dx > 10 || dy > 10 {
+                isAnimating = true
+                withAnimation(.easeOut(duration: 0.3)) {
+                    animatingToTranslation = predicted
+                } completion: {
+                    isAnimating = false
+                    onEnded()
+                }
+                return
+            }
+        }
+        lastTranslation = .zero
+        animatingToTranslation = .zero
+        onEnded()
     }
 }
 
 // MARK: - Accumulating Drag Gesture Modifier
 
-/// Accumulates drag translation via a transformer. Supports momentum animation on release.
+/// Accumulates drag translation via a transformer.
 struct NewAccumulatingDragGestureModifier<T: Transformer>: ViewModifier where T.Input == CGSize, T.Output: AdditiveArithmetic & VectorArithmetic {
     let modifiers: EventModifiers?
     let transformer: T
@@ -85,36 +170,20 @@ struct NewAccumulatingDragGestureModifier<T: Transformer>: ViewModifier where T.
 
     @State private var valueAtDragStart: T.Output?
     @State private var isDragging = false
-    @State private var animatedTranslation: CGSize = .zero
 
     func body(content: Content) -> some View {
         content
-            .modifier(NewCoreDragModifier(modifiers: modifiers, minimumDistance: 10) { translation in
+            .modifier(NewCoreDragModifier(modifiers: modifiers, minimumDistance: 10, momentum: momentum) { translation in
                 if !isDragging {
                     valueAtDragStart = value
                     isDragging = true
                 }
-                animatedTranslation = translation
                 if let start = valueAtDragStart {
                     value = start + transformer.transform(translation)
                 }
-            } onEnded: { predictedEnd in
-                if momentum, let start = valueAtDragStart {
-                    // Check if predicted movement is significant
-                    let currentTranslation = animatedTranslation
-                    let dx = abs(predictedEnd.width - currentTranslation.width)
-                    let dy = abs(predictedEnd.height - currentTranslation.height)
-                    if dx > 10 || dy > 10 {
-                        // Animate to predicted end
-                        let targetValue = start + transformer.transform(predictedEnd)
-                        withAnimation(.easeOut(duration: 0.3)) {
-                            value = targetValue
-                        }
-                    }
-                }
+            } onEnded: {
                 isDragging = false
                 valueAtDragStart = nil
-                animatedTranslation = .zero
             })
     }
 }
@@ -168,7 +237,12 @@ struct NewMagnifyGestureModifier<T: Transformer>: ViewModifier where T.Input == 
 // MARK: - View Extensions
 
 extension View {
-    func newDragGesture<T: Transformer>(_ modifiers: EventModifiers? = nil, momentum: Bool = true, transformer: T, writes value: Binding<T.Output>) -> some View where T.Input == CGSize, T.Output: AdditiveArithmetic & VectorArithmetic {
+    func newDragGesture<T: Transformer>(
+        _ modifiers: EventModifiers? = nil,
+        momentum: Bool = true,
+        transformer: T,
+        writes value: Binding<T.Output>
+    ) -> some View where T.Input == CGSize, T.Output: AdditiveArithmetic & VectorArithmetic {
         modifier(NewAccumulatingDragGestureModifier(modifiers: modifiers, transformer: transformer, momentum: momentum, value: value))
     }
 

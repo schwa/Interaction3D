@@ -18,33 +18,25 @@ private struct NewTurntableDragModifier: ViewModifier {
     @State private var isDragging = false
 
     func body(content: Content) -> some View {
-        content.modifier(NewCoreDragModifier(modifiers: modifiers, minimumDistance: 10) { translation in
+        content.modifier(NewCoreDragModifier(modifiers: modifiers, minimumDistance: 10, momentum: true) { translation in
             if !isDragging {
                 rotationAtDragStart = rotation
                 isDragging = true
             }
-            let (startYaw, startPitch) = decomposeYawPitch(rotationAtDragStart)
-            let yawDelta = Float(translation.width * sensitivity)
-            let pitchDelta = Float(translation.height * sensitivity)
-            let maxPitch = Float.pi / 2 - 0.02
-            let newYaw = startYaw - yawDelta
-            let newPitch = max(-maxPitch, min(maxPitch, startPitch - pitchDelta))
-            rotation = composeYawPitch(yaw: newYaw, pitch: newPitch)
-        } onEnded: { predictedEnd in
-            // Momentum: apply predicted end translation
-            if let start = Optional(rotationAtDragStart) {
-                let (startYaw, startPitch) = decomposeYawPitch(start)
-                let yawDelta = Float(predictedEnd.width * sensitivity)
-                let pitchDelta = Float(predictedEnd.height * sensitivity)
-                let maxPitch = Float.pi / 2 - 0.02
-                let newYaw = startYaw - yawDelta
-                let newPitch = max(-maxPitch, min(maxPitch, startPitch - pitchDelta))
-                withAnimation(.easeOut(duration: 0.3)) {
-                    rotation = composeYawPitch(yaw: newYaw, pitch: newPitch)
-                }
-            }
+            applyRotation(translation)
+        } onEnded: {
             isDragging = false
         })
+    }
+
+    private func applyRotation(_ translation: CGSize) {
+        let (startYaw, startPitch) = decomposeYawPitch(rotationAtDragStart)
+        let yawDelta = Float(translation.width * sensitivity)
+        let pitchDelta = Float(translation.height * sensitivity)
+        let maxPitch = Float.pi / 2 - 0.02
+        let newYaw = startYaw - yawDelta
+        let newPitch = max(-maxPitch, min(maxPitch, startPitch - pitchDelta))
+        rotation = composeYawPitch(yaw: newYaw, pitch: newPitch)
     }
 
     private func decomposeYawPitch(_ q: simd_quatf) -> (yaw: Float, pitch: Float) {
@@ -74,7 +66,7 @@ private struct NewPanDragModifier: ViewModifier {
     @State private var isDragging = false
 
     func body(content: Content) -> some View {
-        content.modifier(NewCoreDragModifier(modifiers: modifiers, minimumDistance: 10) { translation in
+        content.modifier(NewCoreDragModifier(modifiers: modifiers, minimumDistance: 10, momentum: true) { translation in
             if !isDragging {
                 targetAtDragStart = target
                 isDragging = true
@@ -84,7 +76,7 @@ private struct NewPanDragModifier: ViewModifier {
                 Float(-translation.height * sensitivity),
                 0
             )
-        } onEnded: { _ in
+        } onEnded: {
             isDragging = false
         })
     }
