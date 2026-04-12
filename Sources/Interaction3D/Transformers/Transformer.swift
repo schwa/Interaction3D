@@ -6,11 +6,8 @@ public protocol Transformer {
     func transform(_ input: Input) -> Output
 }
 
-
 // MARK: - Parameterized Transformer
 
 public protocol ParameterizedTransformer: Transformer {
     static var parameters: [AnyTransformerParameter<Self>] { get }
 }
-
-

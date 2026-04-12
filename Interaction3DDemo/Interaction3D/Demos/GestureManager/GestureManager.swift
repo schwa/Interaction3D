@@ -15,11 +15,15 @@ private struct CoreDragModifier: ViewModifier {
     let onEnded: (CGSize) -> Void  // receives predictedEndTranslation
 
     /// Tracks whether this modifier "claimed" the current drag.
-    @State private var claimed: Bool?
+    enum ClaimState { case unclaimed, claimed, rejected }
+
+    @State private var claimState: ClaimState = .unclaimed
 
     #if os(macOS)
     private func modifiersMatchNow() -> Bool {
-        guard let required = modifiers else { return true }
+        guard let required = modifiers else {
+            return true
+        }
         let current = NSEvent.modifierFlags
         if required.isEmpty {
             return !current.contains(.command) && !current.contains(.option) && !current.contains(.shift) && !current.contains(.control)
@@ -46,18 +50,22 @@ private struct CoreDragModifier: ViewModifier {
                 DragGesture(minimumDistance: minimumDistance)
                     .onChanged { value in
                         #if os(macOS)
-                        if claimed == nil {
-                            claimed = modifiersMatchNow()
+                        if claimState == .unclaimed {
+                            claimState = modifiersMatchNow() ? .claimed : .rejected
                         }
-                        guard claimed == true else { return }
+                        guard claimState == .claimed else {
+                            return
+                        }
                         #endif
                         onChanged(value.translation)
                     }
                     .onEnded { value in
                         #if os(macOS)
-                        let wasClaimed = claimed == true
-                        claimed = nil
-                        guard wasClaimed else { return }
+                        let wasClaimed = claimState == .claimed
+                        claimState = .unclaimed
+                        guard wasClaimed else {
+                            return
+                        }
                         #endif
                         onEnded(value.predictedEndTranslation)
                     }
@@ -125,7 +133,7 @@ struct ScrollGestureModifier<T: Transformer>: ViewModifier where T.Input == Doub
             .onScrollWheel(delta: $delta)
             .onChange(of: delta) { _, newValue in
                 if newValue != 0 {
-                    value = value + transformer.transform(newValue)
+                    value += transformer.transform(newValue)
                     delta = 0
                 }
             }
@@ -148,7 +156,7 @@ struct MagnifyGestureModifier<T: Transformer>: ViewModifier where T.Input == Dou
                     let current = Double(gestureValue.magnification - 1)
                     let delta = current - lastMagnification
                     lastMagnification = current
-                    value = value + transformer.transform(delta)
+                    value += transformer.transform(delta)
                 }
                 .onEnded { _ in
                     lastMagnification = 0

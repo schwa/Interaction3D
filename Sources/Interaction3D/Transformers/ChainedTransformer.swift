@@ -7,6 +7,7 @@ public struct ChainedTransformer<A: Transformer, B: Transformer>: Transformer wh
     }
 }
 
+// swiftlint:disable:next static_operator
 public func | <A: Transformer, B: Transformer>(lhs: A, rhs: B) -> ChainedTransformer<A, B> where A.Output == B.Input {
     ChainedTransformer(first: lhs, second: rhs)
 }
