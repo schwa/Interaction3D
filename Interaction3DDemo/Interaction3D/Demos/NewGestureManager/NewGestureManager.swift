@@ -103,32 +103,31 @@ struct NewCoreDragModifier: ViewModifier {
                         handleEnded(value.translation, predicted: value.predictedEndTranslation)
                     }
             )
-        } else {
-            return AnyGesture(
-                DragGesture(minimumDistance: minimumDistance)
-                    .onChanged { value in
-                        #if os(macOS)
-                        if claimState == .unclaimed {
-                            claimState = modifiersMatchNow() ? .claimed : .rejected
-                        }
-                        guard claimState == .claimed else {
-                            return
-                        }
-                        #endif
-                        handleChanged(value.translation)
-                    }
-                    .onEnded { value in
-                        #if os(macOS)
-                        let wasClaimed = claimState == .claimed
-                        claimState = .unclaimed
-                        guard wasClaimed else {
-                            return
-                        }
-                        #endif
-                        handleEnded(value.translation, predicted: value.predictedEndTranslation)
-                    }
-            )
         }
+        return AnyGesture(
+            DragGesture(minimumDistance: minimumDistance)
+                .onChanged { value in
+                    #if os(macOS)
+                    if claimState == .unclaimed {
+                        claimState = modifiersMatchNow() ? .claimed : .rejected
+                    }
+                    guard claimState == .claimed else {
+                        return
+                    }
+                    #endif
+                    handleChanged(value.translation)
+                }
+                .onEnded { value in
+                    #if os(macOS)
+                    let wasClaimed = claimState == .claimed
+                    claimState = .unclaimed
+                    guard wasClaimed else {
+                        return
+                    }
+                    #endif
+                    handleEnded(value.translation, predicted: value.predictedEndTranslation)
+                }
+        )
     }
 
     private func handleChanged(_ translation: CGSize) {
