@@ -18,6 +18,35 @@ func colorForFace(_ face: Mesh.Face) -> Color {
     return .blue.opacity(0.7)
 }
 
+func renderColoredCube(context: GraphicsContext, size: CGSize, cameraMatrix: simd_float4x4, modelMatrix: simd_float4x4 = float4x4(scale: [2, 2, 2])) {
+    let perspectiveProjection = PerspectiveProjection(verticalAngleOfView: .degrees(60))
+    let projectionMatrix = perspectiveProjection.projectionMatrix(width: Float(size.width), height: Float(size.height))
+    let clipToScreenMatrix = float4x4.clipToScreen(width: Float(size.width), height: Float(size.height))
+    let viewMatrix = cameraMatrix.inverse
+    let rendererContext = SoftwareRendererContext(viewMatrix: viewMatrix, projectionMatrix: projectionMatrix, clipToScreenMatrix: clipToScreenMatrix)
+    renderWorldAxes(context: context, rendererContext: rendererContext)
+    let mesh = Mesh.cube
+    for face in mesh.faces where !mesh.isFrontFacing(face: face, context: rendererContext, modelMatrix: modelMatrix) {
+        let path = mesh.path(forFace: face, context: rendererContext, modelMatrix: modelMatrix)
+        let color = colorForFace(face)
+        context.fill(path, with: .color(color.opacity(0.3)))
+    }
+    for edge in mesh.edges {
+        guard let start = rendererContext.project(edge.start, modelMatrix: modelMatrix), let end = rendererContext.project(edge.end, modelMatrix: modelMatrix) else {
+            continue
+        }
+        var path = Path()
+        path.move(to: start)
+        path.addLine(to: end)
+        context.stroke(path, with: .color(.white.opacity(0.5)), lineWidth: 1)
+    }
+    for face in mesh.faces where mesh.isFrontFacing(face: face, context: rendererContext, modelMatrix: modelMatrix) {
+        let path = mesh.path(forFace: face, context: rendererContext, modelMatrix: modelMatrix)
+        let color = colorForFace(face)
+        context.fill(path, with: .color(color))
+    }
+}
+
 func renderColoredCube(context: GraphicsContext, size: CGSize, rotation: simd_quatf, distance: Float, target: SIMD3<Float> = .zero, modelMatrix: simd_float4x4 = float4x4(scale: [2, 2, 2])) {
     // Set up perspective projection
     let perspectiveProjection = PerspectiveProjection(verticalAngleOfView: .degrees(60))

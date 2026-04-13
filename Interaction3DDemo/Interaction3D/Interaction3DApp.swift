@@ -15,7 +15,8 @@ struct Interaction3DApp: App {
             WidgetsDemo.self,
             TurntableDemo.self,
             NewGestureManagerDemo.self,
-            NewTurntableDemo.self
+            NewTurntableDemo.self,
+            SpaceMouseDemo.self
         ])
         .handleDemoURL(scheme: "interaction3d")
     }
