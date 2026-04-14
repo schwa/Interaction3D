@@ -1,5 +1,5 @@
 {
-  "originHash" : "cc06c9f1e709d9b85e5593a667f54a83a626cf7e4fb25c9aad26ce5f493610da",
+  "originHash" : "5e772e159fb72b6487858dfe9be21d49bb90e1c71d7eff116db6ef7e94fd0faa",
   "pins" : [
     {
       "identity" : "demokit",
@@ -26,6 +26,15 @@
       "state" : {
         "revision" : "69d396ba90b17cfe2adbc0fb2aec5f175fefe7df",
         "version" : "0.1.0"
+      }
+    },
+    {
+      "identity" : "spacemouse",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/schwa/SpaceMouse",
+      "state" : {
+        "branch" : "main",
+        "revision" : "d1e7e25a8358fb440067d5ea03e79c308830ad6c"
       }
     },
     {

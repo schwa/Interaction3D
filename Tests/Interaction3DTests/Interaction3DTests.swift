@@ -24,16 +24,16 @@ import Testing
 
 @Test func lerpPositionConstraintApply() {
     let constraint = LerpPositionTransformer(start: [0, 0, 0], end: [10, 20, 30], t: 0.5)
-    let result = constraint.apply(to: [0, 0, 0])
+    let result = constraint.transform([0, 0, 0])
     #expect(result == SIMD3<Float>(5, 10, 15))
 }
 
 @Test func lerpPositionConstraintApplyAtExtremes() {
     var constraint = LerpPositionTransformer(start: [1, 2, 3], end: [4, 5, 6], t: 0)
-    var result = constraint.apply(to: [0, 0, 0])
+    var result = constraint.transform([0, 0, 0])
     #expect(result == SIMD3<Float>(1, 2, 3))
 
     constraint.t = 1
-    result = constraint.apply(to: [0, 0, 0])
+    result = constraint.transform([0, 0, 0])
     #expect(result == SIMD3<Float>(4, 5, 6))
 }
