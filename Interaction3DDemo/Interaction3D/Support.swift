@@ -3,7 +3,7 @@ import Interaction3D
 import simd
 import SwiftUI
 
-func colorForFace(_ face: Mesh.Face) -> Color {
+func colorForFace(_ face: PolygonMesh.Face) -> Color {
     // Calculate face normal to determine which axis it's aligned with
     let normal = face.normal
     let absNormal = SIMD3<Float>(abs(normal.x), abs(normal.y), abs(normal.z))
@@ -25,7 +25,7 @@ func renderColoredCube(context: GraphicsContext, size: CGSize, cameraMatrix: sim
     let viewMatrix = cameraMatrix.inverse
     let rendererContext = SoftwareRendererContext(viewMatrix: viewMatrix, projectionMatrix: projectionMatrix, clipToScreenMatrix: clipToScreenMatrix)
     renderWorldAxes(context: context, rendererContext: rendererContext)
-    let mesh = Mesh.cube
+    let mesh = PolygonMesh.cube
     for face in mesh.faces where !mesh.isFrontFacing(face: face, context: rendererContext, modelMatrix: modelMatrix) {
         let path = mesh.path(forFace: face, context: rendererContext, modelMatrix: modelMatrix)
         let color = colorForFace(face)
@@ -62,7 +62,7 @@ func renderColoredCube(context: GraphicsContext, size: CGSize, rotation: simd_qu
     // Render world axes at origin
     renderWorldAxes(context: context, rendererContext: rendererContext)
 
-    let mesh = Mesh.cube
+    let mesh = PolygonMesh.cube
 
     // Render back faces first
     for face in mesh.faces where !mesh.isFrontFacing(face: face, context: rendererContext, modelMatrix: modelMatrix) {

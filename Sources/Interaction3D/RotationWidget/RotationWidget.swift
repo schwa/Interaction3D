@@ -6,9 +6,9 @@ public struct RotationWidget: View {
     @Binding
     public var rotation: simd_quatf
 
-    public var mesh: Mesh
+    public var mesh: PolygonMesh
 
-    public init(rotation: Binding<simd_quatf>, mesh: Mesh = .cube) {
+    public init(rotation: Binding<simd_quatf>, mesh: PolygonMesh = .cube) {
         self._rotation = rotation
         self.mesh = mesh
     }
@@ -57,7 +57,7 @@ public struct RotationWidget: View {
 }
 
 private struct RotationWidgetCanvas: View {
-    let mesh: Mesh
+    let mesh: PolygonMesh
 
     @Binding
     var rotation: simd_quatf
@@ -175,7 +175,7 @@ private struct RotationWidgetCanvas: View {
         }
     }
 
-    func color(for edge: Mesh.Edge) -> Color {
+    func color(for edge: PolygonMesh.Edge) -> Color {
         if edge.start == leastVertex || edge.end == leastVertex {
             let delta = normalize(edge.end - edge.start)
             if abs(delta.x) > abs(delta.y), abs(delta.x) > abs(delta.z) {
