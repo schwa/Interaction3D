@@ -3,8 +3,8 @@ import SwiftUI
 
 @main
 struct Interaction3DApp: App {
-    var body: some Scene {
-        DemoPickerScene(demos: [
+    static var demos: [any DemoView.Type] {
+        var demos: [any DemoView.Type] = [
             ConnectedDevicesDemo.self,
             ToolDemoView.self,
             WorldViewDemo.self,
@@ -16,8 +16,15 @@ struct Interaction3DApp: App {
             TurntableDemo.self,
             NewGestureManagerDemo.self,
             NewTurntableDemo.self,
-            SpaceMouseDemo.self
-        ])
+        ]
+        #if os(macOS)
+        demos.append(SpaceMouseDemo.self)
+        #endif
+        return demos
+    }
+
+    var body: some Scene {
+        DemoPickerScene(demos: Self.demos)
         .handleDemoURL(scheme: "interaction3d")
     }
 }

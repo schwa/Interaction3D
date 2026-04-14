@@ -1,3 +1,4 @@
+#if os(macOS)
 import DemoKit
 import GeometryLite3D
 import Interaction3D
@@ -273,3 +274,4 @@ extension SpaceMouseDemo: DemoView {
         group: "Interaction"
     )
 }
+#endif

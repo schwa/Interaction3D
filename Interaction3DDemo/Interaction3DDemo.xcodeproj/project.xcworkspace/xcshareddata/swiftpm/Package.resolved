@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "http://github.com/schwa/DemoKit",
       "state" : {
-        "revision" : "abf12ec5910b9ec7b18f72c65f09a107895a43d4",
-        "version" : "0.1.0"
+        "revision" : "0c2616c79340980be0c0504690651413001087b0",
+        "version" : "0.1.3"
       }
     },
     {
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/schwa/GeometryLite3D",
       "state" : {
-        "revision" : "2b63646cf7290361567cafaf89f82206ee0ff3e7",
-        "version" : "0.1.0"
+        "revision" : "898b2f439607760e3c9f8c239f51664c9bbd3692",
+        "version" : "0.1.1"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/schwa/Panels",
       "state" : {
-        "revision" : "69d396ba90b17cfe2adbc0fb2aec5f175fefe7df",
-        "version" : "0.1.0"
+        "revision" : "81fb9369c945ec383acddcc5063f75f3e65c1d17",
+        "version" : "0.1.2"
       }
     },
     {
@@ -34,7 +34,7 @@
       "location" : "https://github.com/schwa/SpaceMouse",
       "state" : {
         "branch" : "main",
-        "revision" : "d1e7e25a8358fb440067d5ea03e79c308830ad6c"
+        "revision" : "52a4dac46dbf2704e00010523274ada3a4d5c4e2"
       }
     },
     {
@@ -49,19 +49,19 @@
     {
       "identity" : "swift-async-algorithms",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-async-algorithms",
+      "location" : "https://github.com/apple/swift-async-algorithms.git",
       "state" : {
-        "revision" : "042e1c4d9d19748c9c228f8d4ebc97bb1e339b0b",
-        "version" : "1.0.4"
+        "revision" : "9d349bcc328ac3c31ce40e746b5882742a0d1272",
+        "version" : "1.1.3"
       }
     },
     {
       "identity" : "swift-collections",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-collections.git",
+      "location" : "https://github.com/apple/swift-collections",
       "state" : {
-        "revision" : "7b847a3b7008b2dc2f47ca3110d8c782fb2e5c7e",
-        "version" : "1.3.0"
+        "revision" : "6675bc0ff86e61436e615df6fc5174e043e57924",
+        "version" : "1.4.1"
       }
     },
     {
@@ -78,8 +78,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/schwa/SwiftFormats",
       "state" : {
-        "revision" : "6b51ccec7fccf2f1d4f28f03def6c6b97d17c05b",
-        "version" : "0.3.6"
+        "revision" : "0f0929852e7709fcd2a006efda19925ee773d752",
+        "version" : "0.3.7"
       }
     }
   ],

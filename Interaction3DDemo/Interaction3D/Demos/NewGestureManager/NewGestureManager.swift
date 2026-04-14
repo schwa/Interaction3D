@@ -95,7 +95,9 @@ struct NewCoreDragModifier: ViewModifier {
         if let modifiers, !modifiers.isEmpty {
             return AnyGesture(
                 DragGesture(minimumDistance: minimumDistance)
+                #if os(macOS)
                     .modifiers(modifiers)
+                #endif
                     .onChanged { value in
                         handleChanged(value.translation)
                     }
