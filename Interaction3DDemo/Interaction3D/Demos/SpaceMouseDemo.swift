@@ -9,8 +9,8 @@ import SwiftUI
 
 struct SpaceMouseDemo: View {
     @State private var cameraMatrix: simd_float4x4 = float4x4(translation: [0, 0, 5])
-    @State private var scene: SCNScene = SpaceMouseDemo.makeScene()
-    @State private var cameraNode: SCNNode = SpaceMouseDemo.makeCameraNode()
+    @State private var scene: SCNScene = Self.makeScene()
+    @State private var cameraNode: SCNNode = Self.makeCameraNode()
     @State private var spaceMouse: SpaceMouse?
     @State private var isConnected = false
     @State private var lastCommand: String?
@@ -70,6 +70,7 @@ struct SpaceMouseDemo: View {
                     LabeledContent("Moving") {
                         Image(systemName: isMoving ? "circle.fill" : "circle")
                             .foregroundStyle(isMoving ? .green : .secondary)
+                            .accessibilityLabel(isMoving ? "Moving" : "Not moving")
                     }
                     LabeledContent("View Target") {
                         Text(formatVec3(viewTarget))
@@ -81,6 +82,7 @@ struct SpaceMouseDemo: View {
                     }
                     LabeledContent("Pivot Visible") {
                         Image(systemName: pivotVisible ? "eye" : "eye.slash")
+                            .accessibilityLabel(pivotVisible ? "Visible" : "Hidden")
                     }
                     LabeledContent("FOV") {
                         Text(String(format: "%.1f°", fieldOfView * 180.0 / .pi))
@@ -93,7 +95,6 @@ struct SpaceMouseDemo: View {
                         }
                     }
                 }
-
 
                 Section("Actions") {
                     Button("Reset") {
@@ -111,7 +112,9 @@ struct SpaceMouseDemo: View {
 
     private func connectSpaceMouse() async {
         let mouse = SpaceMouse(appName: "Interaction3D")
-        let camera = cameraNode.camera!
+        guard let camera = cameraNode.camera else {
+            return
+        }
         mouse.isPerspective = true
         mouse.modelExtents = modelExtents
         mouse.isRotatable = true
@@ -120,7 +123,7 @@ struct SpaceMouseDemo: View {
         mouse.viewFrustum = [
             -Double(camera.zNear), Double(camera.zNear),
             -Double(camera.zNear), Double(camera.zNear),
-            Double(camera.zNear), Double(camera.zFar),
+            Double(camera.zNear), Double(camera.zFar)
         ]
         mouse.viewMatrix = matrixToColumnMajorArray(cameraMatrix)
 
@@ -162,8 +165,6 @@ struct SpaceMouseDemo: View {
             break
         }
     }
-
-
 
     private func syncCameraToDriver() {
         spaceMouse?.viewMatrix = matrixToColumnMajorArray(cameraMatrix)
@@ -219,7 +220,7 @@ struct SpaceMouseDemo: View {
         let lightNode = SCNNode()
         lightNode.light = SCNLight()
         lightNode.light?.type = .omni
-        lightNode.light?.intensity = 1000
+        lightNode.light?.intensity = 1_000
         lightNode.position = SCNVector3(5, 8, 5)
         scene.rootNode.addChildNode(lightNode)
 
@@ -265,7 +266,6 @@ struct SpaceMouseDemo: View {
         }
     }
 }
-
 
 extension SpaceMouseDemo: DemoView {
     static var metadata = DemoMetadata(

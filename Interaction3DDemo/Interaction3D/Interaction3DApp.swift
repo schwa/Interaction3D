@@ -15,7 +15,7 @@ struct Interaction3DApp: App {
             WidgetsDemo.self,
             TurntableDemo.self,
             NewGestureManagerDemo.self,
-            NewTurntableDemo.self,
+            NewTurntableDemo.self
         ]
         #if os(macOS)
         demos.append(SpaceMouseDemo.self)
