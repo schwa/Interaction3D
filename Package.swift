@@ -20,6 +20,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-collections", from: "1.2.0"),
         .package(url: "https://github.com/schwa/SpaceMouse", branch: "main"),
+        .package(url: "https://github.com/schwa/SwiftMesh", branch: "main"),
     ],
     targets: [
         .target(
@@ -30,6 +31,7 @@ let package = Package(
                 .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 .product(name: "Collections", package: "swift-collections"),
                 .product(name: "SpaceMouse", package: "SpaceMouse"),
+                .product(name: "SwiftMesh", package: "SwiftMesh"),
             ]
         ),
         .testTarget(

@@ -1,11 +1,11 @@
 import GeometryLite3D
 import Interaction3D
 import simd
+import SwiftMesh
 import SwiftUI
 
-func colorForFace(_ face: PolygonMesh.Face) -> Color {
+func colorForFace(normal: SIMD3<Float>) -> Color {
     // Calculate face normal to determine which axis it's aligned with
-    let normal = face.normal
     let absNormal = SIMD3<Float>(abs(normal.x), abs(normal.y), abs(normal.z))
 
     // Find which axis has the largest component
@@ -25,13 +25,13 @@ func renderColoredCube(context: GraphicsContext, size: CGSize, cameraMatrix: sim
     let viewMatrix = cameraMatrix.inverse
     let rendererContext = SoftwareRendererContext(viewMatrix: viewMatrix, projectionMatrix: projectionMatrix, clipToScreenMatrix: clipToScreenMatrix)
     renderWorldAxes(context: context, rendererContext: rendererContext)
-    let mesh = PolygonMesh.cube
-    for face in mesh.faces where !mesh.isFrontFacing(face: face, context: rendererContext, modelMatrix: modelMatrix) {
-        let path = mesh.path(forFace: face, context: rendererContext, modelMatrix: modelMatrix)
-        let color = colorForFace(face)
+    let mesh = Mesh.cube
+    for face in mesh.topology.faces where !mesh.isFrontFacing(face: face.id, context: rendererContext, modelMatrix: modelMatrix) {
+        let path = mesh.path(forFace: face.id, context: rendererContext, modelMatrix: modelMatrix)
+        let color = colorForFace(normal: mesh.faceNormal(face.id))
         context.fill(path, with: .color(color.opacity(0.3)))
     }
-    for edge in mesh.edges {
+    for edge in mesh.renderEdges {
         guard let start = rendererContext.project(edge.start, modelMatrix: modelMatrix), let end = rendererContext.project(edge.end, modelMatrix: modelMatrix) else {
             continue
         }
@@ -40,9 +40,9 @@ func renderColoredCube(context: GraphicsContext, size: CGSize, cameraMatrix: sim
         path.addLine(to: end)
         context.stroke(path, with: .color(.white.opacity(0.5)), lineWidth: 1)
     }
-    for face in mesh.faces where mesh.isFrontFacing(face: face, context: rendererContext, modelMatrix: modelMatrix) {
-        let path = mesh.path(forFace: face, context: rendererContext, modelMatrix: modelMatrix)
-        let color = colorForFace(face)
+    for face in mesh.topology.faces where mesh.isFrontFacing(face: face.id, context: rendererContext, modelMatrix: modelMatrix) {
+        let path = mesh.path(forFace: face.id, context: rendererContext, modelMatrix: modelMatrix)
+        let color = colorForFace(normal: mesh.faceNormal(face.id))
         context.fill(path, with: .color(color))
     }
 }
@@ -62,17 +62,17 @@ func renderColoredCube(context: GraphicsContext, size: CGSize, rotation: simd_qu
     // Render world axes at origin
     renderWorldAxes(context: context, rendererContext: rendererContext)
 
-    let mesh = PolygonMesh.cube
+    let mesh = Mesh.cube
 
     // Render back faces first
-    for face in mesh.faces where !mesh.isFrontFacing(face: face, context: rendererContext, modelMatrix: modelMatrix) {
-        let path = mesh.path(forFace: face, context: rendererContext, modelMatrix: modelMatrix)
-        let color = colorForFace(face)
+    for face in mesh.topology.faces where !mesh.isFrontFacing(face: face.id, context: rendererContext, modelMatrix: modelMatrix) {
+        let path = mesh.path(forFace: face.id, context: rendererContext, modelMatrix: modelMatrix)
+        let color = colorForFace(normal: mesh.faceNormal(face.id))
         context.fill(path, with: .color(color.opacity(0.3)))
     }
 
     // Render edges
-    for edge in mesh.edges {
+    for edge in mesh.renderEdges {
         guard let start = rendererContext.project(edge.start, modelMatrix: modelMatrix), let end = rendererContext.project(edge.end, modelMatrix: modelMatrix) else {
             continue
         }
@@ -83,9 +83,9 @@ func renderColoredCube(context: GraphicsContext, size: CGSize, rotation: simd_qu
     }
 
     // Render front faces
-    for face in mesh.faces where mesh.isFrontFacing(face: face, context: rendererContext, modelMatrix: modelMatrix) {
-        let path = mesh.path(forFace: face, context: rendererContext, modelMatrix: modelMatrix)
-        let color = colorForFace(face)
+    for face in mesh.topology.faces where mesh.isFrontFacing(face: face.id, context: rendererContext, modelMatrix: modelMatrix) {
+        let path = mesh.path(forFace: face.id, context: rendererContext, modelMatrix: modelMatrix)
+        let color = colorForFace(normal: mesh.faceNormal(face.id))
         context.fill(path, with: .color(color))
     }
 }

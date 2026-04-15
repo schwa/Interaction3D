@@ -1,14 +1,15 @@
 import GeometryLite3D
 import simd
+import SwiftMesh
 import SwiftUI
 
 public struct RotationWidget: View {
     @Binding
     public var rotation: simd_quatf
 
-    public var mesh: PolygonMesh
+    public var mesh: Mesh
 
-    public init(rotation: Binding<simd_quatf>, mesh: PolygonMesh = .cube) {
+    public init(rotation: Binding<simd_quatf>, mesh: Mesh = .cube) {
         self._rotation = rotation
         self.mesh = mesh
     }
@@ -57,7 +58,7 @@ public struct RotationWidget: View {
 }
 
 private struct RotationWidgetCanvas: View {
-    let mesh: PolygonMesh
+    let mesh: Mesh
 
     @Binding
     var rotation: simd_quatf
@@ -86,8 +87,8 @@ private struct RotationWidgetCanvas: View {
             Canvas { context, size in
                 let modelMatrix = matrix_identity_float4x4
 
-                for face in renderState.rearFaces {
-                    let path = mesh.path(forFace: face, context: renderState.rendererContext, modelMatrix: modelMatrix)
+                for faceID in renderState.rearFaceIDs {
+                    let path = mesh.path(forFace: faceID, context: renderState.rendererContext, modelMatrix: modelMatrix)
                     context.fill(path, with: .color(.white.opacity(0.3)))
                 }
                 for edge in renderState.rearEdges {
@@ -117,8 +118,8 @@ private struct RotationWidgetCanvas: View {
                 update()
             }
 
-            ForEach(renderState.frontFaces, id: \.self) { face in
-                if let center = renderState.rendererContext.project(face.center), let label = renderState.label(for: face.normal), let color = renderState.color(for: face.normal) {
+            ForEach(renderState.frontFaceIDs, id: \.raw) { faceID in
+                if let center = renderState.rendererContext.project(mesh.faceCentroid(faceID)), let label = renderState.label(for: mesh.faceNormal(faceID)), let color = renderState.color(for: mesh.faceNormal(faceID)) {
                     Text(label)
                         .foregroundStyle(color)
                         .padding([.leading, .trailing], 4)
@@ -140,11 +141,11 @@ private struct RotationWidgetCanvas: View {
     }
 
     func update() {
-        leastVertex = mesh.vertices.reduce(into: SIMD3<Float>(repeating: Float.greatestFiniteMagnitude)) { $0 = min($0, $1) }
+        leastVertex = mesh.positions.reduce(into: SIMD3<Float>(repeating: Float.greatestFiniteMagnitude)) { $0 = min($0, $1) }
         renderState.update(mesh: mesh, rotation: rotation, size: size, verticalFOV: verticalFOV)
 
         hoverAreas = []
-        hoverAreas += mesh.vertices.compactMap { vertex -> (Path, Color, () -> Void)? in
+        hoverAreas += mesh.positions.compactMap { vertex -> (Path, Color, () -> Void)? in
             guard let center = renderState.rendererContext.project(vertex) else {
                 return nil
             }
@@ -167,15 +168,15 @@ private struct RotationWidgetCanvas: View {
                 onRotateTo(mesh.calculateLookAt(at: edge.center))
             })
         }
-        hoverAreas += renderState.frontFaces.compactMap { face in
-            let path = mesh.path(forFace: face, context: renderState.rendererContext, modelMatrix: matrix_identity_float4x4)
+        hoverAreas += renderState.frontFaceIDs.compactMap { faceID in
+            let path = mesh.path(forFace: faceID, context: renderState.rendererContext, modelMatrix: matrix_identity_float4x4)
             return (path, Color.accentColor.opacity(0.3), {
-                onRotateTo(mesh.calculateLookAt(at: face.center))
+                onRotateTo(mesh.calculateLookAt(at: mesh.faceCentroid(faceID)))
             })
         }
     }
 
-    func color(for edge: PolygonMesh.Edge) -> Color {
+    func color(for edge: MeshEdge) -> Color {
         if edge.start == leastVertex || edge.end == leastVertex {
             let delta = normalize(edge.end - edge.start)
             if abs(delta.x) > abs(delta.y), abs(delta.x) > abs(delta.z) {

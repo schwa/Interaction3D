@@ -20,6 +20,15 @@
       }
     },
     {
+      "identity" : "metalsupport",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/schwa/MetalSupport",
+      "state" : {
+        "revision" : "bbd05e3292b7b5808e04c93be11a75e141aadf02",
+        "version" : "1.0.1"
+      }
+    },
+    {
       "identity" : "panels",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/schwa/Panels",
@@ -74,12 +83,30 @@
       }
     },
     {
+      "identity" : "swiftearcut",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/schwa/SwiftEarcut",
+      "state" : {
+        "revision" : "ebb45ca2e575a2ba43b50e2b5c13f7bc3ffa289d",
+        "version" : "0.0.1"
+      }
+    },
+    {
       "identity" : "swiftformats",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/schwa/SwiftFormats",
       "state" : {
         "revision" : "0f0929852e7709fcd2a006efda19925ee773d752",
         "version" : "0.3.7"
+      }
+    },
+    {
+      "identity" : "swiftmesh",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/schwa/SwiftMesh",
+      "state" : {
+        "branch" : "main",
+        "revision" : "566cf95ec9262a863a37d5638ed22db5537c3e4a"
       }
     }
   ],
