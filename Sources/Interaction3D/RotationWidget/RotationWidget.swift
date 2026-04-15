@@ -1,17 +1,15 @@
 import GeometryLite3D
 import simd
-import SwiftMesh
 import SwiftUI
 
 public struct RotationWidget: View {
     @Binding
     public var rotation: simd_quatf
 
-    public var mesh: Mesh
+    var cube = Cube()
 
-    public init(rotation: Binding<simd_quatf>, mesh: Mesh = .cube) {
+    public init(rotation: Binding<simd_quatf>) {
         self._rotation = rotation
-        self.mesh = mesh
     }
 
     @State
@@ -31,7 +29,7 @@ public struct RotationWidget: View {
 
     public var body: some View {
         RotationWidgetCanvas(
-            mesh: mesh,
+            cube: cube,
             rotation: $rotation,
             isDragging: $isDragging,
             onRotateTo: { target in
@@ -58,7 +56,7 @@ public struct RotationWidget: View {
 }
 
 private struct RotationWidgetCanvas: View {
-    let mesh: Mesh
+    let cube: Cube
 
     @Binding
     var rotation: simd_quatf
@@ -74,7 +72,7 @@ private struct RotationWidgetCanvas: View {
     var verticalFOV: Double
 
     @State
-    private var renderState = MeshRenderState()
+    private var renderState = CubeRenderState()
 
     @State
     private var leastVertex: SIMD3<Float> = .zero
@@ -87,8 +85,8 @@ private struct RotationWidgetCanvas: View {
             Canvas { context, size in
                 let modelMatrix = matrix_identity_float4x4
 
-                for faceID in renderState.rearFaceIDs {
-                    let path = mesh.path(forFace: faceID, context: renderState.rendererContext, modelMatrix: modelMatrix)
+                for faceIndex in renderState.rearFaceIndices {
+                    let path = cube.path(forFace: faceIndex, context: renderState.rendererContext, modelMatrix: modelMatrix)
                     context.fill(path, with: .color(.white.opacity(0.3)))
                 }
                 for edge in renderState.rearEdges {
@@ -118,8 +116,8 @@ private struct RotationWidgetCanvas: View {
                 update()
             }
 
-            ForEach(renderState.frontFaceIDs, id: \.raw) { faceID in
-                if let center = renderState.rendererContext.project(mesh.faceCentroid(faceID)), let label = renderState.label(for: mesh.faceNormal(faceID)), let color = renderState.color(for: mesh.faceNormal(faceID)) {
+            ForEach(renderState.frontFaceIndices, id: \.self) { faceIndex in
+                if let center = renderState.rendererContext.project(cube.faceCentroid(faceIndex)), let label = renderState.label(for: cube.faceNormal(faceIndex)), let color = renderState.color(for: cube.faceNormal(faceIndex)) {
                     Text(label)
                         .foregroundStyle(color)
                         .padding([.leading, .trailing], 4)
@@ -132,7 +130,7 @@ private struct RotationWidgetCanvas: View {
                 HoverArea(actions: hoverAreas)
             }
         }
-        .onChange(of: mesh, initial: true) {
+        .onChange(of: cube, initial: true) {
             update()
         }
         .onChange(of: rotation, initial: true) {
@@ -141,18 +139,18 @@ private struct RotationWidgetCanvas: View {
     }
 
     func update() {
-        leastVertex = mesh.positions.reduce(into: SIMD3<Float>(repeating: Float.greatestFiniteMagnitude)) { $0 = min($0, $1) }
-        renderState.update(mesh: mesh, rotation: rotation, size: size, verticalFOV: verticalFOV)
+        leastVertex = cube.positions.reduce(into: SIMD3<Float>(repeating: Float.greatestFiniteMagnitude)) { $0 = min($0, $1) }
+        renderState.update(cube: cube, rotation: rotation, size: size, verticalFOV: verticalFOV)
 
         hoverAreas = []
-        hoverAreas += mesh.positions.compactMap { vertex -> (Path, Color, () -> Void)? in
+        hoverAreas += cube.positions.compactMap { vertex -> (Path, Color, () -> Void)? in
             guard let center = renderState.rendererContext.project(vertex) else {
                 return nil
             }
             let rect = CGRect(x: center.x - 5, y: center.y - 5, width: 10, height: 10)
             let path = Path(ellipseIn: rect)
             return (path, Color.accentColor, {
-                onRotateTo(mesh.calculateLookAt(at: vertex))
+                onRotateTo(cube.calculateLookAt(at: vertex))
             })
         }
         hoverAreas += renderState.frontEdges.compactMap { edge -> (Path, Color, () -> Void)? in
@@ -165,18 +163,18 @@ private struct RotationWidgetCanvas: View {
                 path = path.strokedPath(StrokeStyle(lineWidth: 5, lineCap: .round))
             }
             return (path, Color.accentColor, {
-                onRotateTo(mesh.calculateLookAt(at: edge.center))
+                onRotateTo(cube.calculateLookAt(at: edge.center))
             })
         }
-        hoverAreas += renderState.frontFaceIDs.compactMap { faceID in
-            let path = mesh.path(forFace: faceID, context: renderState.rendererContext, modelMatrix: matrix_identity_float4x4)
+        hoverAreas += renderState.frontFaceIndices.compactMap { faceIndex in
+            let path = cube.path(forFace: faceIndex, context: renderState.rendererContext, modelMatrix: matrix_identity_float4x4)
             return (path, Color.accentColor.opacity(0.3), {
-                onRotateTo(mesh.calculateLookAt(at: mesh.faceCentroid(faceID)))
+                onRotateTo(cube.calculateLookAt(at: cube.faceCentroid(faceIndex)))
             })
         }
     }
 
-    func color(for edge: MeshEdge) -> Color {
+    func color(for edge: CubeEdge) -> Color {
         if edge.start == leastVertex || edge.end == leastVertex {
             let delta = normalize(edge.end - edge.start)
             if abs(delta.x) > abs(delta.y), abs(delta.x) > abs(delta.z) {

@@ -1,102 +1,20 @@
 import Foundation
 import GeometryLite3D
 import simd
-import SwiftMesh
 import SwiftUI
 
-// MARK: - Edge type for software rendering
+// MARK: - CubeRenderState
 
-public struct MeshEdge: Hashable, Sendable {
-    public var start: SIMD3<Float>
-    public var end: SIMD3<Float>
-
-    public var center: SIMD3<Float> {
-        (start + end) / 2
-    }
-}
-
-// MARK: - Mesh extensions for software rendering
-
-public extension Mesh {
-    /// All unique undirected edges with their endpoint positions.
-    var renderEdges: [MeshEdge] {
-        topology.undirectedEdges().map { (a, b) in
-            MeshEdge(start: positions[a.raw], end: positions[b.raw])
-        }
-    }
-
-    /// Edges for a specific face.
-    func faceEdges(_ face: HalfEdgeTopology.FaceID) -> [MeshEdge] {
-        let verts = facePositions(face)
-        guard verts.count >= 2 else { return [] }
-        var result: [MeshEdge] = []
-        for i in 0..<verts.count {
-            let next = (i + 1) % verts.count
-            result.append(MeshEdge(start: verts[i], end: verts[next]))
-        }
-        return result
-    }
-}
-
-// MARK: - Software rendering helpers
-
-public extension Mesh {
-    func path(forFace faceID: HalfEdgeTopology.FaceID, context: SoftwareRendererContext, modelMatrix: float4x4 = matrix_identity_float4x4) -> Path {
-        context.path(polygon: facePositions(faceID), modelMatrix: modelMatrix)
-    }
-
-    func isFrontFacing(face faceID: HalfEdgeTopology.FaceID, context: SoftwareRendererContext, modelMatrix: float4x4 = matrix_identity_float4x4) -> Bool {
-        let verts = facePositions(faceID)
-        guard verts.count >= 3 else {
-            return false
-        }
-
-        let modelViewMatrix = context.viewMatrix * modelMatrix
-
-        var viewVertices: [SIMD3<Float>] = []
-        viewVertices.reserveCapacity(verts.count)
-
-        for vertex in verts {
-            let position = SIMD4<Float>(vertex, 1)
-            let transformed = modelViewMatrix * position
-            guard abs(transformed.w) > Float.leastNormalMagnitude else {
-                return false
-            }
-            let viewPosition = (transformed / transformed.w).xyz
-            viewVertices.append(viewPosition)
-        }
-
-        let edgeA = viewVertices[1] - viewVertices[0]
-        let edgeB = viewVertices[2] - viewVertices[0]
-        let normal = simd_cross(edgeA, edgeB)
-
-        let centroidView = viewVertices.reduce(SIMD3<Float>(repeating: 0)) { $0 + $1 } / Float(viewVertices.count)
-        let toCamera = -centroidView
-
-        return simd_dot(normal, toCamera) > 0
-    }
-
-    func calculateLookAt(at vertex: SIMD3<Float>) -> simd_quatf {
-        let direction = simd_normalize(vertex - center)
-        let yaw = atan2(direction.x, direction.z)
-        let horizontalLength = sqrt(direction.x * direction.x + direction.z * direction.z)
-        let pitch = -atan2(direction.y, horizontalLength)
-        return .fromPitchYaw(pitch: pitch, yaw: yaw)
-    }
-}
-
-// MARK: - MeshRenderState
-
-struct MeshRenderState {
-    var rearFaceIDs: [HalfEdgeTopology.FaceID] = []
-    var frontFaceIDs: [HalfEdgeTopology.FaceID] = []
-    var rearEdges: Set<MeshEdge> = []
-    var frontEdges: Set<MeshEdge> = []
+struct CubeRenderState {
+    var rearFaceIndices: [Int] = []
+    var frontFaceIndices: [Int] = []
+    var rearEdges: Set<CubeEdge> = []
+    var frontEdges: Set<CubeEdge> = []
     var rendererContext = SoftwareRendererContext()
 
-    mutating func update(mesh: Mesh, rotation: simd_quatf, size: CGSize, verticalFOV: Double) {
-        rearFaceIDs = []
-        frontFaceIDs = []
+    mutating func update(cube: Cube, rotation: simd_quatf, size: CGSize, verticalFOV: Double) {
+        rearFaceIndices = []
+        frontFaceIndices = []
         rearEdges = []
         frontEdges = []
 
@@ -108,15 +26,14 @@ struct MeshRenderState {
         rendererContext = SoftwareRendererContext(viewMatrix: viewMatrix, projectionMatrix: projectionMatrix, clipToScreenMatrix: clipToScreenMatrix)
 
         let modelMatrix = matrix_identity_float4x4
-        for face in mesh.topology.faces {
-            let faceID = face.id
-            if mesh.isFrontFacing(face: faceID, context: rendererContext, modelMatrix: modelMatrix) {
-                frontFaceIDs.append(faceID)
-                frontEdges.formUnion(mesh.faceEdges(faceID))
+        for faceIndex in 0..<cube.faces.count {
+            if cube.isFrontFacing(face: faceIndex, context: rendererContext, modelMatrix: modelMatrix) {
+                frontFaceIndices.append(faceIndex)
+                frontEdges.formUnion(cube.faceEdges(faceIndex))
             }
             else {
-                rearFaceIDs.append(faceID)
-                rearEdges.formUnion(mesh.faceEdges(faceID))
+                rearFaceIndices.append(faceIndex)
+                rearEdges.formUnion(cube.faceEdges(faceIndex))
             }
         }
     }
