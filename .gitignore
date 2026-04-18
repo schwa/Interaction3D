@@ -32,3 +32,4 @@ playground.xcworkspace
 .build/
 
 .swiftpm
+.xcb-cache.json
