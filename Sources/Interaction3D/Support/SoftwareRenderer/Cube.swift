@@ -10,12 +10,12 @@ public struct Cube: Equatable, Sendable {
     public let positions: [SIMD3<Float>] = [
         simd_normalize(SIMD3(-1, -1, -1)),
         simd_normalize(SIMD3( 1, -1, -1)),
-        simd_normalize(SIMD3( 1,  1, -1)),
-        simd_normalize(SIMD3(-1,  1, -1)),
-        simd_normalize(SIMD3(-1, -1,  1)),
-        simd_normalize(SIMD3( 1, -1,  1)),
-        simd_normalize(SIMD3( 1,  1,  1)),
-        simd_normalize(SIMD3(-1,  1,  1)),
+        simd_normalize(SIMD3( 1, 1, -1)),
+        simd_normalize(SIMD3(-1, 1, -1)),
+        simd_normalize(SIMD3(-1, -1, 1)),
+        simd_normalize(SIMD3( 1, -1, 1)),
+        simd_normalize(SIMD3( 1, 1, 1)),
+        simd_normalize(SIMD3(-1, 1, 1))
     ]
 
     /// The 6 quad faces as vertex index arrays.
@@ -25,10 +25,12 @@ public struct Cube: Equatable, Sendable {
         [0, 1, 5, 4], // -Y
         [3, 7, 6, 2], // +Y
         [1, 2, 6, 5], // +X
-        [0, 4, 7, 3], // -X
+        [0, 4, 7, 3] // -X
     ]
 
-    public init() {}
+    public init() {
+        // Default initializer.
+    }
 
     /// Centroid of all vertices.
     public var center: SIMD3<Float> {
@@ -95,7 +97,9 @@ public struct Cube: Equatable, Sendable {
     /// Test if a face is front-facing relative to the camera.
     public func isFrontFacing(face faceIndex: Int, context: SoftwareRendererContext, modelMatrix: float4x4 = matrix_identity_float4x4) -> Bool {
         let verts = facePositions(faceIndex)
-        guard verts.count >= 3 else { return false }
+        guard verts.count >= 3 else {
+            return false
+        }
 
         let modelViewMatrix = context.viewMatrix * modelMatrix
         var viewVertices: [SIMD3<Float>] = []
@@ -103,7 +107,9 @@ public struct Cube: Equatable, Sendable {
 
         for vertex in verts {
             let transformed = modelViewMatrix * SIMD4<Float>(vertex, 1)
-            guard abs(transformed.w) > Float.leastNormalMagnitude else { return false }
+            guard abs(transformed.w) > Float.leastNormalMagnitude else {
+                return false
+            }
             viewVertices.append((transformed / transformed.w).xyz)
         }
 
