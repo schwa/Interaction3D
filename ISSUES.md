@@ -178,3 +178,42 @@ Building emits two compile warnings in Sources/Interaction3D/FPV/WASDController.
 In setupMouseHandling(), the outer `mouseObservationTask = Task { ... }` implicitly captures self strongly, while the two inner `Task { [weak self] in ... }` closures capture it weakly. The weak captures are therefore ineffective for avoiding a retain, and the compiler flags the mismatch.
 
 ---
+
+## 12: ToolPicker uses AnyView-based type erasure throughout
+
++++
+status: new
+priority: low
+kind: enhancement
+created: 2026-07-20T18:32:49Z
++++
+
+Support/ToolPicker.swift stores tool labels and modifiers as AnyView/AnyViewModifier (~8 uses) and reduces modifiers via nested AnyView wrapping. The house rules discourage AnyView; heterogeneous storage is a semi-legitimate use, but labels could be generic or @ViewBuilder-based. Non-trivial refactor.
+
+---
+
+## 13: Multi-property computed 'some View' sections should be extracted into View structs
+
++++
+status: new
+priority: low
+kind: enhancement
+created: 2026-07-20T18:32:49Z
++++
+
+Per SwiftUI house rules, computed some View properties that read more than a couple of properties should be their own View structs. Candidates: InteractiveCameraDebugView (stateSection, modeSection, transformOptionsSection), FlightSimControlsView.infoPanel, FPVFlightSimModifier.controlsPanel.
+
+---
+
+## 14: WorldView and tool modifiers lack #Previews
+
++++
+status: new
+priority: low
+kind: enhancement
+created: 2026-07-20T18:32:49Z
++++
+
+Views/WorldView.swift and the RotationWidget/debug-overlay tool modifiers have no #Preview. They need a ProjectionProtocol binding and camera plumbing, so a preview requires small fixture helpers.
+
+---
