@@ -3,12 +3,15 @@
 ---
 
 ## 1: InteractiveCameraMatrixModifier should compute lookAt rotation when initializing from matrix
+
++++
 status: closed
 priority: medium
 kind: bug
 created: 2026-04-02T23:13:03Z
 updated: 2026-04-03T00:24:35Z
 closed: 2026-04-03T00:24:35Z
++++
 
 When initializeStateFromMatrix() decomposes a pure translation matrix (e.g. simd_float4x4(translation: [0, 2, 6])), it gets identity rotation because there's no rotation encoded in the matrix. But the turntable target defaults to [0,0,0], so the camera should be looking AT the origin — not straight along -Z.
 
@@ -21,12 +24,15 @@ Currently every demo in MetalSprocketsExamples that uses [0, 2, 6] as initial ca
 ---
 
 ## 2: Remove or disable debug overlay tools from WorldView
+
++++
 status: closed
 priority: medium
 kind: bug
 created: 2026-04-03T00:05:57Z
 updated: 2026-04-03T00:12:10Z
 closed: 2026-04-03T00:12:10Z
++++
 
 WorldView unconditionally adds 'Off' and 'Overlay' debug tools (lines 47-48 of WorldView.swift). These should either be removed, gated behind a parameter (like the interaction tools), or disabled by default so they don't appear in every app that uses WorldView.
 
@@ -35,30 +41,39 @@ WorldView unconditionally adds 'Off' and 'Overlay' debug tools (lines 47-48 of W
 ---
 
 ## 3: Make turntable target configurable in InteractiveCameraMatrixModifier
+
++++
 status: new
 priority: low
 kind: none
 created: 2026-04-03T00:16:43Z
++++
 
 The default target in InteractiveCameraMatrixModifier is hardcoded to [0,0,0]. Add a parameter to allow callers to specify a custom target point for the turntable orbit.
 
 ---
 
 ## 4: WorldView should expose turntable target parameter
+
++++
 status: new
 priority: low
 kind: none
 created: 2026-04-04T01:32:13Z
++++
 
 WorldView wraps InteractiveCameraMatrixModifier but doesn't expose the turntable target (pivot point). This means the turntable always orbits around the origin (0,0,0). Users who need to orbit around a different point (e.g. the centre of a scene) have to work around this by translating their geometry instead. WorldView should accept an optional target binding and pass it through to the turntable.
 
 ---
 
 ## 5: Investigate scroll wheel zoom not working with physical scroll wheel mice
+
++++
 status: new
 priority: medium
 kind: bug
 created: 2026-04-09T20:24:50Z
++++
 
 ScrollWheelModifier uses NSEvent.addLocalMonitorForEvents(.scrollWheel) to capture scroll events. Works with trackpad but reportedly doesn't work with physical scroll wheel mice. May be an issue with the momentumPhase filter:
 
@@ -75,58 +90,89 @@ Used in InteractiveCameraModifier via .onScrollWheel(delta:).
 ---
 
 ## 6: MagnifyGesture zoom should use absolute magnification on visionOS
+
++++
 status: new
 priority: medium
 kind: enhancement
 created: 2026-04-09T21:43:38Z
++++
 
 InteractiveCameraModifier diffs MagnifyGesture magnification per-frame (zoomDelta - lastZoomDelta), giving tiny deltas even when hands move far apart. On visionOS with hand tracking, pinch-to-zoom feels like holding a distance — absolute magnification maps naturally to zoom distance. Per-frame deltas work for trackpad swiping but feel unresponsive with hand tracking. Consider using absolute magnification relative to start distance on visionOS, or at least a platform-specific multiplier.
 
 ---
 
 ## 7: TransformerProtocol should support different input and output types
+
++++
 status: closed
 priority: medium
 kind: enhancement
 created: 2026-04-12T04:51:55Z
 updated: 2026-04-12T18:31:44Z
 closed: 2026-04-12T18:31:44Z
++++
 
 Currently TransformerProtocol is Value -> Value (same type in and out). The gesture manager prototype needed a separate GestureTransformerProtocol with Input -> Output. TransformerProtocol should be generalized to support different input/output types.
 
 ---
 
 ## 8: Rename TransformerProtocol.apply(to:) to transform(_:)
+
++++
 status: closed
 priority: low
 kind: enhancement
 created: 2026-04-12T05:00:26Z
 updated: 2026-04-12T18:31:44Z
 closed: 2026-04-12T18:31:44Z
++++
 
 apply(to:) reads awkwardly. transform(_:) is more natural for a TransformerProtocol.
 
 ---
 
 ## 9: Unify Transformer and TransformerProtocol
+
++++
 status: closed
 priority: medium
 kind: enhancement
 created: 2026-04-12T05:37:42Z
 updated: 2026-04-12T18:31:44Z
 closed: 2026-04-12T18:31:44Z
++++
 
 Two separate transformer protocols exist: Transformer (transform(_:)) and TransformerProtocol (apply(to:)). They're functionally identical with Input/Output associated types. Consolidate into one protocol. See also #8 for renaming apply(to:) to transform(_:).
 
 ---
 
 ## 10: Inspector and overlays take up too much space on iPadOS
+
++++
 status: new
 priority: medium
 kind: bug
 created: 2026-04-12T20:36:52Z
++++
 
 Both .inspector() and .overlay() hint text may dominate the screen on iPadOS, especially in compact width. Inspector likely takes over the full screen instead of appearing as a sidebar. The hint overlay at the bottom could also obscure too much content. Need to test on iPad and consider adaptive layouts or popovers.
 
 ---
 
+## 11: ImplicitStrongCapture warnings in WASDController mouse notification tasks
+
++++
+status: new
+priority: low
+kind: bug
+created: 2026-07-20T18:15:06Z
++++
+
+Building emits two compile warnings in Sources/Interaction3D/FPV/WASDController.swift (lines ~106 and ~114):
+
+    'weak' ownership of capture 'self' differs from implicitly-captured strong reference in outer scope [#ImplicitStrongCapture]
+
+In setupMouseHandling(), the outer `mouseObservationTask = Task { ... }` implicitly captures self strongly, while the two inner `Task { [weak self] in ... }` closures capture it weakly. The weak captures are therefore ineffective for avoiding a retain, and the compiler flags the mismatch.
+
+---
