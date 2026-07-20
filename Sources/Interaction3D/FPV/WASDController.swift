@@ -102,21 +102,24 @@ public final class WASDController: @unchecked Sendable {
     }
 
     private func setupMouseHandling() {
-        mouseObservationTask = Task {
-            Task { [weak self] in
-                for await notification in NotificationCenter.default.notifications(named: .GCMouseDidConnect) {
-                    print("Mouse connected via notification")
-                    if let mouse = notification.object as? GCMouse {
-                        self?.registerMouse(mouse)
+        mouseObservationTask = Task { [weak self] in
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask { [weak self] in
+                    for await notification in NotificationCenter.default.notifications(named: .GCMouseDidConnect) {
+                        print("Mouse connected via notification")
+                        if let mouse = notification.object as? GCMouse {
+                            self?.registerMouse(mouse)
+                        }
                     }
                 }
-            }
-            Task { [weak self] in
-                for await notification in NotificationCenter.default.notifications(named: .GCMouseDidBecomeCurrent) {
-                    if let mouse = notification.object as? GCMouse {
-                        self?.registerMouse(mouse)
+                group.addTask { [weak self] in
+                    for await notification in NotificationCenter.default.notifications(named: .GCMouseDidBecomeCurrent) {
+                        if let mouse = notification.object as? GCMouse {
+                            self?.registerMouse(mouse)
+                        }
                     }
                 }
+                await group.waitForAll()
             }
         }
 

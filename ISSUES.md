@@ -163,10 +163,12 @@ Both .inspector() and .overlay() hint text may dominate the screen on iPadOS, es
 ## 11: ImplicitStrongCapture warnings in WASDController mouse notification tasks
 
 +++
-status: new
+status: closed
 priority: low
 kind: bug
 created: 2026-07-20T18:15:06Z
+updated: 2026-07-20T18:17:22Z
+closed: 2026-07-20T18:17:22Z
 +++
 
 Building emits two compile warnings in Sources/Interaction3D/FPV/WASDController.swift (lines ~106 and ~114):
