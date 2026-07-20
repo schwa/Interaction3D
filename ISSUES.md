@@ -195,10 +195,12 @@ Support/ToolPicker.swift stores tool labels and modifiers as AnyView/AnyViewModi
 ## 13: Multi-property computed 'some View' sections should be extracted into View structs
 
 +++
-status: new
+status: closed
 priority: low
 kind: enhancement
 created: 2026-07-20T18:32:49Z
+updated: 2026-07-20T18:47:40Z
+closed: 2026-07-20T18:47:40Z
 +++
 
 Per SwiftUI house rules, computed some View properties that read more than a couple of properties should be their own View structs. Candidates: InteractiveCameraDebugView (stateSection, modeSection, transformOptionsSection), FlightSimControlsView.infoPanel, FPVFlightSimModifier.controlsPanel.

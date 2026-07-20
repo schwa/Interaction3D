@@ -123,7 +123,7 @@ public struct FPVFlightSimModifier: ViewModifier {
                 Label("Flight Controls", systemImage: "slider.horizontal.3")
             }
             .popover(isPresented: $isShowingControlsPopover) {
-                controlsPanel
+                FlightControlsPanelView(fpvController: $fpvController, breadcrumbs: $breadcrumbs)
                     .padding(20)
                     .frame(minWidth: 320)
             }
@@ -146,7 +146,16 @@ public struct FPVFlightSimModifier: ViewModifier {
         }
     }
 
-    private var controlsPanel: some View {
+}
+
+struct FlightControlsPanelView: View {
+    @Binding
+    var fpvController: FPVMovementController
+
+    @Binding
+    var breadcrumbs: [SIMD2<Float>]
+
+    var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Flight Controls")
                 .font(.headline)

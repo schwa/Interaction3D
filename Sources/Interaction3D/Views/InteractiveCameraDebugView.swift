@@ -18,24 +18,6 @@ public struct InteractiveCameraDebugView: View {
     @Binding
     var transforms: InteractionAxisTransforms
 
-    @State
-    private var pitchScale: Double = 1.0
-
-    @State
-    private var yawScale: Double = 1.0
-
-    @State
-    private var zoomScale: Double = 1.0
-
-    @State
-    private var invertPitch: Bool = false
-
-    @State
-    private var invertYaw: Bool = false
-
-    @State
-    private var invertZoom: Bool = true
-
     public init(
         rotation: Binding<simd_quatf>,
         distance: Binding<Float>,
@@ -52,19 +34,24 @@ public struct InteractiveCameraDebugView: View {
 
     public var body: some View {
         Form {
-            stateSection
-            modeSection
-            transformOptionsSection
+            CameraStateSectionView(rotation: $rotation, distance: $distance, target: $target)
+            CameraModeSectionView(mode: $mode)
+            TransformOptionsSectionView(transforms: $transforms)
         }
-        .onChange(of: pitchScale) { updateTransforms() }
-        .onChange(of: yawScale) { updateTransforms() }
-        .onChange(of: zoomScale) { updateTransforms() }
-        .onChange(of: invertPitch) { updateTransforms() }
-        .onChange(of: invertYaw) { updateTransforms() }
-        .onChange(of: invertZoom) { updateTransforms() }
     }
+}
 
-    private var stateSection: some View {
+struct CameraStateSectionView: View {
+    @Binding
+    var rotation: simd_quatf
+
+    @Binding
+    var distance: Float
+
+    @Binding
+    var target: SIMD3<Float>
+
+    var body: some View {
         Section("State") {
             LabeledContent("Distance") {
                 HStack {
@@ -92,8 +79,13 @@ public struct InteractiveCameraDebugView: View {
             }
         }
     }
+}
 
-    private var modeSection: some View {
+struct CameraModeSectionView: View {
+    @Binding
+    var mode: InteractiveCameraModifier.Mode
+
+    var body: some View {
         Section("Mode") {
             Picker("Interaction Mode", selection: modeBinding) {
                 Text("Turntable").tag(0)
@@ -120,8 +112,31 @@ public struct InteractiveCameraDebugView: View {
             }
         )
     }
+}
 
-    private var transformOptionsSection: some View {
+struct TransformOptionsSectionView: View {
+    @Binding
+    var transforms: InteractionAxisTransforms
+
+    @State
+    private var pitchScale: Double = 1.0
+
+    @State
+    private var yawScale: Double = 1.0
+
+    @State
+    private var zoomScale: Double = 1.0
+
+    @State
+    private var invertPitch: Bool = false
+
+    @State
+    private var invertYaw: Bool = false
+
+    @State
+    private var invertZoom: Bool = true
+
+    var body: some View {
         Section("Transform Options") {
             LabeledContent("Pitch Scale") {
                 HStack {
@@ -151,6 +166,12 @@ public struct InteractiveCameraDebugView: View {
             Toggle("Invert Yaw", isOn: $invertYaw)
             Toggle("Invert Zoom", isOn: $invertZoom)
         }
+        .onChange(of: pitchScale) { updateTransforms() }
+        .onChange(of: yawScale) { updateTransforms() }
+        .onChange(of: zoomScale) { updateTransforms() }
+        .onChange(of: invertPitch) { updateTransforms() }
+        .onChange(of: invertYaw) { updateTransforms() }
+        .onChange(of: invertZoom) { updateTransforms() }
     }
 
     private func updateTransforms() {
