@@ -23,11 +23,13 @@ public struct WorldView<Content: View>: View {
 
     var content: Content
     var tools: [Tool]
+    var turntableTarget: SIMD3<Float>
 
-    public init(projection: Binding<any ProjectionProtocol>, cameraMatrix: Binding<simd_float4x4>, tools: [Tool] = Tool.default, @ViewBuilder content: @escaping () -> Content) {
+    public init(projection: Binding<any ProjectionProtocol>, cameraMatrix: Binding<simd_float4x4>, tools: [Tool] = Tool.default, turntableTarget: SIMD3<Float> = .zero, @ViewBuilder content: @escaping () -> Content) {
         self._projection = projection
         self._cameraMatrix = cameraMatrix
         self.tools = tools
+        self.turntableTarget = turntableTarget
         self.content = content()
     }
 
@@ -37,7 +39,8 @@ public struct WorldView<Content: View>: View {
                 .tool("Turntable", group: .interaction, id: "turntable", enabled: tools.contains(.turntable)) {
                     InteractiveCameraMatrixModifier(
                         cameraMatrix: $cameraMatrix,
-                        mode: .turntable()
+                        mode: .turntable(),
+                        target: turntableTarget
                     )
                 }
                 .tool("Rotation Widget", group: .interaction, id: "rotation-widget", enabled: tools.contains(.rotationWidget)) { RotationWidgetToolModifier(cameraMatrix: $cameraMatrix) }

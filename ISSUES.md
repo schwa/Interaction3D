@@ -58,10 +58,12 @@ The default target in InteractiveCameraMatrixModifier is hardcoded to [0,0,0]. A
 ## 4: WorldView should expose turntable target parameter
 
 +++
-status: new
+status: closed
 priority: low
 kind: none
 created: 2026-04-04T01:32:13Z
+updated: 2026-07-20T18:58:01Z
+closed: 2026-07-20T18:58:01Z
 +++
 
 WorldView wraps InteractiveCameraMatrixModifier but doesn't expose the turntable target (pivot point). This means the turntable always orbits around the origin (0,0,0). Users who need to orbit around a different point (e.g. the centre of a scene) have to work around this by translating their geometry instead. WorldView should accept an optional target binding and pass it through to the turntable.
