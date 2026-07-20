@@ -8,18 +8,19 @@ import Observation
 import SwiftUI
 
 @Observable
-public final class WASDController: @unchecked Sendable {
+@MainActor
+public final class WASDController {
     @ObservationIgnored
-    private var eventContinuation: AsyncStream<NavigationEvent>.Continuation?
+    private let eventContinuation: AsyncStream<NavigationEvent>.Continuation
 
     @ObservationIgnored
-    private var _events: AsyncStream<NavigationEvent>?
+    public let events: AsyncStream<NavigationEvent>
 
     @ObservationIgnored
-    private var keyboardObservationTask: Task<Void, Never>?
+    private var mouseConnectTask: Task<Void, Never>?
 
     @ObservationIgnored
-    private var mouseObservationTask: Task<Void, Never>?
+    private var mouseBecameCurrentTask: Task<Void, Never>?
 
     @ObservationIgnored
     private var timerTask: Task<Void, Never>?
@@ -29,29 +30,17 @@ public final class WASDController: @unchecked Sendable {
 
     public var isMouseCaptured = false
 
-    public var events: AsyncStream<NavigationEvent> {
-        if let events = _events {
-            return events
-        }
-
-        let stream = AsyncStream(bufferingPolicy: .bufferingNewest(1)) { continuation in
-            self.eventContinuation = continuation
-            self.startTimerLoop()
-        }
-        _events = stream
-        return stream
-    }
-
     public init() {
-        setupKeyboardHandling()
+        (events, eventContinuation) = AsyncStream.makeStream(of: NavigationEvent.self, bufferingPolicy: .bufferingNewest(1))
         setupMouseHandling()
+        startTimerLoop()
     }
 
-    deinit {
-        keyboardObservationTask?.cancel()
-        mouseObservationTask?.cancel()
+    isolated deinit {
+        mouseConnectTask?.cancel()
+        mouseBecameCurrentTask?.cancel()
         timerTask?.cancel()
-        eventContinuation?.finish()
+        eventContinuation.finish()
         if let monitor = mouseMonitor {
             NSEvent.removeMonitor(monitor)
         }
@@ -66,7 +55,7 @@ public final class WASDController: @unchecked Sendable {
     }
 
     private func startTimerLoop() {
-        timerTask = Task { @Sendable [weak self] in
+        timerTask = Task { [weak self] in
             for await _ in AsyncTimerSequence(interval: .milliseconds(16), clock: .continuous) {
                 guard let self else {
                     return
@@ -88,38 +77,25 @@ public final class WASDController: @unchecked Sendable {
                     if a { sidewaysAxis -= 1 }
                 }
 
-                eventContinuation?.yield(.axes(forward: forwardAxis, sideways: sidewaysAxis, source: .keyboard))
-            }
-        }
-    }
-
-    private func setupKeyboardHandling() {
-        keyboardObservationTask = Task { @Sendable in
-            for await _ in NotificationCenter.default.notifications(named: .GCKeyboardDidConnect) {
-                // Keyboard connected — no additional setup needed
+                eventContinuation.yield(.axes(forward: forwardAxis, sideways: sidewaysAxis, source: .keyboard))
             }
         }
     }
 
     private func setupMouseHandling() {
-        mouseObservationTask = Task { [weak self] in
-            await withTaskGroup(of: Void.self) { group in
-                group.addTask { [weak self] in
-                    for await notification in NotificationCenter.default.notifications(named: .GCMouseDidConnect) {
-                        print("Mouse connected via notification")
-                        if let mouse = notification.object as? GCMouse {
-                            self?.registerMouse(mouse)
-                        }
-                    }
+        mouseConnectTask = Task { [weak self] in
+            for await notification in NotificationCenter.default.notifications(named: .GCMouseDidConnect) {
+                print("Mouse connected via notification")
+                if let mouse = notification.object as? GCMouse {
+                    self?.registerMouse(mouse)
                 }
-                group.addTask { [weak self] in
-                    for await notification in NotificationCenter.default.notifications(named: .GCMouseDidBecomeCurrent) {
-                        if let mouse = notification.object as? GCMouse {
-                            self?.registerMouse(mouse)
-                        }
-                    }
+            }
+        }
+        mouseBecameCurrentTask = Task { [weak self] in
+            for await notification in NotificationCenter.default.notifications(named: .GCMouseDidBecomeCurrent) {
+                if let mouse = notification.object as? GCMouse {
+                    self?.registerMouse(mouse)
                 }
-                await group.waitForAll()
             }
         }
 
@@ -147,7 +123,7 @@ public final class WASDController: @unchecked Sendable {
                 let deltaX = event.deltaX
                 let deltaY = event.deltaY
                 if deltaX != 0 || deltaY != 0 {
-                    eventContinuation?.yield(.look(deltaX: Float(deltaX), deltaY: Float(deltaY)))
+                    eventContinuation.yield(.look(deltaX: Float(deltaX), deltaY: Float(deltaY)))
                 }
             default:
                 break
@@ -158,19 +134,13 @@ public final class WASDController: @unchecked Sendable {
     }
 
     public func toggleMouseCapture() {
-        Task { @MainActor [weak self] in
-            guard let self else {
-                return
-            }
-            if isMouseCaptured {
-                releaseMouse()
-            } else {
-                captureMouse()
-            }
+        if isMouseCaptured {
+            releaseMouse()
+        } else {
+            captureMouse()
         }
     }
 
-    @MainActor
     public func captureMouse() {
         guard !isMouseCaptured else {
             return
@@ -180,7 +150,6 @@ public final class WASDController: @unchecked Sendable {
         isMouseCaptured = true
     }
 
-    @MainActor
     public func releaseMouse() {
         guard isMouseCaptured else {
             return
@@ -198,8 +167,8 @@ public final class WASDController: @unchecked Sendable {
         if let mouseInput = mouse.mouseInput {
             print("Mouse input available")
 
-            mouseInput.mouseMovedHandler = { [weak self] input, deltaX, deltaY in
-                self?.eventContinuation?.yield(.look(deltaX: deltaX, deltaY: deltaY))
+            mouseInput.mouseMovedHandler = { [weak self] _, deltaX, deltaY in
+                self?.eventContinuation.yield(.look(deltaX: deltaX, deltaY: deltaY))
             }
             _ = mouseInput.capture()
             print("Mouse input is ready")

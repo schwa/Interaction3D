@@ -69,17 +69,13 @@ public struct FPVFlightSimModifier: ViewModifier {
 
     private func handleKeyboardEvents() async {
         for await event in wasdController.events {
-            await MainActor.run {
-                fpvController.process(event: event)
-            }
+            fpvController.process(event: event)
         }
     }
 
     private func handleGameControllerEvents() async {
         for await event in gameController.events {
-            await MainActor.run {
-                fpvController.process(event: event)
-            }
+            fpvController.process(event: event)
         }
     }
 

@@ -5,12 +5,13 @@ import Observation
 import simd
 
 @Observable
-public final class GameControllerMovementController: @unchecked Sendable {
+@MainActor
+public final class GameControllerMovementController {
     @ObservationIgnored
-    private var eventContinuation: AsyncStream<NavigationEvent>.Continuation?
+    private let eventContinuation: AsyncStream<NavigationEvent>.Continuation
 
     @ObservationIgnored
-    private var _events: AsyncStream<NavigationEvent>?
+    public let events: AsyncStream<NavigationEvent>
 
     @ObservationIgnored
     private var timerTask: Task<Void, Never>?
@@ -52,45 +53,27 @@ public final class GameControllerMovementController: @unchecked Sendable {
         self.movementTransformer = movementTransformer
         self.lookTransformer = lookTransformer
         self.altitudeTransformer = altitudeTransformer ?? Self.makeDefaultAltitudeTransformer()
-        Task { @MainActor [weak self] in
-            guard let self else {
-                return
-            }
-            updateControllerMetadata()
-            bootstrapInitialController()
-            observeControllerConnections()
-            observeControllerDisconnections()
-        }
+        (events, eventContinuation) = AsyncStream.makeStream(of: NavigationEvent.self, bufferingPolicy: .bufferingNewest(1))
+        updateControllerMetadata()
+        bootstrapInitialController()
+        observeControllerConnections()
+        observeControllerDisconnections()
+        startTimerLoop()
     }
 
     deinit {
         timerTask?.cancel()
         connectionTask?.cancel()
         disconnectionTask?.cancel()
-        eventContinuation?.finish()
+        eventContinuation.finish()
     }
 
-    public var events: AsyncStream<NavigationEvent> {
-        if let events = _events {
-            return events
-        }
-
-        let stream = AsyncStream(bufferingPolicy: .bufferingNewest(1)) { continuation in
-            self.eventContinuation = continuation
-            self.startTimerLoop()
-        }
-        _events = stream
-        return stream
-    }
-
-    @MainActor
     private func bootstrapInitialController() {
         synchronizeActiveController()
     }
 
-    @MainActor
     private func observeControllerConnections() {
-        connectionTask = Task { @MainActor [weak self] in
+        connectionTask = Task { [weak self] in
             guard let self else {
                 return
             }
@@ -106,9 +89,8 @@ public final class GameControllerMovementController: @unchecked Sendable {
         }
     }
 
-    @MainActor
     private func observeControllerDisconnections() {
-        disconnectionTask = Task { @MainActor [weak self] in
+        disconnectionTask = Task { [weak self] in
             guard let self else {
                 return
             }
@@ -140,13 +122,17 @@ public final class GameControllerMovementController: @unchecked Sendable {
 
     private func configureExtendedGamepad(_ gamepad: GCExtendedGamepad) {
         gamepad.valueChangedHandler = { [weak self] _, _ in
-            self?.lastInputTimestamp = Date()
+            MainActor.assumeIsolated {
+                self?.lastInputTimestamp = Date()
+            }
         }
     }
 
     private func configureMicroGamepad(_ gamepad: GCMicroGamepad) {
         gamepad.valueChangedHandler = { [weak self] _, _ in
-            self?.lastInputTimestamp = Date()
+            MainActor.assumeIsolated {
+                self?.lastInputTimestamp = Date()
+            }
         }
         gamepad.allowsRotation = true
     }
@@ -156,7 +142,7 @@ public final class GameControllerMovementController: @unchecked Sendable {
             return
         }
 
-        timerTask = Task { @Sendable [weak self] in
+        timerTask = Task { [weak self] in
             let clock = ContinuousClock()
             let interval = Duration.milliseconds(8)
 
@@ -165,17 +151,17 @@ public final class GameControllerMovementController: @unchecked Sendable {
                     return
                 }
 
-                await MainActor.run { self.synchronizeActiveController() }
+                synchronizeActiveController()
 
                 guard isControllerConnected else {
                     emitNeutralFrame()
                     continue
                 }
 
-                let state = await MainActor.run { self.readInputVectors() }
+                let state = readInputVectors()
 
                 guard state.connected else {
-                    eventContinuation?.yield(.controllerState(move: .zero, look: .zero, altitude: 0))
+                    eventContinuation.yield(.controllerState(move: .zero, look: .zero, altitude: 0))
                     continue
                 }
 
@@ -183,13 +169,13 @@ public final class GameControllerMovementController: @unchecked Sendable {
                 let look = lookTransformer.transform(state.look)
                 let altitude = altitudeTransformer.transform(state.altitude)
 
-                eventContinuation?.yield(.controllerState(move: move, look: look, altitude: altitude))
+                eventContinuation.yield(.controllerState(move: move, look: look, altitude: altitude))
             }
         }
     }
 
     private func emitNeutralFrame() {
-        eventContinuation?.yield(.controllerState(move: .zero, look: .zero, altitude: 0))
+        eventContinuation.yield(.controllerState(move: .zero, look: .zero, altitude: 0))
     }
 
     private func updateControllerMetadata() {
@@ -216,7 +202,6 @@ public final class GameControllerMovementController: @unchecked Sendable {
         }
     }
 
-    @MainActor
     private func synchronizeActiveController() {
         let controllers = GCController.controllers()
         if let current = activeController, controllers.contains(where: { $0 === current }) {
@@ -234,7 +219,6 @@ public final class GameControllerMovementController: @unchecked Sendable {
         }
     }
 
-    @MainActor
     private func readInputVectors() -> (move: SIMD2<Float>, look: SIMD2<Float>, altitude: Float, connected: Bool) {
         guard let controller = activeController else {
             return (.zero, .zero, 0, false)
