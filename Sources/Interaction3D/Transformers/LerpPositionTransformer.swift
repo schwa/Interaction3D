@@ -19,9 +19,9 @@ public struct LerpPositionTransformer: Transformer, Equatable {
 extension LerpPositionTransformer: ParameterizedTransformer {
     public static var parameters: [AnyTransformerParameter<LerpPositionTransformer>] {
         [
-            AnyTransformerParameter(keyPath: \LerpPositionTransformer.start, name: "start", metadata: .vector()),
-            AnyTransformerParameter(keyPath: \LerpPositionTransformer.end, name: "end", metadata: .vector()),
-            AnyTransformerParameter(keyPath: \LerpPositionTransformer.t, name: "t", metadata: .floatingPoint(range: 0...1))
+            AnyTransformerParameter(keyPath: \Self.start, name: "start", metadata: .vector()),
+            AnyTransformerParameter(keyPath: \Self.end, name: "end", metadata: .vector()),
+            AnyTransformerParameter(keyPath: \Self.t, name: "t", metadata: .floatingPoint(range: 0...1))
         ]
     }
 }

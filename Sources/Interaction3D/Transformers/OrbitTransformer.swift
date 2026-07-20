@@ -26,10 +26,10 @@ public struct OrbitTransformer: Transformer, Equatable {
 extension OrbitTransformer: ParameterizedTransformer {
     public static var parameters: [AnyTransformerParameter<OrbitTransformer>] {
         [
-            AnyTransformerParameter(keyPath: \OrbitTransformer.center, name: "center", metadata: .vector()),
-            AnyTransformerParameter(keyPath: \OrbitTransformer.radius, name: "radius", metadata: .floatingPoint(range: 0...200)),
-            AnyTransformerParameter(keyPath: \OrbitTransformer.angle, name: "angle", metadata: .angle),
-            AnyTransformerParameter(keyPath: \OrbitTransformer.normal, name: "normal", metadata: .vector())
+            AnyTransformerParameter(keyPath: \Self.center, name: "center", metadata: .vector()),
+            AnyTransformerParameter(keyPath: \Self.radius, name: "radius", metadata: .floatingPoint(range: 0...200)),
+            AnyTransformerParameter(keyPath: \Self.angle, name: "angle", metadata: .angle),
+            AnyTransformerParameter(keyPath: \Self.normal, name: "normal", metadata: .vector())
         ]
     }
 }
