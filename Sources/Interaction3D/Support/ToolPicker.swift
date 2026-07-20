@@ -134,7 +134,7 @@ public struct ToolPickerHost<Content: View>: View {
         return content
             .environment(model)
             .toolbar {
-                ForEach(Array(groupedEnabledTools.keys), id: \.self) { group in
+                ForEach(groupedEnabledTools.keys, id: \.self) { group in
                     if let tools = groupedEnabledTools[group], tools.count > 1 {
                         Picker(selection: binding(for: group), label: Text(group.label)) {
                             ForEach(tools) { entry in
@@ -234,12 +234,5 @@ struct AnyViewModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         _modifier(content)
-    }
-}
-
-// TODO: This is EmptyModifier.
-extension AnyViewModifier {
-    init() {
-        self.init(EmptyModifier())
     }
 }
