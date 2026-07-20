@@ -29,3 +29,17 @@ struct AngleSlider: View {
         }
     }
 }
+
+#Preview {
+    @Previewable @State
+    var floatValue = 0.5
+
+    @Previewable @State
+    var angleValue: AngleF = .degrees(45)
+
+    Form {
+        FloatSlider(value: $floatValue, range: 0...1)
+        AngleSlider(value: $angleValue)
+    }
+    .padding()
+}

@@ -29,10 +29,10 @@ public struct MapView: View {
 
             // Add axis labels
             let labelOffset: CGFloat = 15
-            context.draw(Text("-Z").font(.system(size: 10, weight: .bold)).foregroundColor(.blue), at: CGPoint(x: centerX, y: labelOffset), anchor: .center)
-            context.draw(Text("+Z").font(.system(size: 10, weight: .bold)).foregroundColor(.blue), at: CGPoint(x: centerX, y: size.height - labelOffset), anchor: .center)
-            context.draw(Text("+X").font(.system(size: 10, weight: .bold)).foregroundColor(.red), at: CGPoint(x: size.width - labelOffset, y: centerY), anchor: .center)
-            context.draw(Text("-X").font(.system(size: 10, weight: .bold)).foregroundColor(.red), at: CGPoint(x: labelOffset, y: centerY), anchor: .center)
+            context.draw(Text("-Z").font(.system(size: 10, weight: .bold)).foregroundStyle(.blue), at: CGPoint(x: centerX, y: labelOffset), anchor: .center)
+            context.draw(Text("+Z").font(.system(size: 10, weight: .bold)).foregroundStyle(.blue), at: CGPoint(x: centerX, y: size.height - labelOffset), anchor: .center)
+            context.draw(Text("+X").font(.system(size: 10, weight: .bold)).foregroundStyle(.red), at: CGPoint(x: size.width - labelOffset, y: centerY), anchor: .center)
+            context.draw(Text("-X").font(.system(size: 10, weight: .bold)).foregroundStyle(.red), at: CGPoint(x: labelOffset, y: centerY), anchor: .center)
 
             let position = transform.columns.3
             let markerX = centerX + CGFloat(position.x) * scale
@@ -72,4 +72,10 @@ public struct MapView: View {
             }
         }
     }
+}
+
+#Preview {
+    MapView(transform: float4x4(1), breadcrumbs: [[0, 0], [1, 2], [3, 4]])
+        .frame(width: 200, height: 200)
+        .background(Color.black)
 }

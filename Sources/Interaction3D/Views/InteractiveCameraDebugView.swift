@@ -168,3 +168,22 @@ public struct InteractiveCameraDebugView: View {
         )
     }
 }
+
+#Preview {
+    @Previewable @State
+    var rotation: simd_quatf = .identity
+
+    @Previewable @State
+    var distance: Float = 5
+
+    @Previewable @State
+    var target: SIMD3<Float> = .zero
+
+    @Previewable @State
+    var mode: InteractiveCameraModifier.Mode = .turntable()
+
+    @Previewable @State
+    var transforms: InteractionAxisTransforms = .default
+
+    InteractiveCameraDebugView(rotation: $rotation, distance: $distance, target: $target, mode: $mode, transforms: $transforms)
+}

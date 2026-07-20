@@ -90,7 +90,7 @@ public struct CompassView: View {
                     ctx.drawLayer { textCtx in
                         textCtx.translateBy(x: textPoint.x, y: textPoint.y)
                         let textColor: Color = angle == .zero ? .red : palette.text
-                        let text = Text(label).font(.system(size: 16, weight: .bold)).foregroundColor(textColor)
+                        let text = Text(label).font(.system(size: 16, weight: .bold)).foregroundStyle(textColor)
                         textCtx.draw(text, at: .zero, anchor: .center)
                     }
                 }
@@ -135,7 +135,7 @@ public struct CompassView: View {
                 //                        ctx.drawLayer { textCtx in
                 //                            textCtx.translateBy(x: textPoint.x, y: textPoint.y)
                 //                            textCtx.rotate(by: heading)
-                //                            let text = Text(label).font(.system(size: 16, weight: .bold)).foregroundColor(angle == .zero ? .red : .white)
+                //                            let text = Text(label).font(.system(size: 16, weight: .bold)).foregroundStyle(angle == .zero ? .red : .white)
                 //                            textCtx.draw(text, at: .zero, anchor: .center)
                 //                        }
                 //
@@ -160,7 +160,7 @@ public struct CompassView: View {
             let formattedHeading = heading.degrees.formatted(.number.precision(.fractionLength(0)))
             let headingText = Text("\(formattedHeading)°")
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white)
+                .foregroundStyle(.white)
             context.draw(headingText, at: CGPoint(x: center.x, y: center.y + 20), anchor: .center)
         }
         .aspectRatio(1, contentMode: .fit)

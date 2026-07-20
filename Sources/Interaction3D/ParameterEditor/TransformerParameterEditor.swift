@@ -11,7 +11,7 @@ public struct TransformerParameterEditor<Transformer>: View where Transformer: P
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            ForEach(Array(Transformer.parameters.enumerated()), id: \.offset) { _, parameter in
+            ForEach(Transformer.parameters.enumerated(), id: \.offset) { _, parameter in
                 ParameterControl(transformer: $transformer, parameter: parameter)
             }
         }
@@ -67,4 +67,12 @@ struct ParameterMetadataEditorView<Transformer>: View where Transformer: Paramet
             }
         }
     }
+}
+
+#Preview {
+    @Previewable @State
+    var transformer = OrbitTransformer(center: .zero, radius: 10, angle: .degrees(45))
+
+    TransformerParameterEditor(transformer: $transformer)
+        .padding()
 }

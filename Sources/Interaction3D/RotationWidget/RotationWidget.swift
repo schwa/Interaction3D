@@ -255,12 +255,13 @@ struct HoverArea: View {
         ZStack {
             Color.clear
             if let activePath, let index = actions.firstIndex(where: { $0.0 == activePath }) {
-                activePath.fill(actions[index].1)
-                    .contentShape(activePath)
-                    .accessibilityAddTraits(.isButton)
-                    .onTapGesture {
-                        actions[index].2()
-                    }
+                Button {
+                    actions[index].2()
+                } label: {
+                    activePath.fill(actions[index].1)
+                }
+                .buttonStyle(.plain)
+                .contentShape(activePath)
             }
         }
         .onContinuousHover { phase in
@@ -272,4 +273,12 @@ struct HoverArea: View {
             }
         }
     }
+}
+
+#Preview {
+    @Previewable @State
+    var rotation: simd_quatf = .identity
+
+    RotationWidget(rotation: $rotation)
+        .frame(width: 200, height: 200)
 }

@@ -81,7 +81,7 @@ public struct MeasurementDial <U>: View where U: Dimension {
 
                 let text = Text("\(convertedLabel.value, format: format)")
                     .font(.system(size: 10))
-                    .foregroundColor(.white.opacity(0.7))
+                    .foregroundStyle(.white.opacity(0.7))
                 context.draw(text, at: labelPoint, anchor: .center)
             }
 
@@ -102,12 +102,12 @@ public struct MeasurementDial <U>: View where U: Dimension {
             let convertedSpeed = measurement.converted(to: displayUnit)
             let speedText = Text("\(convertedSpeed.value, format: format)")
                 .font(.system(size: 24, weight: .bold, design: .monospaced))
-                .foregroundColor(.white)
+                .foregroundStyle(.white)
             context.draw(speedText, at: CGPoint(x: 0, y: 30), anchor: .center)
 
             let unitsText = Text("\(convertedSpeed.unit.symbol)")
                 .font(.system(size: 10, weight: .medium))
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundStyle(.white.opacity(0.7))
             context.draw(unitsText, at: CGPoint(x: 0, y: 45), anchor: .center)
         }
         .background(Color.black, in: Circle())

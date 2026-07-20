@@ -56,7 +56,7 @@ public struct ArtificialHorizonView: View {
                         ctx.stroke(path, with: .color(.white.opacity(0.8)), lineWidth: i.isMultiple(of: 30) ? 2 : 1)
 
                         if i.isMultiple(of: 30) {
-                            let text = Text("\(abs(i))°").font(.system(size: 10, weight: .medium)).foregroundColor(.white)
+                            let text = Text("\(abs(i))°").font(.system(size: 10, weight: .medium)).foregroundStyle(.white)
                             ctx.draw(text, at: CGPoint(x: lineLength / 2 + 15, y: y))
                             ctx.draw(text, at: CGPoint(x: -lineLength / 2 - 15, y: y))
                         }

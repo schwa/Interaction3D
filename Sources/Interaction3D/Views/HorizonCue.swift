@@ -45,3 +45,9 @@ public struct HorizonCue: View {
         }
     }
 }
+
+#Preview {
+    HorizonCue(pitch: 0.2, verticalFOV: 60)
+        .frame(width: 300, height: 300)
+        .background(Color.black)
+}

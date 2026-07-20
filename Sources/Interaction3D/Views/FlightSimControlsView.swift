@@ -41,11 +41,11 @@ public struct FlightSimControlsView: View {
                 HStack(alignment: .top, spacing: 12) {
                     ArtificialHorizonView(transform: transform)
                         .frame(width: 150, height: 150)
-                        .cornerRadius(8)
+                        .clipShape(.rect(cornerRadius: 8))
 
                     CompassView(heading: heading, labelStyle: .axis)
                         .frame(width: 150, height: 150)
-                        .cornerRadius(8)
+                        .clipShape(.rect(cornerRadius: 8))
                 }
                 Spacer()
             }
@@ -60,7 +60,7 @@ public struct FlightSimControlsView: View {
                     scale: mapScale
                 )
                 .frame(width: 200, height: 200)
-                .cornerRadius(8)
+                .clipShape(.rect(cornerRadius: 8))
                 Spacer()
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
