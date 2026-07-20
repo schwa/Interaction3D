@@ -11,6 +11,7 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
 
     var mode: InteractiveCameraModifier.Mode
     var transforms: InteractionAxisTransforms
+    var target: SIMD3<Float>
 
     @State
     private var interactionState = InteractionState()
@@ -21,11 +22,13 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
     public init(
         cameraMatrix: Binding<simd_float4x4>,
         mode: InteractiveCameraModifier.Mode,
-        transforms: InteractionAxisTransforms = .default
+        transforms: InteractionAxisTransforms = .default,
+        target: SIMD3<Float> = .zero
     ) {
         self._cameraMatrix = cameraMatrix
         self.mode = mode
         self.transforms = transforms
+        self.target = target
     }
 
     public func body(content: Content) -> some View {
@@ -59,11 +62,10 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
         }
 
         let position = components.translate
-        let defaultTarget = SIMD3<Float>(repeating: 0)
-        let distance = max(length(defaultTarget - position), 0.01)
+        let distance = max(length(target - position), 0.01)
 
         // Compute a lookAt rotation from position toward the target
-        let forward = normalize(defaultTarget - position)
+        let forward = normalize(target - position)
         let worldUp = SIMD3<Float>(0, 1, 0)
         let right = normalize(cross(forward, worldUp))
         let up = cross(right, forward)
@@ -71,7 +73,7 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
         let rotationMatrix = simd_float3x3(columns: (right, up, -forward))
         let rotation = simd_normalize(simd_quatf(rotationMatrix))
 
-        interactionState = InteractionState(rotation: rotation, distance: distance, target: defaultTarget)
+        interactionState = InteractionState(rotation: rotation, distance: distance, target: target)
         hasInitializedFromMatrix = true
     }
 
@@ -94,8 +96,9 @@ public extension View {
     func interactiveCamera(
         cameraMatrix: Binding<simd_float4x4>,
         mode: InteractiveCameraModifier.Mode = .turntable(),
-        transforms: InteractionAxisTransforms = .default
+        transforms: InteractionAxisTransforms = .default,
+        target: SIMD3<Float> = .zero
     ) -> some View {
-        modifier(InteractiveCameraMatrixModifier(cameraMatrix: cameraMatrix, mode: mode, transforms: transforms))
+        modifier(InteractiveCameraMatrixModifier(cameraMatrix: cameraMatrix, mode: mode, transforms: transforms, target: target))
     }
 }

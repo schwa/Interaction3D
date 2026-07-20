@@ -43,10 +43,12 @@ WorldView unconditionally adds 'Off' and 'Overlay' debug tools (lines 47-48 of W
 ## 3: Make turntable target configurable in InteractiveCameraMatrixModifier
 
 +++
-status: new
+status: closed
 priority: low
 kind: none
 created: 2026-04-03T00:16:43Z
+updated: 2026-07-20T18:56:09Z
+closed: 2026-07-20T18:56:09Z
 +++
 
 The default target in InteractiveCameraMatrixModifier is hardcoded to [0,0,0]. Add a parameter to allow callers to specify a custom target point for the turntable orbit.
