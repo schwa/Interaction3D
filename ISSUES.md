@@ -223,3 +223,22 @@ created: 2026-07-20T18:32:49Z
 Views/WorldView.swift and the RotationWidget/debug-overlay tool modifiers have no #Preview. They need a ProjectionProtocol binding and camera plumbing, so a preview requires small fixture helpers.
 
 ---
+
+## 15: Turntable/WorldView controls missing accessibility labels
+
++++
+status: new
+priority: medium
+kind: task
+labels: accessibility, effort:m
+created: 2026-08-09T16:23:32Z
+updated: 2026-08-09T16:23:40Z
++++
+
+The Turntable camera control popup and related WorldView interaction controls have no accessibility labels. Need .accessibilityLabel() on the camera mode picker and any other interactive elements.
+
+This blocks automated UI testing via steveo in downstream apps.
+
+Reported downstream: MetalSprocketsExamples#368.
+
+---
