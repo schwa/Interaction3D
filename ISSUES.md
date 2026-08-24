@@ -73,10 +73,12 @@ WorldView wraps InteractiveCameraMatrixModifier but doesn't expose the turntable
 ## 5: Investigate scroll wheel zoom not working with physical scroll wheel mice
 
 +++
-status: new
+status: closed
 priority: medium
 kind: bug
 created: 2026-04-09T20:24:50Z
+updated: 2026-08-24T21:18:59Z
+closed: 2026-08-24T21:18:59Z
 +++
 
 ScrollWheelModifier uses NSEvent.addLocalMonitorForEvents(.scrollWheel) to capture scroll events. Works with trackpad but reportedly doesn't work with physical scroll wheel mice. May be an issue with the momentumPhase filter:
@@ -91,18 +93,24 @@ Physical scroll wheel mice may not set momentumPhase the same way as trackpads. 
 
 Used in InteractiveCameraModifier via .onScrollWheel(delta:).
 
+- `2026-08-24T21:18:59Z`: Removed momentum-phase filtering so physical wheel events are accepted.
+
 ---
 
 ## 6: MagnifyGesture zoom should use absolute magnification on visionOS
 
 +++
-status: new
+status: closed
 priority: medium
 kind: enhancement
 created: 2026-04-09T21:43:38Z
+updated: 2026-08-24T21:18:59Z
+closed: 2026-08-24T21:18:59Z
 +++
 
 InteractiveCameraModifier diffs MagnifyGesture magnification per-frame (zoomDelta - lastZoomDelta), giving tiny deltas even when hands move far apart. On visionOS with hand tracking, pinch-to-zoom feels like holding a distance — absolute magnification maps naturally to zoom distance. Per-frame deltas work for trackpad swiping but feel unresponsive with hand tracking. Consider using absolute magnification relative to start distance on visionOS, or at least a platform-specific multiplier.
+
+- `2026-08-24T21:18:59Z`: visionOS magnification now sets distance relative to the gesture's starting distance.
 
 ---
 
@@ -246,10 +254,12 @@ Reported downstream: MetalSprocketsExamples#368.
 ## 16: Scroll gestures affect views in other windows
 
 +++
-status: new
+status: closed
 priority: medium
 kind: bug
 created: 2026-08-24T20:05:06Z
+updated: 2026-08-24T21:18:59Z
+closed: 2026-08-24T21:18:59Z
 +++
 
 ## What’s wrong
@@ -269,5 +279,7 @@ Only the interactive camera view under the pointer responds.
 ## Actual
 
 Interactive camera views elsewhere in the app can respond to the gesture.
+
+- `2026-08-24T21:18:59Z`: Scoped scroll events to their originating window and attached view.
 
 ---

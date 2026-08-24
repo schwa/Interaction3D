@@ -72,17 +72,11 @@ final class ScrollWheelNSView: NSView {
     }
 
     private func handleScrollEvent(_ event: NSEvent) {
-        // Only handle if the mouse is over this view's frame in window coordinates
-        guard let window else {
+        guard let window, event.window === window else {
             return
         }
-        let mouseInWindow = window.mouseLocationOutsideOfEventStream
-        let mouseInView = convert(mouseInWindow, from: nil)
+        let mouseInView = convert(event.locationInWindow, from: nil)
         guard bounds.contains(mouseInView) else {
-            return
-        }
-
-        guard event.momentumPhase.isEmpty || event.momentumPhase == .changed else {
             return
         }
 

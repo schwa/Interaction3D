@@ -43,6 +43,11 @@ public struct InteractiveCameraModifier: ViewModifier {
     @State
     private var lastZoomDelta: Double = 0
 
+    #if os(visionOS)
+    @State
+    private var zoomDistanceAtStart: Float?
+    #endif
+
     @State
     private var viewSize: CGSize = .zero
 
@@ -116,11 +121,21 @@ public struct InteractiveCameraModifier: ViewModifier {
     private var zoomGesture: some Gesture {
         MagnifyGesture()
             .onChanged { value in
+                #if os(visionOS)
+                let startDistance = zoomDistanceAtStart ?? distance
+                zoomDistanceAtStart = startDistance
+                distance = max(0.01, startDistance / Float(value.magnification))
+                #else
                 zoomDelta = Double(value.magnification - 1)
+                #endif
             }
             .onEnded { _ in
+                #if os(visionOS)
+                zoomDistanceAtStart = nil
+                #else
                 lastZoomDelta = 0
                 zoomDelta = 0
+                #endif
             }
     }
 
