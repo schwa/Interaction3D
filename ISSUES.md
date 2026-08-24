@@ -242,3 +242,32 @@ This blocks automated UI testing via steveo in downstream apps.
 Reported downstream: MetalSprocketsExamples#368.
 
 ---
+
+## 16: Scroll gestures affect views in other windows
+
++++
+status: new
+priority: medium
+kind: bug
+created: 2026-08-24T20:05:06Z
++++
+
+## What’s wrong
+
+Scroll-wheel and trackpad gestures captured by `onScrollWheel` can update an interactive camera when the gesture occurs over another window or over a different view. Event ownership by window alone is insufficient: handling must also be scoped to the specific attached view under the pointer.
+
+## Reproduction
+
+1. Open two app windows, with an interactive camera view in at least one window.
+2. Place the pointer over the other window or over a view outside the interactive camera.
+3. Perform a trackpad Page Up/Page Down scroll gesture.
+
+## Expected
+
+Only the interactive camera view under the pointer responds.
+
+## Actual
+
+Interactive camera views elsewhere in the app can respond to the gesture.
+
+---
