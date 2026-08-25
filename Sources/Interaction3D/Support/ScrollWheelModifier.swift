@@ -43,6 +43,7 @@ private struct ScrollWheelView: NSViewRepresentable {
 
 final class ScrollWheelNSView: NSView {
     var onScroll: ((Double) -> Void)?
+
     override func hitTest(_ point: NSPoint) -> NSView? {
         NSApp.currentEvent?.type == .scrollWheel ? self : nil
     }
