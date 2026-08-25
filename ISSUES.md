@@ -326,12 +326,13 @@ The scrollable view scrolls and the camera view zooms at the same time.
 ## 18: Game-controller observers retain their controller indefinitely
 
 +++
-status: open
+status: closed
 priority: medium
 kind: bug
 labels: effort:s
 created: 2026-08-25T20:55:25Z
-updated: 2026-08-25T21:05:45Z
+updated: 2026-08-25T21:09:13Z
+closed: 2026-08-25T21:09:13Z
 +++
 
 ## What is wrong

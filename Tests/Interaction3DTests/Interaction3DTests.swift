@@ -37,3 +37,15 @@ import Testing
     result = constraint.transform([0, 0, 0])
     #expect(result == SIMD3<Float>(4, 5, 6))
 }
+
+@MainActor
+@Test func gameControllerMovementControllerDoesNotRetainItself() async {
+    var controller: GameControllerMovementController? = GameControllerMovementController()
+    weak let weakController = controller
+
+    await Task.yield()
+    controller = nil
+    await Task.yield()
+
+    #expect(weakController == nil)
+}

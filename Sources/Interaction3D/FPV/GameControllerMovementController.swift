@@ -74,10 +74,10 @@ public final class GameControllerMovementController {
 
     private func observeControllerConnections() {
         connectionTask = Task { [weak self] in
-            guard let self else {
-                return
-            }
             for await notification in NotificationCenter.default.notifications(named: .GCControllerDidConnect) {
+                guard let self else {
+                    return
+                }
                 guard let controller = notification.object as? GCController else {
                     continue
                 }
@@ -91,10 +91,10 @@ public final class GameControllerMovementController {
 
     private func observeControllerDisconnections() {
         disconnectionTask = Task { [weak self] in
-            guard let self else {
-                return
-            }
             for await notification in NotificationCenter.default.notifications(named: .GCControllerDidDisconnect) {
+                guard let self else {
+                    return
+                }
                 guard let controller = notification.object as? GCController else {
                     continue
                 }
