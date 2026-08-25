@@ -411,12 +411,13 @@ Unused geometry readers wrap the canvases.
 ## 21: ForEach rows use copied enumerated collections and positional identity
 
 +++
-status: open
+status: closed
 priority: medium
 kind: bug
 labels: effort:s
 created: 2026-08-25T20:57:01Z
-updated: 2026-08-25T21:05:45Z
+updated: 2026-08-25T21:11:35Z
+closed: 2026-08-25T21:11:35Z
 +++
 
 ## What is wrong
@@ -430,5 +431,7 @@ ForEach receives the collection directly and uses stable element identity.
 ## Actual
 
 Rows use copied collections or positional offsets as identity.
+
+- `2026-08-25T21:11:35Z`: Regression test exempt: this is SwiftUI row identity and allocation behavior without a unit-testable output; xcb test verifies the direct enumerated collections and element identity key paths compile.
 
 ---
