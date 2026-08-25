@@ -283,3 +283,32 @@ Interactive camera views elsewhere in the app can respond to the gesture.
 - `2026-08-24T21:18:59Z`: Scoped scroll events to their originating window and attached view.
 
 ---
+
+## 17: Scroll-wheel zoom responds outside the interactive view
+
++++
+status: new
+priority: medium
+kind: bug
+created: 2026-08-25T20:48:33Z
++++
+
+## What is wrong
+
+A view with Interaction3D scroll-wheel zoom responds to scroll events when the pointer is over a different scrollable view in the same window. Both views react to one event: the frontmost scroll view scrolls and the interactive camera zooms.
+
+## Reproduction
+
+1. Add an Interaction3D camera view and a separate scrollable view to the same window.
+2. Place the pointer over the scrollable view.
+3. Scroll with a trackpad or mouse.
+
+## Expected
+
+Only the scrollable view under the pointer scrolls. The camera view does not zoom.
+
+## Actual
+
+The scrollable view scrolls and the camera view zooms at the same time.
+
+---
