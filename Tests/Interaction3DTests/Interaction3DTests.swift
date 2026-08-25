@@ -49,3 +49,18 @@ import Testing
 
     #expect(weakController == nil)
 }
+
+@Test func angleOfViewRoundTripsAcrossAxes() {
+    let angle = AngleOfView(verticalDegrees: 71, aspectRatio: 1.4)
+    let vertical = AngleOfView.verticalDegrees(from: angle.horizontalDegrees, axis: .horizontal, aspectRatio: 1.4)
+
+    #expect(abs(vertical - 71) < 0.0001)
+}
+
+@Test func cameraPoseRoundTripsMatrix() {
+    let pose = CameraPose(position: [1, 2, 3], rotationDegrees: [12, -34, 5])
+    let result = CameraPose(matrix: pose.matrix)
+
+    #expect(length(result.position - pose.position) < 0.0001)
+    #expect(length(result.rotationDegrees - pose.rotationDegrees) < 0.0001)
+}
