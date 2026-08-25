@@ -228,12 +228,13 @@ Per SwiftUI house rules, computed some View properties that read more than a cou
 ## 14: WorldView and tool modifiers lack #Previews
 
 +++
-status: open
+status: closed
 priority: low
 kind: enhancement
 labels: effort:s
 created: 2026-07-20T18:32:49Z
-updated: 2026-08-25T21:05:45Z
+updated: 2026-08-25T21:13:35Z
+closed: 2026-08-25T21:13:35Z
 +++
 
 Views/WorldView.swift and the RotationWidget/debug-overlay tool modifiers have no #Preview. They need a ProjectionProtocol binding and camera plumbing, so a preview requires small fixture helpers.

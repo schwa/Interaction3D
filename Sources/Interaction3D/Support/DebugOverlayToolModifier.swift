@@ -10,3 +10,9 @@ public struct DebugOverlayToolModifier: ViewModifier {
             .border(.red, width: 4)
     }
 }
+
+#Preview {
+    Color.blue
+        .modifier(DebugOverlayToolModifier())
+        .padding()
+}

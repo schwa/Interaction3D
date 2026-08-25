@@ -30,3 +30,10 @@ public struct RotationWidgetToolModifier: ViewModifier {
             }
     }
 }
+
+#Preview {
+    @Previewable @State var cameraMatrix = matrix_identity_float4x4
+
+    Color.blue
+        .modifier(RotationWidgetToolModifier(cameraMatrix: $cameraMatrix))
+}

@@ -60,3 +60,12 @@ public struct WorldView<Content: View>: View {
         return 60
     }
 }
+
+#Preview {
+    @Previewable @State var projection: any ProjectionProtocol = PerspectiveProjection(verticalAngleOfView: .degrees(60))
+    @Previewable @State var cameraMatrix = matrix_identity_float4x4
+
+    WorldView(projection: $projection, cameraMatrix: $cameraMatrix) {
+        Color.blue
+    }
+}
