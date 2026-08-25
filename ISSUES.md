@@ -208,6 +208,8 @@ updated: 2026-08-25T21:05:45Z
 
 Support/ToolPicker.swift stores tool labels and modifiers as AnyView/AnyViewModifier (~8 uses) and reduces modifiers via nested AnyView wrapping. The house rules discourage AnyView; heterogeneous storage is a semi-legitimate use, but labels could be generic or @ViewBuilder-based. Non-trivial refactor.
 
+- `2026-08-25T21:13:45Z`: Inspected ToolPicker's storage and public tool APIs. Punting: heterogeneous arbitrary View labels and ViewModifier factories require type erasure, so removing AnyView means narrowing the public API or redesigning modifier composition with unclear compatibility impact. Should labels be limited to LocalizedStringKey/Text, or is preserving arbitrary View labels required?
+
 ---
 
 ## 13: Multi-property computed 'some View' sections should be extracted into View structs
