@@ -1,6 +1,7 @@
 import Observation
 import simd
 
+@MainActor
 @Observable
 public final class MovementController {
     public var linearVelocity: SIMD3<Float> = .zero

@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import simd
 
+@MainActor
 public struct FPVMovementController {
     public var movementController = MovementController()
 

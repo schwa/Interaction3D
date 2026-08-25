@@ -357,12 +357,13 @@ The observer tasks retain the controller for the lifetime of the notification st
 ## 19: SwiftUI observable models are not main-actor isolated
 
 +++
-status: open
+status: closed
 priority: high
 kind: bug
 labels: effort:m
 created: 2026-08-25T20:57:00Z
-updated: 2026-08-25T21:05:45Z
+updated: 2026-08-25T21:07:46Z
+closed: 2026-08-25T21:07:46Z
 +++
 
 ## What is wrong
@@ -376,6 +377,8 @@ Observable UI model state is isolated to the main actor.
 ## Actual
 
 The models expose mutable observed state without actor isolation.
+
+- `2026-08-25T21:07:46Z`: Regression test exempt: actor isolation is enforced at compile time; xcb test confirms all affected call sites compile under strict concurrency.
 
 ---
 

@@ -43,6 +43,7 @@ public struct ToolPickerGroup: Hashable, Equatable {
     }
 }
 
+@MainActor
 @Observable
 internal class ToolPickerModel {
     struct Tool: Identifiable {
