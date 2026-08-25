@@ -13,8 +13,8 @@ public struct CameraControlStyle: Sendable {
         self.valueWidth = valueWidth
     }
 
-    public static let standard = CameraControlStyle()
-    public static let compact = CameraControlStyle(fieldSpacing: 4, fieldCornerRadius: 5, labelWidth: 14, valueWidth: 64)
+    public static let standard = Self()
+    public static let compact = Self(fieldSpacing: 4, fieldCornerRadius: 5, labelWidth: 14, valueWidth: 64)
 }
 
 public extension EnvironmentValues {
