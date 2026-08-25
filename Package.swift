@@ -19,7 +19,7 @@ let package = Package(
         .package(url: "https://github.com/schwa/SwiftFormats", from: "0.3.6"),
         .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-collections", from: "1.2.0"),
-        .package(url: "https://github.com/schwa/SpaceMouse", branch: "main"),
+        .package(url: "https://github.com/schwa/SpaceMouse", from: "0.0.1"),
     ],
     targets: [
         .target(
