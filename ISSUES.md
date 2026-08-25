@@ -287,10 +287,12 @@ Interactive camera views elsewhere in the app can respond to the gesture.
 ## 17: Scroll-wheel zoom responds outside the interactive view
 
 +++
-status: new
+status: closed
 priority: medium
 kind: bug
 created: 2026-08-25T20:48:33Z
+updated: 2026-08-25T20:53:04Z
+closed: 2026-08-25T20:53:04Z
 +++
 
 ## What is wrong
@@ -310,5 +312,7 @@ Only the scrollable view under the pointer scrolls. The camera view does not zoo
 ## Actual
 
 The scrollable view scrolls and the camera view zooms at the same time.
+
+- `2026-08-25T20:53:04Z`: Replaced the window-wide event monitor with normal AppKit scroll-wheel hit testing, so only the view under the pointer receives zoom input.
 
 ---

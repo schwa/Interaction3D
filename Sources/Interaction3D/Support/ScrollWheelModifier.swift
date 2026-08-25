@@ -43,58 +43,17 @@ private struct ScrollWheelView: NSViewRepresentable {
 
 final class ScrollWheelNSView: NSView {
     var onScroll: ((Double) -> Void)?
-    nonisolated(unsafe) private var monitor: Any?
-
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        if window != nil {
-            startMonitoring()
-        } else {
-            stopMonitoring()
-        }
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        NSApp.currentEvent?.type == .scrollWheel ? self : nil
     }
 
-    private func startMonitoring() {
-        guard monitor == nil else {
-            return
-        }
-        monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
-            self?.handleScrollEvent(event)
-            return event  // always return the event so other views still get it
-        }
-    }
-
-    private func stopMonitoring() {
-        if let monitor {
-            NSEvent.removeMonitor(monitor)
-        }
-        monitor = nil
-    }
-
-    private func handleScrollEvent(_ event: NSEvent) {
-        guard let window, event.window === window else {
-            return
-        }
-        let mouseInView = convert(event.locationInWindow, from: nil)
-        guard bounds.contains(mouseInView) else {
-            return
-        }
-
-        let dy = event.hasPreciseScrollingDeltas
+    override func scrollWheel(with event: NSEvent) {
+        let delta = event.hasPreciseScrollingDeltas
             ? Double(event.scrollingDeltaY)
             : Double(event.deltaY) * 10
-        onScroll?(dy)
+        onScroll?(delta)
     }
-
-    // Invisible to hit testing - all mouse/drag events pass through
-    override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
     override var acceptsFirstResponder: Bool { false }
-
-    deinit {
-        if let monitor {
-            NSEvent.removeMonitor(monitor)
-        }
-    }
 }
 #endif
