@@ -12,13 +12,11 @@ struct TurntableDemo: View {
     @State private var showInspector = true
 
     var body: some View {
-        GeometryReader { _ in
-            Canvas { context, size in
-                renderColoredCube(context: context, size: size, rotation: rotation, distance: distance, target: target)
-                renderTargetCrosshair(context: context, size: size)
-            }
-            .background(Color.black)
+        Canvas { context, size in
+            renderColoredCube(context: context, size: size, rotation: rotation, distance: distance, target: target)
+            renderTargetCrosshair(context: context, size: size)
         }
+        .background(Color.black)
         .interactiveCamera(
             rotation: $rotation,
             distance: $distance,

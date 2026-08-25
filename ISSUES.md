@@ -394,12 +394,13 @@ The models expose mutable observed state without actor isolation.
 ## 20: Canvas views use redundant GeometryReader wrappers
 
 +++
-status: open
+status: closed
 priority: low
 kind: task
 labels: effort:xs
 created: 2026-08-25T20:57:01Z
-updated: 2026-08-25T21:05:45Z
+updated: 2026-08-25T21:16:20Z
+closed: 2026-08-25T21:16:20Z
 +++
 
 ## What is wrong

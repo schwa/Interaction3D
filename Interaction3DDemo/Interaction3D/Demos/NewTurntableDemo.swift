@@ -103,13 +103,11 @@ struct NewTurntableDemo: View {
     @State private var showInspector = true
 
     var body: some View {
-        GeometryReader { _ in
-            Canvas { context, size in
-                renderColoredCube(context: context, size: size, rotation: rotation, distance: Float(distance), target: target)
-                renderTargetCrosshair(context: context, size: size)
-            }
-            .background(Color.black)
+        Canvas { context, size in
+            renderColoredCube(context: context, size: size, rotation: rotation, distance: Float(distance), target: target)
+            renderTargetCrosshair(context: context, size: size)
         }
+        .background(Color.black)
         .newTurntableDrag([], rotation: $rotation)
         .newPanDrag(.command, target: $target)
         #if os(macOS)
