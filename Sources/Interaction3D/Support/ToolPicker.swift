@@ -142,6 +142,7 @@ public struct ToolPickerHost<Content: View>: View {
                                 entry.label.tag(Optional(entry.id))
                             }
                         }
+                        .accessibilityLabel(group.label)
                     }
                 }
             }

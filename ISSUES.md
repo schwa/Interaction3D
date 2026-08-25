@@ -243,12 +243,13 @@ Views/WorldView.swift and the RotationWidget/debug-overlay tool modifiers have n
 ## 15: Turntable/WorldView controls missing accessibility labels
 
 +++
-status: open
+status: closed
 priority: medium
 kind: task
 labels: accessibility, effort:m
 created: 2026-08-09T16:23:32Z
-updated: 2026-08-25T21:03:06Z
+updated: 2026-08-25T21:12:48Z
+closed: 2026-08-25T21:12:48Z
 +++
 
 The Turntable camera control popup and related WorldView interaction controls have no accessibility labels. Need .accessibilityLabel() on the camera mode picker and any other interactive elements.
@@ -256,6 +257,8 @@ The Turntable camera control popup and related WorldView interaction controls ha
 This blocks automated UI testing via steveo in downstream apps.
 
 Reported downstream: MetalSprocketsExamples#368.
+
+- `2026-08-25T21:12:48Z`: Regression test exempt: accessibility metadata is exposed by SwiftUI at runtime rather than as a unit-testable value. Added an explicit accessibility label to every ToolPicker group picker; its options already use their visible labels.
 
 ---
 
