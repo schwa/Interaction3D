@@ -198,17 +198,19 @@ In setupMouseHandling(), the outer `mouseObservationTask = Task { ... }` implici
 ## 12: ToolPicker uses AnyView-based type erasure throughout
 
 +++
-status: open
+status: closed
 priority: low
 kind: enhancement
 labels: effort:l
 created: 2026-07-20T18:32:49Z
-updated: 2026-08-25T21:05:45Z
+updated: 2026-08-25T21:26:05Z
+closed: 2026-08-25T21:26:05Z
 +++
 
 Support/ToolPicker.swift stores tool labels and modifiers as AnyView/AnyViewModifier (~8 uses) and reduces modifiers via nested AnyView wrapping. The house rules discourage AnyView; heterogeneous storage is a semi-legitimate use, but labels could be generic or @ViewBuilder-based. Non-trivial refactor.
 
 - `2026-08-25T21:13:45Z`: Inspected ToolPicker's storage and public tool APIs. Punting: heterogeneous arbitrary View labels and ViewModifier factories require type erasure, so removing AnyView means narrowing the public API or redesigning modifier composition with unclear compatibility impact. Should labels be limited to LocalizedStringKey/Text, or is preserving arbitrary View labels required?
+- `2026-08-25T21:26:05Z`: Closed as invalid after API review: ToolPicker intentionally supports arbitrary SwiftUI view labels in a heterogeneous runtime collection. AnyView is the appropriate standard type erasure; alternatives would only recreate type erasure, restrict label shapes, or break dynamic registration.
 
 ---
 
