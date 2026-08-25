@@ -162,10 +162,12 @@ Two separate transformer protocols exist: Transformer (transform(_:)) and Transf
 ## 10: Inspector and overlays take up too much space on iPadOS
 
 +++
-status: new
+status: open
 priority: medium
 kind: bug
+labels: effort:m
 created: 2026-04-12T20:36:52Z
+updated: 2026-08-25T21:05:45Z
 +++
 
 Both .inspector() and .overlay() hint text may dominate the screen on iPadOS, especially in compact width. Inspector likely takes over the full screen instead of appearing as a sidebar. The hint overlay at the bottom could also obscure too much content. Need to test on iPad and consider adaptive layouts or popovers.
@@ -194,10 +196,12 @@ In setupMouseHandling(), the outer `mouseObservationTask = Task { ... }` implici
 ## 12: ToolPicker uses AnyView-based type erasure throughout
 
 +++
-status: new
+status: open
 priority: low
 kind: enhancement
+labels: effort:l
 created: 2026-07-20T18:32:49Z
+updated: 2026-08-25T21:05:45Z
 +++
 
 Support/ToolPicker.swift stores tool labels and modifiers as AnyView/AnyViewModifier (~8 uses) and reduces modifiers via nested AnyView wrapping. The house rules discourage AnyView; heterogeneous storage is a semi-legitimate use, but labels could be generic or @ViewBuilder-based. Non-trivial refactor.
@@ -222,10 +226,12 @@ Per SwiftUI house rules, computed some View properties that read more than a cou
 ## 14: WorldView and tool modifiers lack #Previews
 
 +++
-status: new
+status: open
 priority: low
 kind: enhancement
+labels: effort:s
 created: 2026-07-20T18:32:49Z
+updated: 2026-08-25T21:05:45Z
 +++
 
 Views/WorldView.swift and the RotationWidget/debug-overlay tool modifiers have no #Preview. They need a ProjectionProtocol binding and camera plumbing, so a preview requires small fixture helpers.
@@ -235,12 +241,12 @@ Views/WorldView.swift and the RotationWidget/debug-overlay tool modifiers have n
 ## 15: Turntable/WorldView controls missing accessibility labels
 
 +++
-status: new
+status: open
 priority: medium
 kind: task
 labels: accessibility, effort:m
 created: 2026-08-09T16:23:32Z
-updated: 2026-08-09T16:23:40Z
+updated: 2026-08-25T21:03:06Z
 +++
 
 The Turntable camera control popup and related WorldView interaction controls have no accessibility labels. Need .accessibilityLabel() on the camera mode picker and any other interactive elements.
@@ -314,5 +320,111 @@ Only the scrollable view under the pointer scrolls. The camera view does not zoo
 The scrollable view scrolls and the camera view zooms at the same time.
 
 - `2026-08-25T20:53:04Z`: Replaced the window-wide event monitor with normal AppKit scroll-wheel hit testing, so only the view under the pointer receives zoom input.
+
+---
+
+## 18: Game-controller observers retain their controller indefinitely
+
++++
+status: open
+priority: medium
+kind: bug
+labels: effort:s
+created: 2026-08-25T20:55:25Z
+updated: 2026-08-25T21:05:45Z
++++
+
+## What is wrong
+
+The game-controller connection and disconnection observer tasks promote their weak controller reference to a strong reference before entering an indefinite notification loop. Each controller owns those tasks, so the tasks keep the controller alive and its deinitializer cannot cancel them or finish its event stream.
+
+## Reproduction
+
+1. Create a `GameControllerMovementController`.
+2. Release every external reference to it while no connection notification stream has ended.
+3. Observe that the controller is not deallocated and its observer tasks remain active.
+
+## Expected
+
+Releasing the last external reference deallocates the controller and stops its tasks.
+
+## Actual
+
+The observer tasks retain the controller for the lifetime of the notification streams.
+
+---
+
+## 19: SwiftUI observable models are not main-actor isolated
+
++++
+status: open
+priority: high
+kind: bug
+labels: effort:m
+created: 2026-08-25T20:57:00Z
+updated: 2026-08-25T21:05:45Z
++++
+
+## What is wrong
+
+`MovementController` and `ToolPickerModel` are Observation models consumed and mutated by SwiftUI, but the package target does not use main-actor default isolation and neither class declares main-actor isolation. Their mutable properties can therefore be accessed outside the UI actor, allowing races with SwiftUI reads and updates.
+
+## Expected
+
+Observable UI model state is isolated to the main actor.
+
+## Actual
+
+The models expose mutable observed state without actor isolation.
+
+---
+
+## 20: Canvas views use redundant GeometryReader wrappers
+
++++
+status: open
+priority: low
+kind: task
+labels: effort:xs
+created: 2026-08-25T20:57:01Z
+updated: 2026-08-25T21:05:45Z
++++
+
+## What is wrong
+
+The turntable demos and `HorizonCue` wrap `Canvas` in `GeometryReader` but do not use the geometry proxy. `Canvas` already receives its available size, so the wrappers add layout complexity and an unnecessary view layer without affecting rendering.
+
+## Expected
+
+Canvas-based views use the size supplied by `Canvas` directly.
+
+## Actual
+
+Unused geometry readers wrap the canvases.
+
+---
+
+## 21: ForEach rows use copied enumerated collections and positional identity
+
++++
+status: open
+priority: medium
+kind: bug
+labels: effort:s
+created: 2026-08-25T20:57:01Z
+updated: 2026-08-25T21:05:45Z
++++
+
+## What is wrong
+
+`VectorEditor` and `TransformerParameterEditor` eagerly wrap enumerated collections in `Array` or identify rows by enumeration offsets. Swift 6.2 enumerated collections can be passed directly, and offsets identify positions rather than elements. Reordering or inserting elements can associate SwiftUI row state with the wrong element; the array wrapper also allocates during body evaluation.
+
+## Expected
+
+ForEach receives the collection directly and uses stable element identity.
+
+## Actual
+
+Rows use copied collections or positional offsets as identity.
 
 ---
