@@ -64,3 +64,60 @@ import Testing
     #expect(length(result.position - pose.position) < 0.0001)
     #expect(length(result.rotationDegrees - pose.rotationDegrees) < 0.0001)
 }
+
+@Test func cameraMatrixSynchronizerRoundTripsPositionAndTarget() throws {
+    let synchronizer = CameraMatrixSynchronizer(target: .zero)
+    var matrix = matrix_identity_float4x4
+    matrix.columns.3 = [2, 3, 5, 1]
+    let state = try #require(synchronizer.interactionState(from: matrix))
+    let result = synchronizer.cameraMatrix(from: state)
+
+    #expect(abs(state.distance - length(SIMD3<Float>(2, 3, 5))) < 0.0001)
+    #expect(length(result.columns.3.xyz - matrix.columns.3.xyz) < 0.0001)
+    #expect(length(state.rotation.act([0, 0, -1]) - normalize(-matrix.columns.3.xyz)) < 0.0001)
+}
+
+@Test func cameraMatrixSynchronizerHandlesPoleAlignedCamera() throws {
+    let synchronizer = CameraMatrixSynchronizer(target: .zero)
+    var matrix = matrix_identity_float4x4
+    matrix.columns.3 = [0, 5, 0, 1]
+    let state = try #require(synchronizer.interactionState(from: matrix))
+    let result = synchronizer.cameraMatrix(from: state)
+
+    #expect(state.rotation.vector.x.isFinite)
+    #expect(state.rotation.vector.y.isFinite)
+    #expect(state.rotation.vector.z.isFinite)
+    #expect(state.rotation.vector.w.isFinite)
+    #expect(length(result.columns.3.xyz - matrix.columns.3.xyz) < 0.0001)
+}
+
+@Test func cameraMatrixSynchronizerHandlesCameraAtTarget() throws {
+    let synchronizer = CameraMatrixSynchronizer(target: [1, 2, 3])
+    let sourceRotation = simd_quatf(angle: 0.7, axis: [0, 1, 0])
+    var matrix = sourceRotation.matrix
+    matrix.columns.3 = [1, 2, 3, 1]
+    let state = try #require(synchronizer.interactionState(from: matrix))
+
+    #expect(state.distance == 0.01)
+    #expect(abs(dot(state.rotation.vector, sourceRotation.vector)) > 0.9999)
+}
+
+@Test func cameraMatrixSynchronizerImportsExternalMatrixReplacement() throws {
+    let synchronizer = CameraMatrixSynchronizer(target: .zero)
+    var firstMatrix = matrix_identity_float4x4
+    firstMatrix.columns.3 = [0, 0, 5, 1]
+    var replacementMatrix = matrix_identity_float4x4
+    replacementMatrix.columns.3 = [4, 0, 0, 1]
+
+    let firstState = try #require(synchronizer.interactionState(from: firstMatrix))
+    let replacementState = try #require(synchronizer.interactionState(from: replacementMatrix))
+
+    #expect(firstState != replacementState)
+    #expect(length(synchronizer.cameraMatrix(from: replacementState).columns.3.xyz - replacementMatrix.columns.3.xyz) < 0.0001)
+}
+
+private extension SIMD4<Float> {
+    var xyz: SIMD3<Float> {
+        SIMD3<Float>(x, y, z)
+    }
+}

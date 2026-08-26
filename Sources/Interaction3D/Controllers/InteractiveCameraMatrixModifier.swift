@@ -16,9 +16,6 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
     @State
     private var interactionState = InteractionState()
 
-    @State
-    private var hasInitializedFromMatrix = false
-
     public init(
         cameraMatrix: Binding<simd_float4x4>,
         mode: InteractiveCameraModifier.Mode,
@@ -29,6 +26,8 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
         self.mode = mode
         self.transforms = transforms
         self.target = target
+        let synchronizer = CameraMatrixSynchronizer(target: target)
+        self._interactionState = State(initialValue: synchronizer.interactionState(from: cameraMatrix.wrappedValue) ?? InteractionState(target: target))
     }
 
     public func body(content: Content) -> some View {
@@ -43,49 +42,36 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
                 )
             )
             .onChange(of: interactionState) { _, newValue in
-                guard hasInitializedFromMatrix else {
+                let newMatrix = synchronizer.cameraMatrix(from: newValue)
+                guard !matricesMatch(cameraMatrix, newMatrix) else {
                     return
                 }
-                updateCameraMatrixFromInteraction()
+                cameraMatrix = newMatrix
             }
-            .onAppear {
-                guard !hasInitializedFromMatrix else {
+            .onChange(of: cameraMatrix) { _, newValue in
+                let expectedMatrix = synchronizer.cameraMatrix(from: interactionState)
+                guard !matricesMatch(newValue, expectedMatrix), let newState = synchronizer.interactionState(from: newValue) else {
                     return
                 }
-                initializeStateFromMatrix()
+                interactionState = newState
+            }
+            .onChange(of: target) { _, _ in
+                guard let newState = synchronizer.interactionState(from: cameraMatrix) else {
+                    return
+                }
+                interactionState = newState
             }
     }
 
-    private func initializeStateFromMatrix() {
-        guard let components = cameraMatrix.decompose else {
-            return
-        }
-
-        let position = components.translate
-        let distance = max(length(target - position), 0.01)
-
-        // Compute a lookAt rotation from position toward the target
-        let forward = normalize(target - position)
-        let worldUp = SIMD3<Float>(0, 1, 0)
-        let right = normalize(cross(forward, worldUp))
-        let up = cross(right, forward)
-        // Build a rotation matrix where -Z is forward (camera convention)
-        let rotationMatrix = simd_float3x3(columns: (right, up, -forward))
-        let rotation = simd_normalize(simd_quatf(rotationMatrix))
-
-        interactionState = InteractionState(rotation: rotation, distance: distance, target: target)
-        hasInitializedFromMatrix = true
+    private var synchronizer: CameraMatrixSynchronizer {
+        CameraMatrixSynchronizer(target: target)
     }
 
-    private func updateCameraMatrixFromInteraction() {
-        let rotation = interactionState.rotation
-        let forward = rotation.act(SIMD3<Float>(0, 0, -1))
-        let position = interactionState.target - forward * interactionState.distance
-
-        var newMatrix = rotation.matrix
-        newMatrix.columns.3 = SIMD4<Float>(position, 1)
-
-        cameraMatrix = newMatrix
+    private func matricesMatch(_ lhs: simd_float4x4, _ rhs: simd_float4x4, tolerance: Float = 0.00001) -> Bool {
+        length(lhs.columns.0 - rhs.columns.0) <= tolerance
+            && length(lhs.columns.1 - rhs.columns.1) <= tolerance
+            && length(lhs.columns.2 - rhs.columns.2) <= tolerance
+            && length(lhs.columns.3 - rhs.columns.3) <= tolerance
     }
 
 }

@@ -592,12 +592,13 @@ Given the same input sequence and elapsed time, FPV movement produces determinis
 ## 28: Camera matrix binding does not have a testable synchronization boundary
 
 +++
-status: open
+status: closed
 priority: high
 kind: bug
 labels: architecture, testability, camera, effort:m
 created: 2026-08-26T14:15:33Z
-updated: 2026-08-26T14:19:49Z
+updated: 2026-08-26T14:52:46Z
+closed: 2026-08-26T14:52:46Z
 +++
 
 ## What is wrong
@@ -607,6 +608,8 @@ InteractiveCameraMatrixModifier keeps matrix/state conversion and lifecycle sync
 ## Expected
 
 Camera matrices and interaction state remain synchronized across initialization, external updates, repeated interaction, and degenerate orientations.
+
+- `2026-08-26T14:52:46Z`: Added a pure camera matrix synchronization boundary, observed external matrix and target changes, handled degenerate orientations, and added boundary tests. SwiftLint, package tests, and iOS build pass.
 
 ---
 
