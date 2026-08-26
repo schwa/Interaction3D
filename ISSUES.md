@@ -616,24 +616,27 @@ Camera matrices and interaction state remain synchronized across initialization,
 
 ---
 
-## 29: WorldView centrally owns every interaction tool and projection assumption
+## 29: WorldView silently assumes a 60-degree flight simulation field of view
 
 +++
-status: open
+status: closed
 priority: medium
 kind: enhancement
-labels: architecture, testability, tools, effort:l
+labels: testability, projection, fpv, effort:s
 created: 2026-08-26T14:15:33Z
-updated: 2026-08-26T14:19:49Z
+updated: 2026-08-26T15:10:07Z
+closed: 2026-08-26T15:10:07Z
 +++
 
-## What is wrong
+What is wrong
 
-WorldView directly registers every tool, group, label, platform condition, modifier constructor, and shared camera binding. Adding or changing a tool requires editing the central view. Flight simulation behavior also depends on a PerspectiveProjection downcast and silently substitutes a field of view for other projection types.
+WorldView downcasts its projection to PerspectiveProjection for FPV flight simulation. For every other projection type it silently substitutes a 60-degree field of view, so the horizon overlay can disagree with the rendered projection.
 
-## Expected
+Expected
 
-Tool composition and projection capabilities have explicit boundaries whose behavior can be verified independently.
+WorldView derives the field of view from PerspectiveProjection or accepts an explicit override. When neither is available, the FPV flight simulation tool is unavailable rather than using an invented projection value.
+
+- `2026-08-26T15:10:07Z`: WorldView now derives perspective field of view, accepts an explicit override for other projections, and disables FPV Flight Sim when no field of view is available. Added capability tests; strict SwiftLint, package tests, and macOS/iOS builds pass.
 
 ---
 

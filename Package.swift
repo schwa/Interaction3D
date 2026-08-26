@@ -34,7 +34,10 @@ let package = Package(
         ),
         .testTarget(
             name: "Interaction3DTests",
-            dependencies: ["Interaction3D"]
+            dependencies: [
+                "Interaction3D",
+                .product(name: "GeometryLite3D", package: "GeometryLite3D"),
+            ]
         ),
     ]
 )

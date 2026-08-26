@@ -1,3 +1,4 @@
+import GeometryLite3D
 @testable import Interaction3D
 import simd
 import Testing
@@ -165,6 +166,26 @@ import Testing
     controller.update(deltaTime: 10)
 
     #expect(abs(controller.pitch - (.pi / 2 - 0.01)) < 0.0001)
+}
+
+@Test func worldViewDerivesFlightSimulationFieldOfViewFromPerspectiveProjection() {
+    let projection = PerspectiveProjection(verticalAngleOfView: .degrees(75))
+    let fieldOfView = WorldViewProjectionCapabilities.verticalFOV(for: projection, override: nil)
+
+    #expect(fieldOfView == 75)
+}
+
+@Test func worldViewRequiresExplicitFieldOfViewForOtherProjections() {
+    let projection = TestProjection()
+
+    #expect(WorldViewProjectionCapabilities.verticalFOV(for: projection, override: nil) == nil)
+    #expect(WorldViewProjectionCapabilities.verticalFOV(for: projection, override: 42) == 42)
+}
+
+private struct TestProjection: ProjectionProtocol {
+    func projectionMatrix(aspectRatio: Float) -> float4x4 {
+        matrix_identity_float4x4
+    }
 }
 
 private extension SIMD4<Float> {
