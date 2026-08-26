@@ -446,3 +446,83 @@ Rows use copied collections or positional offsets as identity.
 - `2026-08-25T21:11:35Z`: Regression test exempt: this is SwiftUI row identity and allocation behavior without a unit-testable output; xcb test verifies the direct enumerated collections and element identity key paths compile.
 
 ---
+
+## 22: Canvas widgets are inaccessible to assistive technologies
+
++++
+status: new
+priority: high
+kind: bug
+labels: accessibility, swiftui
+created: 2026-08-26T13:55:39Z
++++
+
+## What is wrong
+
+The public canvas-based widgets expose visual state without accessibility labels, values, representations, or decorative-element handling. VoiceOver users cannot identify or understand the artificial horizon, compass, horizon cue, map, speedometer, measurement dial, or rotation widget.
+
+## Expected
+
+Each widget communicates its purpose and current value through accessibility APIs.
+
+---
+
+## 23: Tool picker relies on pervasive AnyView type erasure
+
++++
+status: new
+priority: medium
+kind: enhancement
+labels: swiftui, architecture
+created: 2026-08-26T13:55:39Z
++++
+
+## What is wrong
+
+ToolPicker erases tool labels, modifiers, and composed content with AnyView. This hides view structure from SwiftUI and makes identity, invalidation, and layout behavior harder to reason about.
+
+## Expected
+
+The tool picker preserves useful SwiftUI view structure without pervasive type erasure.
+
+---
+
+## 24: Form controls use hand-built label and value rows
+
++++
+status: new
+priority: low
+kind: enhancement
+labels: swiftui
+created: 2026-08-26T13:55:39Z
++++
+
+## What is wrong
+
+Camera lens controls and transformer parameter controls manually compose labels, spacers, values, and controls in HStacks. Their alignment and adaptive behavior do not consistently follow Form conventions.
+
+## Expected
+
+Label-and-value controls align and adapt consistently with native Form rows.
+
+---
+
+## 25: Flight simulator controls do not adapt to available space
+
++++
+status: new
+priority: medium
+kind: bug
+labels: swiftui,layout
+created: 2026-08-26T13:55:39Z
++++
+
+## What is wrong
+
+FlightSimControlsView uses several fixed widths and heights with explicit spacers. The public view does not adapt well to narrow windows, larger text, or varying container sizes, which can clip or misalign its instruments.
+
+## Expected
+
+The control layout adapts to its container and text size without clipping or overflow.
+
+---
