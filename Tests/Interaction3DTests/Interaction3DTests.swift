@@ -1,6 +1,7 @@
 import GeometryLite3D
 @testable import Interaction3D
 import simd
+import SwiftUI
 import Testing
 
 @Test func anyTransformerParameterStoresAndRetrievesValues() {
@@ -222,6 +223,80 @@ private struct TestProjection: ProjectionProtocol {
 
     let polygon: [SIMD3<Float>] = [[-1, -1, -1], [1, -1, -1], [0, 1, 1]]
     #expect(projection.project(polygon: polygon).isEmpty)
+}
+
+@MainActor
+@Test func interactiveCameraPublicAPIIsSourceCompatible() {
+    let rotation = Binding.constant(simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0)))
+    let distance = Binding.constant(Float(5))
+    let target = Binding.constant(SIMD3<Float>.zero)
+    let matrix = Binding.constant(matrix_identity_float4x4)
+
+    _ = Color.clear.interactiveCamera(rotation: rotation, distance: distance, target: target)
+    _ = Color.clear.interactiveCamera(cameraMatrix: matrix)
+}
+
+@Test func cameraScrollAndMagnifyZoomUseIndependentEquivalentScales() {
+    let zoom: InteractionAxisTransforms.AxisTransform = { $0 * 2 }
+    let transforms = InteractionAxisTransforms(zoom: zoom)
+    let scroll = CameraZoomTransformer(transforms: transforms, magnitude: 1)
+    let magnify = CameraZoomTransformer(transforms: transforms, magnitude: 100)
+
+    #expect(scroll.transform(5) == magnify.transform(0.05))
+}
+
+@Test func cameraRotationSessionTracksDeltasAndCompletion() {
+    var session = CameraRotationSession()
+    let rotation = simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))
+    let firstDrag = CoreDragValue(
+        translation: CGSize(width: 10, height: 4),
+        startLocation: CGPoint(x: 20, y: 20),
+        currentLocation: CGPoint(x: 30, y: 24)
+    )
+    let secondDrag = CoreDragValue(
+        translation: CGSize(width: 15, height: 9),
+        startLocation: CGPoint(x: 20, y: 20),
+        currentLocation: CGPoint(x: 35, y: 29)
+    )
+
+    let firstInput = session.input(for: firstDrag, rotation: rotation, mode: .turntable(), viewSize: .zero)
+    let secondInput = session.input(for: secondDrag, rotation: rotation, mode: .turntable(), viewSize: .zero)
+    #expect(firstInput.rotation == CGSize(width: 10, height: 4))
+    #expect(secondInput.rotation == CGSize(width: 5, height: 5))
+
+    session.end()
+    #expect(session.rotationAtDragStart == nil)
+    let restartedInput = session.input(for: firstDrag, rotation: rotation, mode: .turntable(), viewSize: .zero)
+    #expect(restartedInput.rotation == firstDrag.translation)
+}
+
+@Test func cameraRotationSessionSuppliesArcballPositions() {
+    var session = CameraRotationSession()
+    let rotation = simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0))
+    let drag = CoreDragValue(
+        translation: CGSize(width: 50, height: 0),
+        startLocation: CGPoint(x: 25, y: 50),
+        currentLocation: CGPoint(x: 75, y: 50)
+    )
+    let input = session.input(
+        for: drag,
+        rotation: rotation,
+        mode: .arcball(),
+        viewSize: CGSize(width: 100, height: 100)
+    )
+    let result = ArcballTransformer(input: input).transform(InteractionState(rotation: rotation))
+
+    #expect(input.startLocation == drag.startLocation)
+    #expect(input.currentLocation == drag.currentLocation)
+    #expect(abs(result.rotation.real) < 0.9999)
+}
+
+@Test func cameraPanUsesConfiguredTransform() {
+    let pan: InteractionAxisTransforms.PanTransform = { SIMD3(Float($0.x * 2), Float($0.y * 3), 0) }
+    let transforms = InteractionAxisTransforms(pan: pan)
+    let transformer = CameraPanTransformer(transforms: transforms)
+
+    #expect(transformer.transform(CGSize(width: 4, height: 5)) == SIMD3<Float>(8, 15, 0))
 }
 
 private extension SIMD4<Float> {

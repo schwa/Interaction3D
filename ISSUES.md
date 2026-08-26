@@ -546,12 +546,13 @@ The control layout adapts to its container and text size without clipping or ove
 ## 26: InteractiveCamera bypasses shared composable gesture components
 
 +++
-status: open
+status: closed
 priority: high
 kind: enhancement
 labels: architecture, testability, camera, effort:l
 created: 2026-08-26T14:15:33Z
-updated: 2026-08-26T14:19:49Z
+updated: 2026-08-26T15:25:27Z
+closed: 2026-08-26T15:25:27Z
 +++
 
 ## What is wrong
@@ -565,6 +566,8 @@ InteractiveCamera composes the same reusable drag, scroll, magnify, accumulation
 ## Proposed fix (per user)
 
 Keep the existing `interactiveCamera(...)` API as a convenience composition. Extend the shared drag primitive to expose start location, current location, and translation. Build thin turntable and arcball rotation adapters on that primitive. Compose pan, scroll zoom, and magnify zoom from the existing transformed gesture components, with independent scroll and magnify scaling because their raw units differ. Remove the duplicate delta bookkeeping and `applyInteraction()` state machine from `InteractiveCameraModifier`. Add boundary tests for scroll/pinch parity, gesture completion, and both rotation modes.
+
+- `2026-08-26T15:25:27Z`: Refactored InteractiveCamera to compose shared core drag, scroll, and magnify components while preserving its public API. Added internal drag positions, thin camera adapters, independent zoom scaling, and compatibility/rotation/completion tests. Strict SwiftLint, package tests, and macOS/iOS builds pass.
 
 ---
 

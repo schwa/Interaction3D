@@ -1,61 +1,18 @@
-import GeometryLite3D
 import simd
 import SwiftUI
 
-// MARK: - Interactive Camera Modifier
-
-/// Orchestrates all camera interaction gestures (drag, pan, scroll, magnify) and delegates to a ``TurntableTransformer`` or ``ArcballTransformer`` to update camera state.
 public struct InteractiveCameraModifier: ViewModifier {
     public enum Mode {
         case turntable(TurntableTransformer = TurntableTransformer())
         case arcball(ArcballTransformer = ArcballTransformer())
     }
 
-    @Binding
-    var rotation: simd_quatf
-
-    @Binding
-    var distance: Float
-
-    @Binding
-    var target: SIMD3<Float>
+    @Binding var rotation: simd_quatf
+    @Binding var distance: Float
+    @Binding var target: SIMD3<Float>
 
     var mode: Mode
-
-    @State
-    private var dragState: DragGestureModifier.DragState = .zero
-
-    @State
-    private var panTranslation: CGSize = .zero
-
-    @State
-    private var zoomDelta: Double = 0
-
-    @State
-    private var scrollWheelDelta: Double = 0
-
-    @State
-    private var lastRotationTranslation: CGSize = .zero
-
-    @State
-    private var lastPanTranslation: CGSize = .zero
-
-    @State
-    private var lastZoomDelta: Double = 0
-
-    #if os(visionOS)
-    @State
-    private var zoomDistanceAtStart: Float?
-    #endif
-
-    @State
-    private var viewSize: CGSize = .zero
-
-    @State
-    private var rotationAtDragStart = simd_quatf(angle: 0, axis: [0, 1, 0])
-
-    var rotationTransforms: InteractionAxisTransforms
-    var panTransforms: InteractionAxisTransforms
+    var transforms: InteractionAxisTransforms
 
     public init(
         rotation: Binding<simd_quatf>,
@@ -68,151 +25,152 @@ public struct InteractiveCameraModifier: ViewModifier {
         self._distance = distance
         self._target = target
         self.mode = mode
-        self.rotationTransforms = transforms
-        self.panTransforms = InteractionAxisTransforms(
-            yaw: transforms.yaw,
-            pitch: transforms.pitch,
-            zoom: transforms.zoom,
-            pan: transforms.pan
-        )
+        self.transforms = transforms
     }
 
     public func body(content: Content) -> some View {
         content
-            .onGeometryChange(for: CGSize.self, of: \.size) { viewSize = $0 }
-            .modifier(DragGestureModifier(state: $dragState))
+            .modifier(CameraRotationModifier(rotation: $rotation, mode: mode, transforms: transforms))
             #if os(macOS)
-            .simultaneousGesture(panGesture)
-            .onScrollWheel(delta: $scrollWheelDelta)
+            .modifier(CameraPanModifier(target: $target, transforms: transforms))
+            .transformedScrollGesture(
+                transformer: CameraZoomTransformer(transforms: transforms, magnitude: 1),
+                writes: clampedDistance
+            )
             #endif
-            .simultaneousGesture(zoomGesture)
-            .onChange(of: dragState) { oldValue, newValue in
-                // Capture rotation at drag start
-                if oldValue.startLocation == .zero, newValue.startLocation != .zero {
-                    rotationAtDragStart = rotation
-                }
-                applyInteraction()
-            }
-            .onChange(of: panTranslation) { _, _ in
-                applyInteraction()
-            }
-            .onChange(of: zoomDelta) { _, _ in
-                applyInteraction()
-            }
-            .onChange(of: scrollWheelDelta) { _, _ in
-                applyInteraction()
-            }
+            .transformedMagnifyGesture(
+                transformer: CameraZoomTransformer(transforms: transforms, magnitude: 100),
+                writes: clampedDistance
+            )
     }
 
-    #if os(macOS)
-    private var panGesture: some Gesture {
-        DragGesture(minimumDistance: 10)
-            .modifiers(.command)
-            .onChanged { value in
-                panTranslation = value.translation
-            }
-            .onEnded { _ in
-                lastPanTranslation = .zero
-                panTranslation = .zero
-            }
-    }
-    #endif
-
-    private var zoomGesture: some Gesture {
-        MagnifyGesture()
-            .onChanged { value in
-                #if os(visionOS)
-                let startDistance = zoomDistanceAtStart ?? distance
-                zoomDistanceAtStart = startDistance
-                distance = max(0.01, startDistance / Float(value.magnification))
-                #else
-                zoomDelta = Double(value.magnification - 1) * 100
-                #endif
-            }
-            .onEnded { _ in
-                #if os(visionOS)
-                zoomDistanceAtStart = nil
-                #else
-                lastZoomDelta = 0
-                zoomDelta = 0
-                #endif
-            }
-    }
-
-    // swiftlint:disable:next function_body_length
-    private func applyInteraction() {
-        let rotationTranslation = dragState.translation
-
-        var rotationDelta = CGSize(
-            width: rotationTranslation.width - lastRotationTranslation.width,
-            height: rotationTranslation.height - lastRotationTranslation.height
-        )
-
-        if rotationTranslation == .zero, lastRotationTranslation != .zero {
-            rotationDelta = .zero
+    private var clampedDistance: Binding<Float> {
+        Binding {
+            distance
+        } set: { newDistance in
+            distance = max(0.01, newDistance)
         }
-
-        var panDelta = CGSize(
-            width: panTranslation.width - lastPanTranslation.width,
-            height: panTranslation.height - lastPanTranslation.height
-        )
-
-        if panTranslation == .zero, lastPanTranslation != .zero {
-            panDelta = .zero
-        }
-
-        var zoomDeltaChange = zoomDelta - lastZoomDelta
-
-        if zoomDelta == 0, lastZoomDelta != 0 {
-            zoomDeltaChange = 0
-        }
-
-        // Scroll wheel delta is cumulative — consume it all each frame
-        zoomDeltaChange += scrollWheelDelta
-        scrollWheelDelta = 0
-
-        lastRotationTranslation = rotationTranslation
-        lastPanTranslation = panTranslation
-        lastZoomDelta = zoomDelta
-
-        let hasRotationInput = rotationDelta != .zero || dragState.startLocation != .zero
-        guard hasRotationInput || panDelta != .zero || zoomDeltaChange != 0 else {
-            return
-        }
-
-        let input = InteractionInput(
-            rotation: rotationDelta,
-            pan: panDelta,
-            zoom: zoomDeltaChange,
-            startLocation: dragState.startLocation,
-            currentLocation: dragState.currentLocation,
-            viewSize: viewSize,
-            rotationAtDragStart: rotationAtDragStart
-        )
-
-        let state = InteractionState(rotation: rotation, distance: distance, target: target)
-
-        let updatedState: InteractionState
-        switch mode {
-        case .turntable(let transformer):
-            var transformer = transformer
-            transformer.input = input
-            transformer.transforms = rotationTransforms
-            updatedState = transformer.transform(state)
-        case .arcball(let transformer):
-            var transformer = transformer
-            transformer.input = input
-            transformer.transforms = rotationTransforms
-            updatedState = transformer.transform(state)
-        }
-
-        rotation = updatedState.rotation
-        distance = updatedState.distance
-        target = updatedState.target
     }
 }
 
-// MARK: - View Extension
+struct CameraPanTransformer: Transformer {
+    var transforms: InteractionAxisTransforms
+
+    func transform(_ input: CGSize) -> SIMD3<Float> {
+        transforms.pan(SIMD2(Double(input.width), Double(input.height)))
+    }
+}
+
+private struct CameraPanModifier: ViewModifier {
+    @Binding var target: SIMD3<Float>
+    var transforms: InteractionAxisTransforms
+
+    @State private var targetAtDragStart: SIMD3<Float>?
+
+    func body(content: Content) -> some View {
+        content.modifier(
+            CoreDragModifier(modifiers: .command, minimumDistance: 10, momentum: false) { translation in
+                let startTarget = targetAtDragStart ?? target
+                targetAtDragStart = startTarget
+                target = startTarget + CameraPanTransformer(transforms: transforms).transform(translation)
+            } onEnded: {
+                targetAtDragStart = nil
+            }
+        )
+    }
+}
+
+struct CameraZoomTransformer: Transformer {
+    var transforms: InteractionAxisTransforms
+    var magnitude: Double
+
+    func transform(_ input: Double) -> Float {
+        Float(transforms.zoom(input * magnitude))
+    }
+}
+
+struct CameraRotationSession {
+    private(set) var rotationAtDragStart: simd_quatf?
+    private var lastTranslation: CGSize = .zero
+
+    mutating func input(
+        for drag: CoreDragValue,
+        rotation: simd_quatf,
+        mode: InteractiveCameraModifier.Mode,
+        viewSize: CGSize
+    ) -> InteractionInput {
+        let startRotation = rotationAtDragStart ?? rotation
+        rotationAtDragStart = startRotation
+        defer { lastTranslation = drag.translation }
+
+        switch mode {
+        case .turntable:
+            return InteractionInput(
+                rotation: drag.translation - lastTranslation,
+                rotationAtDragStart: startRotation
+            )
+        case .arcball:
+            return InteractionInput(
+                startLocation: drag.startLocation,
+                currentLocation: drag.currentLocation,
+                viewSize: viewSize,
+                rotationAtDragStart: startRotation
+            )
+        }
+    }
+
+    mutating func end() {
+        rotationAtDragStart = nil
+        lastTranslation = .zero
+    }
+}
+
+private struct CameraRotationModifier: ViewModifier {
+    @Binding var rotation: simd_quatf
+
+    var mode: InteractiveCameraModifier.Mode
+    var transforms: InteractionAxisTransforms
+
+    @State private var viewSize: CGSize = .zero
+    @State private var session = CameraRotationSession()
+
+    func body(content: Content) -> some View {
+        content
+            .onGeometryChange(for: CGSize.self, of: \.size) { viewSize = $0 }
+            .modifier(
+                CoreDragModifier(
+                    modifiers: [],
+                    minimumDistance: 10,
+                    momentum: true,
+                    onValueChanged: updateRotation,
+                    onEnded: endRotation
+                )
+            )
+    }
+
+    private func updateRotation(_ drag: CoreDragValue) {
+        let input = session.input(for: drag, rotation: rotation, mode: mode, viewSize: viewSize)
+        rotation = transformedRotation(input: input)
+    }
+
+    private func transformedRotation(input: InteractionInput) -> simd_quatf {
+        let state = InteractionState(rotation: rotation)
+        switch mode {
+        case .turntable(var transformer):
+            transformer.input = input
+            transformer.transforms = transforms
+            return transformer.transform(state).rotation
+        case .arcball(var transformer):
+            transformer.input = input
+            transformer.transforms = transforms
+            return transformer.transform(state).rotation
+        }
+    }
+
+    private func endRotation() {
+        session.end()
+    }
+}
 
 public extension View {
     func interactiveCamera(
@@ -223,5 +181,11 @@ public extension View {
         transforms: InteractionAxisTransforms = .default
     ) -> some View {
         modifier(InteractiveCameraModifier(rotation: rotation, distance: distance, target: target, mode: mode, transforms: transforms))
+    }
+}
+
+private extension CGSize {
+    static func - (lhs: Self, rhs: Self) -> Self {
+        CGSize(width: lhs.width - rhs.width, height: lhs.height - rhs.height)
     }
 }

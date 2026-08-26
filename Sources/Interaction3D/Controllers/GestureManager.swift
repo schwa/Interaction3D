@@ -27,6 +27,12 @@ private struct AnimatedSizeModifier: ViewModifier, @MainActor Animatable {
 
 // MARK: - Core Drag Modifier
 
+struct CoreDragValue: Equatable {
+    var translation: CGSize
+    var startLocation: CGPoint
+    var currentLocation: CGPoint
+}
+
 /// Low-level drag gesture filtered by modifier keys.
 /// Supports momentum: on release, animates from last translation to predicted end,
 /// calling `onChanged` each frame during the animation.
@@ -35,13 +41,13 @@ public struct CoreDragModifier: ViewModifier {
     let modifiers: EventModifiers?
     let minimumDistance: CGFloat
     let momentum: Bool
-    let onChanged: (CGSize) -> Void
+    let onValueChanged: (CoreDragValue) -> Void
     let onEnded: () -> Void
 
     enum ClaimState { case unclaimed, claimed, rejected }
 
     @State private var claimState: ClaimState = .unclaimed
-    @State private var lastTranslation: CGSize = .zero
+    @State private var startLocation: CGPoint = .zero
     @State private var animatingToTranslation: CGSize = .zero
     @State private var isAnimating = false
 
@@ -55,7 +61,21 @@ public struct CoreDragModifier: ViewModifier {
         self.modifiers = modifiers
         self.minimumDistance = minimumDistance
         self.momentum = momentum
-        self.onChanged = onChanged
+        self.onValueChanged = { onChanged($0.translation) }
+        self.onEnded = onEnded
+    }
+
+    init(
+        modifiers: EventModifiers? = nil,
+        minimumDistance: CGFloat = 10,
+        momentum: Bool = true,
+        onValueChanged: @escaping (CoreDragValue) -> Void,
+        onEnded: @escaping () -> Void
+    ) {
+        self.modifiers = modifiers
+        self.minimumDistance = minimumDistance
+        self.momentum = momentum
+        self.onValueChanged = onValueChanged
         self.onEnded = onEnded
     }
 
@@ -84,7 +104,7 @@ public struct CoreDragModifier: ViewModifier {
                 height: animatingToTranslation.height
             ) { size in
                 if isAnimating {
-                    onChanged(size)
+                    notifyChanged(translation: size)
                 }
             })
             .simultaneousGesture(dragGesture)
@@ -98,7 +118,7 @@ public struct CoreDragModifier: ViewModifier {
                     .modifiers(modifiers)
                 #endif
                     .onChanged { value in
-                        handleChanged(value.translation)
+                        handleChanged(value)
                     }
                     .onEnded { value in
                         handleEnded(value.translation, predicted: value.predictedEndTranslation)
@@ -116,7 +136,7 @@ public struct CoreDragModifier: ViewModifier {
                         return
                     }
                     #endif
-                    handleChanged(value.translation)
+                    handleChanged(value)
                 }
                 .onEnded { value in
                     #if os(macOS)
@@ -131,11 +151,24 @@ public struct CoreDragModifier: ViewModifier {
         )
     }
 
-    private func handleChanged(_ translation: CGSize) {
+    private func handleChanged(_ value: DragGesture.Value) {
         isAnimating = false
-        lastTranslation = translation
-        animatingToTranslation = translation
-        onChanged(translation)
+        startLocation = value.startLocation
+        animatingToTranslation = value.translation
+        notifyChanged(translation: value.translation, currentLocation: value.location)
+    }
+
+    private func notifyChanged(translation: CGSize, currentLocation: CGPoint? = nil) {
+        onValueChanged(
+            CoreDragValue(
+                translation: translation,
+                startLocation: startLocation,
+                currentLocation: currentLocation ?? CGPoint(
+                    x: startLocation.x + translation.width,
+                    y: startLocation.y + translation.height
+                )
+            )
+        )
     }
 
     private func handleEnded(_ translation: CGSize, predicted: CGSize) {
@@ -147,13 +180,17 @@ public struct CoreDragModifier: ViewModifier {
                 withAnimation(.easeOut(duration: 0.3)) {
                     animatingToTranslation = predicted
                 } completion: {
-                    isAnimating = false
-                    onEnded()
+                    finish()
                 }
                 return
             }
         }
-        lastTranslation = .zero
+        finish()
+    }
+
+    private func finish() {
+        isAnimating = false
+        startLocation = .zero
         animatingToTranslation = .zero
         onEnded()
     }
