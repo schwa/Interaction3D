@@ -68,20 +68,6 @@ struct WidgetsDemo: View {
 
     var body: some View {
         Form {
-            Section("Presentation") {
-                Picker("Form Style", selection: $formStyle) {
-                    ForEach(WidgetsFormStyle.allCases) { style in
-                        Text(style.rawValue).tag(style)
-                    }
-                }
-                .pickerStyle(.segmented)
-                Picker("Color Scheme", selection: $colorScheme) {
-                    ForEach(WidgetsColorScheme.allCases) { scheme in
-                        Text(scheme.rawValue).tag(Optional(scheme))
-                    }
-                }
-                .pickerStyle(.segmented)
-            }
             Section("Rotation Widget") {
                 RotationWidget(rotation: $rotation)
                     .frame(width: 200, height: 200)
@@ -103,12 +89,76 @@ struct WidgetsDemo: View {
                     .frame(maxWidth: 400)
             }
 
-            Section("Camera Controls") {
+            Section("Scrubbable Value Field") {
                 ScrubbableValueField("Value", value: $scrubbedValue, range: 0 ... 100)
+            }
+
+            Section("Camera Position Editor") {
                 CameraPositionEditor(matrix: $matrix)
+            }
+
+            Section("Camera Orientation Editor") {
                 CameraOrientationEditor(matrix: $matrix)
+            }
+
+            Section("Angle of View Control") {
                 AngleOfViewControl(verticalDegrees: $verticalFieldOfView, aspectRatio: 16 / 9)
+            }
+
+            Section("Clipping Range Control") {
                 ClippingRangeControl(near: $nearClippingPlane, far: $farClippingPlane)
+            }
+
+            Section("Compass") {
+                CompassView(heading: .degrees(45))
+                    .frame(height: 100)
+            }
+
+            Section("Artificial Horizon") {
+                ArtificialHorizonView(transform: matrix)
+                    .frame(width: 240, height: 160)
+            }
+
+            Section("Horizon Cue") {
+                HorizonCue(pitch: 0.2, verticalFOV: verticalFieldOfView)
+                    .frame(width: 300, height: 160)
+                    .background(.black)
+            }
+
+            Section("Map") {
+                MapView(transform: matrix, breadcrumbs: [[-20, -10], [-10, 5], [0, 0], [15, 20]])
+                    .frame(width: 300, height: 240)
+            }
+
+            Section("Speedometer") {
+                SpeedometerView(linearVelocity: [0.25, -0.1, 0.75], angularVelocity: [0.1, 0.2, -0.1])
+                    .frame(width: 320, height: 160)
+            }
+
+            Section("Measurement Dial") {
+                SpeedometerDialView(
+                    measurement: Measurement(value: 80, unit: UnitSpeed.kilometersPerHour),
+                    maxMeasurement: Measurement(value: 200, unit: UnitSpeed.kilometersPerHour),
+                    displayUnit: .kilometersPerHour,
+                    minorTick: Measurement(value: 10, unit: UnitSpeed.kilometersPerHour),
+                    majorTick: Measurement(value: 20, unit: UnitSpeed.kilometersPerHour),
+                    labels: stride(from: 0.0, through: 200.0, by: 20).map { Measurement(value: $0, unit: UnitSpeed.kilometersPerHour) }
+                )
+                .frame(width: 240, height: 240)
+            }
+
+            Section("Flight Simulator Controls") {
+                FlightSimControlsView(
+                    transform: matrix,
+                    linearVelocity: [0.25, -0.1, 0.75],
+                    angularVelocity: [0.1, 0.2, -0.1],
+                    pitch: 0.2,
+                    verticalFOV: verticalFieldOfView,
+                    breadcrumbs: [[-20, -10], [-10, 5], [0, 0], [15, 20]],
+                    speed: 80
+                )
+                .frame(height: 420)
+                .background(.black)
             }
 
             Section("Game Controller") {
@@ -131,6 +181,23 @@ struct WidgetsDemo: View {
             }
         }
         .modifier(WidgetsFormStyleModifier(style: formStyle))
+        .toolbar {
+            ToolbarItemGroup {
+                Picker("Form Style", selection: $formStyle) {
+                    ForEach(WidgetsFormStyle.allCases) { style in
+                        Text(style.rawValue).tag(style)
+                    }
+                }
+                .pickerStyle(.menu)
+
+                Picker("Color Scheme", selection: $colorScheme) {
+                    ForEach(WidgetsColorScheme.allCases) { scheme in
+                        Text(scheme.rawValue).tag(Optional(scheme))
+                    }
+                }
+                .pickerStyle(.menu)
+            }
+        }
         .preferredColorScheme(colorScheme?.colorScheme)
         .onAppear {
             colorScheme = colorScheme ?? WidgetsColorScheme(systemColorScheme)
