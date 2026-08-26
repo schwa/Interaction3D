@@ -61,10 +61,6 @@ struct WidgetsDemo: View {
     @State private var farClippingPlane = 1_000.0
     @State private var scrubbedValue = 12.0
     @State private var transformer = LerpPositionTransformer(start: .zero, end: [10, 10, 10], t: 0.5)
-    @State private var cameraDistance: Float = 5
-    @State private var cameraTarget = SIMD3<Float>.zero
-    @State private var cameraMode = InteractiveCameraModifier.Mode.turntable()
-    @State private var cameraTransforms = InteractionAxisTransforms.default
 
     var body: some View {
         Form {
@@ -147,33 +143,8 @@ struct WidgetsDemo: View {
                 .frame(width: 240, height: 240)
             }
 
-            Section("Flight Simulator Controls") {
-                FlightSimControlsView(
-                    transform: matrix,
-                    linearVelocity: [0.25, -0.1, 0.75],
-                    angularVelocity: [0.1, 0.2, -0.1],
-                    pitch: 0.2,
-                    verticalFOV: verticalFieldOfView,
-                    breadcrumbs: [[-20, -10], [-10, 5], [0, 0], [15, 20]],
-                    speed: 80
-                )
-                .frame(height: 420)
-                .background(.black)
-            }
-
             Section("Game Controller") {
                 GameControllerSnapshotView()
-            }
-
-            Section("Interactive Camera Debug") {
-                InteractiveCameraDebugView(
-                    rotation: $rotation,
-                    distance: $cameraDistance,
-                    target: $cameraTarget,
-                    mode: $cameraMode,
-                    transforms: $cameraTransforms
-                )
-                .frame(minHeight: 500)
             }
 
             Section("Transformer Parameters") {
