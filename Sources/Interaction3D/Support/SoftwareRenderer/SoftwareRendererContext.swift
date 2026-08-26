@@ -18,36 +18,28 @@ public struct SoftwareRendererContext {
         self.clipToScreenMatrix = clipToScreenMatrix
     }
 
+    private var projection: SoftwareProjection {
+        SoftwareProjection(
+            viewMatrix: viewMatrix,
+            projectionMatrix: projectionMatrix,
+            clipToScreenMatrix: clipToScreenMatrix
+        )
+    }
+
     public func project(_ position: SIMD3<Float>, modelMatrix: float4x4 = matrix_identity_float4x4) -> CGPoint? {
-        let worldPosition = modelMatrix * SIMD4<Float>(position, 1)
-        let viewPosition = viewMatrix * worldPosition
-        let clipPosition = projectionMatrix * viewPosition
-        let w = clipPosition.w
-
-        guard abs(w) > Float.leastNormalMagnitude else {
-            return nil
-        }
-
-        var ndc = clipPosition / w
-        ndc = clipToScreenMatrix * ndc
-        let transformedW = ndc.w
-        guard abs(transformedW) > Float.leastNormalMagnitude else {
-            return nil
-        }
-        ndc /= transformedW
-
-        return CGPoint(x: CGFloat(ndc.x), y: CGFloat(ndc.y))
+        projection.project(position, modelMatrix: modelMatrix).map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) }
     }
 
     public func path(polygon: [SIMD3<Float>], modelMatrix: float4x4 = matrix_identity_float4x4) -> Path {
-        let projected = polygon.compactMap { project($0, modelMatrix: modelMatrix) }
-        guard projected.count >= 3 else {
+        let projected = projection.project(polygon: polygon, modelMatrix: modelMatrix)
+        guard !projected.isEmpty else {
             return Path()
         }
+        let points = projected.map { CGPoint(x: CGFloat($0.x), y: CGFloat($0.y)) }
 
         var path = Path()
-        path.move(to: projected[0])
-        for point in projected.dropFirst() {
+        path.move(to: points[0])
+        for point in points.dropFirst() {
             path.addLine(to: point)
         }
         path.closeSubpath()

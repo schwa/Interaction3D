@@ -188,6 +188,42 @@ private struct TestProjection: ProjectionProtocol {
     }
 }
 
+@Test func softwareProjectionMapsNormalizedCoordinatesToScreen() {
+    let projection = SoftwareProjection(
+        viewMatrix: .identity,
+        projectionMatrix: .identity,
+        clipToScreenMatrix: .clipToScreen(width: 200, height: 100)
+    )
+
+    #expect(projection.project([0, 0, 0]) == [100, 50])
+    #expect(projection.project([1, 1, 0]) == [200, 0])
+}
+
+@Test func softwareProjectionRejectsInvalidAndBehindCameraPoints() {
+    let perspective = PerspectiveProjection(verticalAngleOfView: .degrees(60))
+    let projection = SoftwareProjection(
+        viewMatrix: .identity,
+        projectionMatrix: perspective.projectionMatrix(aspectRatio: 1),
+        clipToScreenMatrix: .identity
+    )
+
+    #expect(projection.project([0, 0, -1]) != nil)
+    #expect(projection.project([0, 0, 1]) == nil)
+    #expect(projection.project([.nan, 0, -1]) == nil)
+}
+
+@Test func softwareProjectionRejectsPartiallyUnprojectablePolygons() {
+    let perspective = PerspectiveProjection(verticalAngleOfView: .degrees(60))
+    let projection = SoftwareProjection(
+        viewMatrix: .identity,
+        projectionMatrix: perspective.projectionMatrix(aspectRatio: 1),
+        clipToScreenMatrix: .identity
+    )
+
+    let polygon: [SIMD3<Float>] = [[-1, -1, -1], [1, -1, -1], [0, 1, 1]]
+    #expect(projection.project(polygon: polygon).isEmpty)
+}
+
 private extension SIMD4<Float> {
     var xyz: SIMD3<Float> {
         SIMD3<Float>(x, y, z)

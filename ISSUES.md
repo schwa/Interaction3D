@@ -640,23 +640,26 @@ WorldView derives the field of view from PerspectiveProjection or accepts an exp
 
 ---
 
-## 30: Software renderer mixes projection geometry with SwiftUI presentation
+## 30: Software renderer accepts invalid and partially projected geometry
 
 +++
-status: open
+status: closed
 priority: medium
 kind: enhancement
-labels: architecture, testability, rendering, effort:l
+labels: testability, rendering, projection, effort:s
 created: 2026-08-26T14:15:33Z
-updated: 2026-08-26T14:19:49Z
+updated: 2026-08-26T15:16:51Z
+closed: 2026-08-26T15:16:51Z
 +++
 
-## What is wrong
+What is wrong
 
-The software renderer combines homogeneous projection, CGPoint and Path creation, face and edge visibility, camera setup, colors, and labels across SoftwareRendererContext, PolygonMesh, and Cube. Pure geometry behavior cannot be tested without importing presentation concerns, and partially unprojectable polygons have undefined boundary behavior.
+SoftwareRendererContext accepts points behind the camera because it checks abs(w), and path(polygon:) drops unprojectable vertices before connecting the remainder. This can create a valid-looking path from invalid geometry.
 
-## Expected
+Expected
 
-Projection and visibility behavior have a clear testable boundary, including clipping, invalid W values, screen mapping, and behind-camera geometry.
+Pure projection behavior has a testable SIMD boundary. Invalid or behind-camera points fail projection, screen mapping is deterministic, and a polygon is rejected in full when any vertex cannot be projected. Full frustum clipping is out of scope until arbitrary partially visible meshes require it.
+
+- `2026-08-26T15:16:51Z`: Added a pure SIMD projection boundary, reject non-finite and behind-camera points, and reject polygons when any vertex cannot project. Preserved CGPoint and Path adapters; full frustum clipping remains out of scope. Strict SwiftLint, package tests, and macOS/iOS builds pass.
 
 ---
