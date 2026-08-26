@@ -1,13 +1,12 @@
 #if os(macOS)
 import AppKit
 #endif
-import Interaction3D
 import SwiftUI
 
 // MARK: - Animated CGSize Helper
 
 /// Bridges SwiftUI animation to a CGSize callback, interpolating frame-by-frame.
-private struct AnimatedSizeModifier: ViewModifier, Animatable {
+private struct AnimatedSizeModifier: ViewModifier, @MainActor Animatable {
     var width: CGFloat
     var height: CGFloat
     var onChange: (CGSize) -> Void
@@ -32,7 +31,7 @@ private struct AnimatedSizeModifier: ViewModifier, Animatable {
 /// Supports momentum: on release, animates from last translation to predicted end,
 /// calling `onChanged` each frame during the animation.
 /// `modifiers`: nil = don't care, [] = no modifiers, [.command] = exactly command, etc.
-struct NewCoreDragModifier: ViewModifier {
+public struct CoreDragModifier: ViewModifier {
     let modifiers: EventModifiers?
     let minimumDistance: CGFloat
     let momentum: Bool
@@ -46,7 +45,7 @@ struct NewCoreDragModifier: ViewModifier {
     @State private var animatingToTranslation: CGSize = .zero
     @State private var isAnimating = false
 
-    init(
+    public init(
         modifiers: EventModifiers? = nil,
         minimumDistance: CGFloat = 10,
         momentum: Bool = true,
@@ -78,7 +77,7 @@ struct NewCoreDragModifier: ViewModifier {
     }
     #endif
 
-    func body(content: Content) -> some View {
+    public func body(content: Content) -> some View {
         content
             .modifier(AnimatedSizeModifier(
                 width: animatingToTranslation.width,
@@ -163,7 +162,7 @@ struct NewCoreDragModifier: ViewModifier {
 // MARK: - Accumulating Drag Gesture Modifier
 
 /// Accumulates drag translation via a transformer.
-struct NewAccumulatingDragGestureModifier<T: Transformer>: ViewModifier where T.Input == CGSize, T.Output: AdditiveArithmetic & VectorArithmetic {
+struct AccumulatingDragGestureModifier<T: Transformer>: ViewModifier where T.Input == CGSize, T.Output: AdditiveArithmetic & VectorArithmetic {
     let modifiers: EventModifiers?
     let transformer: T
     let momentum: Bool
@@ -174,7 +173,7 @@ struct NewAccumulatingDragGestureModifier<T: Transformer>: ViewModifier where T.
 
     func body(content: Content) -> some View {
         content
-            .modifier(NewCoreDragModifier(modifiers: modifiers, minimumDistance: 10, momentum: momentum) { translation in
+            .modifier(CoreDragModifier(modifiers: modifiers, minimumDistance: 10, momentum: momentum) { translation in
                 if !isDragging {
                     valueAtDragStart = value
                     isDragging = true
@@ -192,7 +191,7 @@ struct NewAccumulatingDragGestureModifier<T: Transformer>: ViewModifier where T.
 // MARK: - Scroll Gesture Modifier
 
 #if os(macOS)
-struct NewScrollGestureModifier<T: Transformer>: ViewModifier where T.Input == Double, T.Output: AdditiveArithmetic {
+struct ScrollGestureModifier<T: Transformer>: ViewModifier where T.Input == Double, T.Output: AdditiveArithmetic {
     let transformer: T
     @Binding var value: T.Output
 
@@ -213,7 +212,7 @@ struct NewScrollGestureModifier<T: Transformer>: ViewModifier where T.Input == D
 
 // MARK: - Magnify Gesture Modifier
 
-struct NewMagnifyGestureModifier<T: Transformer>: ViewModifier where T.Input == Double, T.Output: AdditiveArithmetic {
+struct MagnifyGestureModifier<T: Transformer>: ViewModifier where T.Input == Double, T.Output: AdditiveArithmetic {
     let transformer: T
     @Binding var value: T.Output
 
@@ -237,23 +236,23 @@ struct NewMagnifyGestureModifier<T: Transformer>: ViewModifier where T.Input == 
 
 // MARK: - View Extensions
 
-extension View {
-    func newDragGesture<T: Transformer>(
+public extension View {
+    func transformedDragGesture<T: Transformer>(
         _ modifiers: EventModifiers? = nil,
         momentum: Bool = true,
         transformer: T,
         writes value: Binding<T.Output>
     ) -> some View where T.Input == CGSize, T.Output: AdditiveArithmetic & VectorArithmetic {
-        modifier(NewAccumulatingDragGestureModifier(modifiers: modifiers, transformer: transformer, momentum: momentum, value: value))
+        modifier(AccumulatingDragGestureModifier(modifiers: modifiers, transformer: transformer, momentum: momentum, value: value))
     }
 
     #if os(macOS)
-    func newScrollGesture<T: Transformer>(transformer: T, writes value: Binding<T.Output>) -> some View where T.Input == Double, T.Output: AdditiveArithmetic {
-        modifier(NewScrollGestureModifier(transformer: transformer, value: value))
+    func transformedScrollGesture<T: Transformer>(transformer: T, writes value: Binding<T.Output>) -> some View where T.Input == Double, T.Output: AdditiveArithmetic {
+        modifier(ScrollGestureModifier(transformer: transformer, value: value))
     }
     #endif
 
-    func newMagnifyGesture<T: Transformer>(transformer: T, writes value: Binding<T.Output>) -> some View where T.Input == Double, T.Output: AdditiveArithmetic {
-        modifier(NewMagnifyGestureModifier(transformer: transformer, value: value))
+    func transformedMagnifyGesture<T: Transformer>(transformer: T, writes value: Binding<T.Output>) -> some View where T.Input == Double, T.Output: AdditiveArithmetic {
+        modifier(MagnifyGestureModifier(transformer: transformer, value: value))
     }
 }

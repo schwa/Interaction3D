@@ -2,7 +2,7 @@ import DemoKit
 import Interaction3D
 import SwiftUI
 
-struct NewGestureManagerDemo: View {
+struct GestureManagerDemo: View {
     @State private var drag: CGSize = .zero
     @GestureState private var dragPreview: CGSize = .zero
     @GestureState private var commandDragPreview: CGSize = .zero
@@ -84,15 +84,15 @@ struct NewGestureManagerDemo: View {
                 .updating($commandDragPreview) { value, state, _ in state = value.translation }
         )
         #endif
-        .newDragGesture([], transformer: widthTransformer, writes: $drag.width)
-        .newDragGesture([], transformer: heightTransformer, writes: $drag.height)
-        .newDragGesture(.command, transformer: widthTransformer, writes: $commandDrag.width)
-        .newDragGesture(.command, transformer: heightTransformer, writes: $commandDrag.height)
-        .newDragGesture(.option, transformer: clampedWidthTransformer, writes: $optionDragX)
+        .transformedDragGesture([], transformer: widthTransformer, writes: $drag.width)
+        .transformedDragGesture([], transformer: heightTransformer, writes: $drag.height)
+        .transformedDragGesture(.command, transformer: widthTransformer, writes: $commandDrag.width)
+        .transformedDragGesture(.command, transformer: heightTransformer, writes: $commandDrag.height)
+        .transformedDragGesture(.option, transformer: clampedWidthTransformer, writes: $optionDragX)
         #if os(macOS)
-        .newScrollGesture(transformer: ScalingTransformer(magnitude: scrollSensitivity), writes: lockZoom ? $scrollValue.synced(to: $magnifyValue) : $scrollValue)
+        .transformedScrollGesture(transformer: ScalingTransformer(magnitude: scrollSensitivity), writes: lockZoom ? $scrollValue.synced(to: $magnifyValue) : $scrollValue)
         #endif
-        .newMagnifyGesture(transformer: ScalingTransformer(magnitude: magnifySensitivity), writes: lockZoom ? $magnifyValue.synced(to: $scrollValue) : $magnifyValue)
+        .transformedMagnifyGesture(transformer: ScalingTransformer(magnitude: magnifySensitivity), writes: lockZoom ? $magnifyValue.synced(to: $scrollValue) : $magnifyValue)
         .overlay(alignment: .bottom) {
             VStack(spacing: 4) {
                 Text("Drag horizontally")
@@ -215,7 +215,7 @@ private extension Binding where Value: AdditiveArithmetic {
     }
 }
 
-extension NewGestureManagerDemo: DemoView {
+extension GestureManagerDemo: DemoView {
     static var metadata = DemoMetadata(
         name: "Gesture Manager",
         description: "Composable gesture-to-binding system using ViewModifier chaining.",
