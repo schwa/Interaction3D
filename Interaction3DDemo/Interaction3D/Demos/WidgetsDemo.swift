@@ -159,14 +159,14 @@ struct WidgetsDemo: View {
                         Text(style.rawValue).tag(style)
                     }
                 }
-                .pickerStyle(.menu)
+                .pickerStyle(.segmented)
 
                 Picker("Color Scheme", selection: $colorScheme) {
                     ForEach(WidgetsColorScheme.allCases) { scheme in
                         Text(scheme.rawValue).tag(Optional(scheme))
                     }
                 }
-                .pickerStyle(.menu)
+                .pickerStyle(.segmented)
             }
         }
         .preferredColorScheme(colorScheme?.colorScheme)

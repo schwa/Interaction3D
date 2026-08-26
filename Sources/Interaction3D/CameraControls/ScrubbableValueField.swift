@@ -44,9 +44,6 @@ public struct ScrubbableValueField: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(.horizontal, style.fieldSpacing)
-        .padding(.vertical, style.fieldSpacing / 2)
-        .background(.quaternary, in: .rect(cornerRadius: style.fieldCornerRadius))
     }
 
     private var clampedValue: Binding<Double> {
