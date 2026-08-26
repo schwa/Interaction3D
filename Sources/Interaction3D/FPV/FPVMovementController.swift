@@ -1,4 +1,3 @@
-import Foundation
 import Observation
 import simd
 
@@ -15,7 +14,6 @@ public struct FPVMovementController {
     private var yaw: Float = 0
     public private(set) var pitch: Float = 0
     private var position: SIMD3<Float> = .zero
-    private var lastUpdateTime: TimeInterval?
 
     private let minPitch: Float = -.pi / 2 + 0.01
     private let maxPitch: Float = .pi / 2 - 0.01
@@ -30,13 +28,6 @@ public struct FPVMovementController {
     }
 
     public mutating func process(event: NavigationEvent) {
-        let now = Date.timeIntervalSinceReferenceDate
-        if let lastUpdateTime {
-            let delta = Float(now - lastUpdateTime)
-            applyContinuousInputs(deltaTime: max(delta, 0))
-        }
-        lastUpdateTime = now
-
         switch event {
         case .axes(let forward, let sideways, let source):
             let vector = SIMD2<Float>(sideways, forward)
@@ -69,6 +60,11 @@ public struct FPVMovementController {
         updateTransform()
     }
 
+    public mutating func update(deltaTime: Float) {
+        applyContinuousInputs(deltaTime: max(deltaTime, 0))
+        updateTransform()
+    }
+
     public mutating func reset() {
         keyboardAxes = .zero
         controllerAxes = .zero
@@ -80,7 +76,6 @@ public struct FPVMovementController {
         position = .zero
         movementController.linearVelocity = .zero
         movementController.angularVelocity = .zero
-        lastUpdateTime = nil
         updateTransform()
     }
 

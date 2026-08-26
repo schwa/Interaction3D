@@ -116,6 +116,57 @@ import Testing
     #expect(length(synchronizer.cameraMatrix(from: replacementState).columns.3.xyz - replacementMatrix.columns.3.xyz) < 0.0001)
 }
 
+@MainActor
+@Test func fpvMovementIsIndependentOfRepeatedInputEvents() {
+    var sparseController = FPVMovementController()
+    sparseController.process(event: .axes(forward: 1, sideways: 0, source: .keyboard))
+    sparseController.update(deltaTime: 1)
+
+    var noisyController = FPVMovementController()
+    for _ in 0..<100 {
+        noisyController.process(event: .axes(forward: 1, sideways: 0, source: .keyboard))
+    }
+    noisyController.update(deltaTime: 1)
+
+    #expect(length(sparseController.movementController.transform.columns.3.xyz - noisyController.movementController.transform.columns.3.xyz) < 0.0001)
+}
+
+@MainActor
+@Test func fpvMovementCombinesAndNormalizesInputSources() {
+    var controller = FPVMovementController()
+    controller.process(event: .axes(forward: 1, sideways: 0, source: .keyboard))
+    controller.process(event: .axes(forward: 0, sideways: 1, source: .controller))
+    controller.update(deltaTime: 1)
+
+    let position = controller.movementController.transform.columns.3.xyz
+    #expect(abs(length(position) - controller.speed) < 0.0001)
+    #expect(position.x > 0)
+    #expect(position.z < 0)
+}
+
+@MainActor
+@Test func fpvMovementStopsOnNeutralInput() {
+    var controller = FPVMovementController()
+    controller.process(event: .axes(forward: 1, sideways: 0, source: .keyboard))
+    controller.update(deltaTime: 1)
+    let movingPosition = controller.movementController.transform.columns.3.xyz
+
+    controller.process(event: .axes(forward: 0, sideways: 0, source: .keyboard))
+    controller.update(deltaTime: 1)
+
+    #expect(controller.movementController.transform.columns.3.xyz == movingPosition)
+    #expect(controller.movementController.linearVelocity == .zero)
+}
+
+@MainActor
+@Test func fpvMovementClampsPitchDuringExplicitUpdate() {
+    var controller = FPVMovementController()
+    controller.process(event: .controllerState(move: .zero, look: [0, -1], altitude: 0))
+    controller.update(deltaTime: 10)
+
+    #expect(abs(controller.pitch - (.pi / 2 - 0.01)) < 0.0001)
+}
+
 private extension SIMD4<Float> {
     var xyz: SIMD3<Float> {
         SIMD3<Float>(x, y, z)

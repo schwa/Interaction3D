@@ -1,5 +1,6 @@
 #if os(macOS)
 
+import AsyncAlgorithms
 import simd
 import SwiftUI
 
@@ -27,6 +28,7 @@ public struct FPVMovementModifier: ViewModifier {
             .toolbar { toolbarContent }
             .task { await handleKeyboardEvents() }
             .task { await handleGameControllerEvents() }
+            .task { await updateMovement() }
             .onChange(of: fpvController.movementController.transform, initial: true) {
                 cameraMatrix = fpvController.movementController.transform
             }
@@ -41,6 +43,17 @@ public struct FPVMovementModifier: ViewModifier {
     private func handleGameControllerEvents() async {
         for await event in gameController.events {
             fpvController.process(event: event)
+        }
+    }
+
+    private func updateMovement() async {
+        let clock = ContinuousClock()
+        var previousUpdate = clock.now
+        for await _ in AsyncTimerSequence(interval: .milliseconds(8), clock: clock) {
+            let updateTime = clock.now
+            let deltaTime = previousUpdate.duration(to: updateTime).timeInterval
+            previousUpdate = updateTime
+            fpvController.update(deltaTime: deltaTime)
         }
     }
 
@@ -76,6 +89,13 @@ public struct FPVMovementModifier: ViewModifier {
 public extension View {
     func fpvMovement(cameraMatrix: Binding<matrix_float4x4>) -> some View {
         modifier(FPVMovementModifier(cameraMatrix: cameraMatrix))
+    }
+}
+
+private extension Duration {
+    var timeInterval: Float {
+        let components = self.components
+        return Float(components.seconds) + Float(components.attoseconds) / 1e18
     }
 }
 

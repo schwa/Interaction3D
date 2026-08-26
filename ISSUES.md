@@ -571,12 +571,13 @@ Keep the existing `interactiveCamera(...)` API as a convenience composition. Ext
 ## 27: FPV movement depends on hardware polling cadence and wall-clock timing
 
 +++
-status: open
+status: closed
 priority: high
 kind: bug
 labels: architecture, testability, fpv, effort:l
 created: 2026-08-26T14:15:33Z
-updated: 2026-08-26T14:19:49Z
+updated: 2026-08-26T14:57:41Z
+closed: 2026-08-26T14:57:41Z
 +++
 
 ## What is wrong
@@ -586,6 +587,8 @@ The FPV path couples keyboard, mouse, and game-controller polling with event red
 ## Expected
 
 Given the same input sequence and elapsed time, FPV movement produces deterministic pose updates independent of hardware polling cadence.
+
+- `2026-08-26T14:57:41Z`: Separated input event reduction from explicit elapsed-time movement updates, added a continuous-clock integration loop, and added deterministic boundary tests. SwiftLint, package tests, and iOS build pass.
 
 ---
 
