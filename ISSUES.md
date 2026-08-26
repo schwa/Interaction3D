@@ -474,11 +474,13 @@ Each widget communicates its purpose and current value through accessibility API
 ## 23: Tool picker relies on pervasive AnyView type erasure
 
 +++
-status: new
+status: closed
 priority: medium
 kind: enhancement
 labels: swiftui, architecture
 created: 2026-08-26T13:55:39Z
+updated: 2026-08-26T14:19:31Z
+closed: 2026-08-26T14:19:31Z
 +++
 
 ## What is wrong
@@ -488,6 +490,8 @@ ToolPicker erases tool labels, modifiers, and composed content with AnyView. Thi
 ## Expected
 
 The tool picker preserves useful SwiftUI view structure without pervasive type erasure.
+
+- `2026-08-26T14:19:31Z`: Duplicate of #12, which reviewed this exact AnyView-based ToolPicker design and closed it as intentional type erasure for heterogeneous runtime tools.
 
 ---
 
@@ -536,5 +540,114 @@ FlightSimControlsView uses several fixed widths and heights with explicit spacer
 The control layout adapts to its container and text size without clipping or overflow.
 
 - `2026-08-26T14:07:20Z`: Implemented and validated with SwiftLint, macOS/iOS builds, and package tests.
+
+---
+
+## 26: InteractiveCamera bypasses shared composable gesture components
+
++++
+status: open
+priority: high
+kind: enhancement
+labels: architecture, testability, camera, effort:l
+created: 2026-08-26T14:15:33Z
+updated: 2026-08-26T14:19:49Z
++++
+
+## What is wrong
+
+InteractiveCameraModifier implements its own drag, pan, scroll, magnification, delta, and reset behavior instead of composing the gesture components exposed by GestureManager. The two paths can drift: scroll-wheel scoping and pinch scaling have already behaved differently between them. Camera-specific orchestration is also difficult to test because shared gesture semantics are embedded in SwiftUI callbacks.
+
+## Expected
+
+InteractiveCamera composes the same reusable drag, scroll, magnify, accumulation, and transformation parts used elsewhere. Platform adapters can remain separate, and camera-specific orchestration stays thin and independently testable.
+
+## Proposed fix (per user)
+
+Keep the existing `interactiveCamera(...)` API as a convenience composition. Extend the shared drag primitive to expose start location, current location, and translation. Build thin turntable and arcball rotation adapters on that primitive. Compose pan, scroll zoom, and magnify zoom from the existing transformed gesture components, with independent scroll and magnify scaling because their raw units differ. Remove the duplicate delta bookkeeping and `applyInteraction()` state machine from `InteractiveCameraModifier`. Add boundary tests for scroll/pinch parity, gesture completion, and both rotation modes.
+
+---
+
+## 27: FPV movement depends on hardware polling cadence and wall-clock timing
+
++++
+status: open
+priority: high
+kind: bug
+labels: architecture, testability, fpv, effort:l
+created: 2026-08-26T14:15:33Z
+updated: 2026-08-26T14:19:49Z
++++
+
+## What is wrong
+
+The FPV path couples keyboard, mouse, and game-controller polling with event reduction, elapsed-time calculation, and pose integration. Continuous movement advances when events arrive, so observable motion can vary with adapter scheduling and polling cadence. Stream lifetime and cancellation also span several owners.
+
+## Expected
+
+Given the same input sequence and elapsed time, FPV movement produces deterministic pose updates independent of hardware polling cadence.
+
+---
+
+## 28: Camera matrix binding does not have a testable synchronization boundary
+
++++
+status: open
+priority: high
+kind: bug
+labels: architecture, testability, camera, effort:m
+created: 2026-08-26T14:15:33Z
+updated: 2026-08-26T14:19:49Z
++++
+
+## What is wrong
+
+InteractiveCameraMatrixModifier keeps matrix/state conversion and lifecycle synchronization private inside SwiftUI callbacks. Matrix import is gated after initial appearance, so later external matrix replacements are not observed. Degenerate distance and pole-aligned camera cases are also unverified.
+
+## Expected
+
+Camera matrices and interaction state remain synchronized across initialization, external updates, repeated interaction, and degenerate orientations.
+
+---
+
+## 29: WorldView centrally owns every interaction tool and projection assumption
+
++++
+status: open
+priority: medium
+kind: enhancement
+labels: architecture, testability, tools, effort:l
+created: 2026-08-26T14:15:33Z
+updated: 2026-08-26T14:19:49Z
++++
+
+## What is wrong
+
+WorldView directly registers every tool, group, label, platform condition, modifier constructor, and shared camera binding. Adding or changing a tool requires editing the central view. Flight simulation behavior also depends on a PerspectiveProjection downcast and silently substitutes a field of view for other projection types.
+
+## Expected
+
+Tool composition and projection capabilities have explicit boundaries whose behavior can be verified independently.
+
+---
+
+## 30: Software renderer mixes projection geometry with SwiftUI presentation
+
++++
+status: open
+priority: medium
+kind: enhancement
+labels: architecture, testability, rendering, effort:l
+created: 2026-08-26T14:15:33Z
+updated: 2026-08-26T14:19:49Z
++++
+
+## What is wrong
+
+The software renderer combines homogeneous projection, CGPoint and Path creation, face and edge visibility, camera setup, colors, and labels across SoftwareRendererContext, PolygonMesh, and Cube. Pure geometry behavior cannot be tested without importing presentation concerns, and partially unprojectable polygons have undefined boundary behavior.
+
+## Expected
+
+Projection and visibility behavior have a clear testable boundary, including clipping, invalid W values, screen mapping, and behind-camera geometry.
 
 ---
