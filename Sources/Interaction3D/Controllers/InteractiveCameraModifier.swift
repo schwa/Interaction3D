@@ -126,7 +126,7 @@ public struct InteractiveCameraModifier: ViewModifier {
                 zoomDistanceAtStart = startDistance
                 distance = max(0.01, startDistance / Float(value.magnification))
                 #else
-                zoomDelta = Double(value.magnification - 1)
+                zoomDelta = Double(value.magnification - 1) * 100
                 #endif
             }
             .onEnded { _ in

@@ -4,6 +4,8 @@ import SwiftUI
 
 struct NewGestureManagerDemo: View {
     @State private var drag: CGSize = .zero
+    @GestureState private var dragPreview: CGSize = .zero
+    @GestureState private var commandDragPreview: CGSize = .zero
     @State private var commandDrag: CGSize = .zero
     @State private var optionDragX: CGFloat = 0
     @State private var scrollValue: Double = 0
@@ -51,8 +53,37 @@ struct NewGestureManagerDemo: View {
                     context.fill(Path(rect), with: .color(.white))
                 }
             }
+
+            var dragPath = Path()
+            dragPath.move(to: center)
+            dragPath.addLine(to: CGPoint(x: center.x + dragPreview.width, y: center.y + dragPreview.height))
+            context.stroke(dragPath, with: .color(.cyan), lineWidth: 2)
+
+            var commandDragPath = Path()
+            commandDragPath.move(to: center)
+            commandDragPath.addLine(to: CGPoint(x: center.x + commandDragPreview.width, y: center.y + commandDragPreview.height))
+            context.stroke(commandDragPath, with: .color(.orange), lineWidth: 2)
+
+            let optionPoint = CGPoint(x: center.x + optionDragX * dotSpacing, y: center.y)
+            context.fill(Path(ellipseIn: CGRect(x: optionPoint.x - 4, y: optionPoint.y - 4, width: 8, height: 8)), with: .color(.pink))
+
+            let zoomRadius = max(8, dotSpacing * CGFloat(abs(magnifyValue)))
+            let zoomRect = CGRect(x: center.x - zoomRadius, y: center.y - zoomRadius, width: zoomRadius * 2, height: zoomRadius * 2)
+            context.stroke(Path(ellipseIn: zoomRect), with: .color(.green), lineWidth: 2)
         }
         .background(Color.black)
+        #if os(macOS)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 10)
+                .modifiers([])
+                .updating($dragPreview) { value, state, _ in state = value.translation }
+        )
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 10)
+                .modifiers(.command)
+                .updating($commandDragPreview) { value, state, _ in state = value.translation }
+        )
+        #endif
         .newDragGesture([], transformer: widthTransformer, writes: $drag.width)
         .newDragGesture([], transformer: heightTransformer, writes: $drag.height)
         .newDragGesture(.command, transformer: widthTransformer, writes: $commandDrag.width)
@@ -88,8 +119,14 @@ struct NewGestureManagerDemo: View {
                     InspectorXYRow(label: "Drag", x: drag.width, y: drag.height)
                     InspectorXYRow(label: "⌘-Drag", x: commandDrag.width, y: commandDrag.height)
                     InspectorValueRow(label: "⌥-Drag X (clamped -5...5)", value: optionDragX)
+                    Text("Option-drag changes X between -5 and 5.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                     InspectorValueRow(label: "Scroll", value: scrollValue)
                     Toggle("Lock", isOn: $lockZoom)
+                    Text("Keeps the scroll and magnify values equal.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                     InspectorValueRow(label: "Magnify", value: magnifyValue)
                 }
 
@@ -146,7 +183,6 @@ private struct InspectorXYRow: View {
                         .animation(.snappy, value: y)
                 }
             }
-            .font(.system(size: 24, weight: .medium, design: .monospaced))
         }
     }
 }
@@ -161,7 +197,6 @@ private struct InspectorValueRow: View {
                 .font(.headline)
                 .foregroundStyle(.secondary)
             Text(Double(value), format: .number.precision(.fractionLength(2)))
-                .font(.system(size: 32, weight: .medium, design: .monospaced))
                 .contentTransition(.numericText())
                 .animation(.snappy, value: value)
         }
