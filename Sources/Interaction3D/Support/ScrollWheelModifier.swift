@@ -9,7 +9,7 @@ public struct ScrollWheelModifier: ViewModifier {
     @Binding var delta: Double
 
     public func body(content: Content) -> some View {
-        content.background {
+        content.overlay {
             ScrollWheelView(delta: $delta)
         }
     }
