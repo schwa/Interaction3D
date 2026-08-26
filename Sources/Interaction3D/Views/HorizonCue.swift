@@ -41,6 +41,9 @@ public struct HorizonCue: View {
             context.stroke(left, with: .color(.white), lineWidth: 2)
             context.stroke(right, with: .color(.white), lineWidth: 2)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Horizon cue")
+        .accessibilityValue("Pitch \((Double(pitch) * 180 / .pi).formatted(.number.precision(.fractionLength(1)))) degrees")
     }
 }
 

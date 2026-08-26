@@ -36,64 +36,50 @@ public struct FlightSimControlsView: View {
 
     public var body: some View {
         ZStack {
-            // Top leading: Navigation instruments
-            VStack(alignment: .leading) {
-                HStack(alignment: .top, spacing: 12) {
-                    ArtificialHorizonView(transform: transform)
-                        .frame(width: 150, height: 150)
-                        .clipShape(.rect(cornerRadius: 8))
-
-                    CompassView(heading: heading, labelStyle: .axis)
-                        .frame(width: 150, height: 150)
-                        .clipShape(.rect(cornerRadius: 8))
-                }
-                Spacer()
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding()
-
-            // Top trailing: Map
-            VStack(alignment: .trailing) {
-                MapView(
-                    transform: transform,
-                    breadcrumbs: breadcrumbs,
-                    scale: mapScale
-                )
-                .frame(width: 200, height: 200)
-                .clipShape(.rect(cornerRadius: 8))
-                Spacer()
-            }
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .padding()
-
-            // Bottom leading: Speedometer
             VStack {
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .top) {
+                        ArtificialHorizonView(transform: transform)
+                            .aspectRatio(1, contentMode: .fit)
+                            .clipShape(.rect(cornerRadius: 8))
+                        CompassView(heading: heading, labelStyle: .axis)
+                            .aspectRatio(1, contentMode: .fit)
+                            .clipShape(.rect(cornerRadius: 8))
+                        Spacer()
+                        MapView(transform: transform, breadcrumbs: breadcrumbs, scale: mapScale)
+                            .aspectRatio(1, contentMode: .fit)
+                            .clipShape(.rect(cornerRadius: 8))
+                    }
+
+                    VStack {
+                        HStack {
+                            ArtificialHorizonView(transform: transform)
+                                .aspectRatio(1, contentMode: .fit)
+                                .clipShape(.rect(cornerRadius: 8))
+                            CompassView(heading: heading, labelStyle: .axis)
+                                .aspectRatio(1, contentMode: .fit)
+                                .clipShape(.rect(cornerRadius: 8))
+                        }
+                        MapView(transform: transform, breadcrumbs: breadcrumbs, scale: mapScale)
+                            .aspectRatio(1, contentMode: .fit)
+                            .clipShape(.rect(cornerRadius: 8))
+                    }
+                }
+
                 Spacer()
-                HStack {
-                    SpeedometerView(
-                        linearVelocity: linearVelocity,
-                        angularVelocity: angularVelocity
-                    )
-                    .frame(width: 240)
+
+                HStack(alignment: .bottom) {
+                    SpeedometerView(linearVelocity: linearVelocity, angularVelocity: angularVelocity)
+                        .frame(maxWidth: 240)
                     Spacer()
+                    FlightInfoPanelView(heading: heading, transform: transform, speed: speed)
                 }
             }
-            .padding()
 
-            // Bottom trailing: Info panel
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer()
-                    infoPanel
-                }
-            }
-            .padding()
-
-            // Center: Horizon cue
             HorizonCue(pitch: pitch, verticalFOV: verticalFOV)
                 .allowsHitTesting(false)
         }
+        .padding()
     }
 
     private var heading: Angle {
@@ -104,16 +90,23 @@ public struct FlightSimControlsView: View {
         return Angle(radians: normalizedHeading)
     }
 
-    private var infoPanel: some View {
-        VStack(alignment: .trailing, spacing: 4) {
+}
+
+private struct FlightInfoPanelView: View {
+    let heading: Angle
+    let transform: matrix_float4x4
+    let speed: Float
+
+    var body: some View {
+        VStack(alignment: .trailing) {
             Text("Heading: \(heading.degrees, format: .number.precision(.fractionLength(1)))°")
             Text("Position: (\(transform.columns.3.x, format: .number.precision(.fractionLength(1))), \(transform.columns.3.y, format: .number.precision(.fractionLength(1))), \(transform.columns.3.z, format: .number.precision(.fractionLength(1))))")
             Text("Speed: \(speed, format: .number.precision(.fractionLength(1))) m/s")
         }
         .font(.caption)
         .foregroundStyle(.white)
-        .padding(12)
-        .background(Color.black.opacity(0.5), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .padding()
+        .background(.black.opacity(0.5), in: .rect(cornerRadius: 12))
     }
 }
 
@@ -125,4 +118,9 @@ public struct FlightSimControlsView: View {
         speed: 10
     )
     .background(Color.gray)
+}
+
+#Preview("Info Panel") {
+    FlightInfoPanelView(heading: .degrees(45), transform: matrix_identity_float4x4, speed: 10)
+        .padding()
 }

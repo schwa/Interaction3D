@@ -450,11 +450,13 @@ Rows use copied collections or positional offsets as identity.
 ## 22: Canvas widgets are inaccessible to assistive technologies
 
 +++
-status: new
+status: closed
 priority: high
 kind: bug
 labels: accessibility, swiftui
 created: 2026-08-26T13:55:39Z
+updated: 2026-08-26T14:07:20Z
+closed: 2026-08-26T14:07:20Z
 +++
 
 ## What is wrong
@@ -464,6 +466,8 @@ The public canvas-based widgets expose visual state without accessibility labels
 ## Expected
 
 Each widget communicates its purpose and current value through accessibility APIs.
+
+- `2026-08-26T14:07:20Z`: Implemented and validated with SwiftLint, macOS/iOS builds, and package tests.
 
 ---
 
@@ -490,11 +494,13 @@ The tool picker preserves useful SwiftUI view structure without pervasive type e
 ## 24: Form controls use hand-built label and value rows
 
 +++
-status: new
+status: closed
 priority: low
 kind: enhancement
 labels: swiftui
 created: 2026-08-26T13:55:39Z
+updated: 2026-08-26T14:07:20Z
+closed: 2026-08-26T14:07:20Z
 +++
 
 ## What is wrong
@@ -505,16 +511,20 @@ Camera lens controls and transformer parameter controls manually compose labels,
 
 Label-and-value controls align and adapt consistently with native Form rows.
 
+- `2026-08-26T14:07:20Z`: Implemented and validated with SwiftLint, macOS/iOS builds, and package tests.
+
 ---
 
 ## 25: Flight simulator controls do not adapt to available space
 
 +++
-status: new
+status: closed
 priority: medium
 kind: bug
-labels: swiftui,layout
+labels: swiftui, layout
 created: 2026-08-26T13:55:39Z
+updated: 2026-08-26T14:07:20Z
+closed: 2026-08-26T14:07:20Z
 +++
 
 ## What is wrong
@@ -524,5 +534,7 @@ FlightSimControlsView uses several fixed widths and heights with explicit spacer
 ## Expected
 
 The control layout adapts to its container and text size without clipping or overflow.
+
+- `2026-08-26T14:07:20Z`: Implemented and validated with SwiftLint, macOS/iOS builds, and package tests.
 
 ---

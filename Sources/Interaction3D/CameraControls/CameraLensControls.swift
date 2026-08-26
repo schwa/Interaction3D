@@ -46,23 +46,24 @@ public struct AngleOfViewControl: View {
 
     public var body: some View {
         VStack {
-            HStack {
-                Text("Angle of view")
-                Picker("Axis", selection: $axis) {
-                    ForEach(AngleOfViewAxis.allCases, id: \.self) { axis in
-                        Text(axis.rawValue).tag(axis)
+            LabeledContent("Angle of view") {
+                HStack {
+                    Picker("Axis", selection: $axis) {
+                        ForEach(AngleOfViewAxis.allCases, id: \.self) { axis in
+                            Text(axis.rawValue).tag(axis)
+                        }
                     }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .fixedSize()
-
-                Spacer()
-                ScrubbableValueField("Angle", value: displayedDegrees, suffix: "°", range: 1 ... 179, sensitivity: 0.2, precision: 0)
+                    .pickerStyle(.segmented)
                     .labelsHidden()
+                    .fixedSize()
+
+                    ScrubbableValueField("Angle", value: displayedDegrees, suffix: "°", range: 1 ... 179, sensitivity: 0.2, precision: 0)
+                        .labelsHidden()
+                }
             }
 
             Slider(value: displayedDegrees, in: 1 ... 179)
+                .accessibilityLabel("Angle of view")
         }
     }
 
@@ -84,11 +85,11 @@ public struct ClippingRangeControl: View {
     }
 
     public var body: some View {
-        HStack {
-            Text("Clipping")
-            Spacer()
-            ScrubbableValueField("Near", value: nearValue, range: 0.0001 ... far, sensitivity: 0.001, precision: 3)
-            ScrubbableValueField("Far", value: farValue, range: near ... 1_000_000, sensitivity: 0.1, precision: 1)
+        LabeledContent("Clipping") {
+            HStack {
+                ScrubbableValueField("Near", value: nearValue, range: 0.0001 ... far, sensitivity: 0.001, precision: 3)
+                ScrubbableValueField("Far", value: farValue, range: near ... 1_000_000, sensitivity: 0.1, precision: 1)
+            }
         }
     }
 

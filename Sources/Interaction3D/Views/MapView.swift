@@ -71,6 +71,9 @@ public struct MapView: View {
                 layerContext.stroke(trianglePath, with: .color(.white), lineWidth: 1)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Map")
+        .accessibilityValue("Position X \(transform.columns.3.x.formatted(.number.precision(.fractionLength(1)))), Z \(transform.columns.3.z.formatted(.number.precision(.fractionLength(1)))); \(breadcrumbs.count) breadcrumbs")
     }
 }
 

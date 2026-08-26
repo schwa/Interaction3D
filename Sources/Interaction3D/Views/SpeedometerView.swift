@@ -63,7 +63,21 @@ public struct SpeedometerView: View {
             }
             context.stroke(centerLine, with: .color(.white.opacity(0.2)), lineWidth: 1)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Velocity")
+        .accessibilityValue(accessibilityValue)
         .frame(height: 160)
+    }
+
+    private var accessibilityValue: String {
+        [
+            "Lateral \(linearVelocity.x.formatted(.number.precision(.fractionLength(2))))",
+            "vertical \(linearVelocity.y.formatted(.number.precision(.fractionLength(2))))",
+            "forward \(linearVelocity.z.formatted(.number.precision(.fractionLength(2))))",
+            "pitch \(angularVelocity.x.formatted(.number.precision(.fractionLength(2))))",
+            "yaw \(angularVelocity.y.formatted(.number.precision(.fractionLength(2))))",
+            "roll \(angularVelocity.z.formatted(.number.precision(.fractionLength(2))))"
+        ].joined(separator: ", ")
     }
 }
 

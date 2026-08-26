@@ -110,6 +110,9 @@ public struct MeasurementDial <U>: View where U: Dimension {
                 .foregroundStyle(.white.opacity(0.7))
             context.draw(unitsText, at: CGPoint(x: 0, y: 45), anchor: .center)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Measurement dial")
+        .accessibilityValue("\(measurement.converted(to: displayUnit).value.formatted(format)) \(displayUnit.symbol)")
         .background(Color.black, in: Circle())
     }
 }

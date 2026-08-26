@@ -92,6 +92,9 @@ public struct ArtificialHorizonView: View {
                 context.stroke(path, with: .color(.white.opacity(0.7)), lineWidth: angle.isMultiple(of: 90) ? 2 : 1)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Artificial horizon")
+        .accessibilityValue("Pitch \(pitch.degrees.formatted(.number.precision(.fractionLength(1)))) degrees, roll \(roll.degrees.formatted(.number.precision(.fractionLength(1)))) degrees")
         .aspectRatio(1, contentMode: .fit)
     }
 }

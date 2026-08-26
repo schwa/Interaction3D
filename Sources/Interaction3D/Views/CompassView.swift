@@ -163,6 +163,9 @@ public struct CompassView: View {
                 .foregroundStyle(.white)
             context.draw(headingText, at: CGPoint(x: center.x, y: center.y + 20), anchor: .center)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Compass")
+        .accessibilityValue("\(heading.degrees.formatted(.number.precision(.fractionLength(0)))) degrees")
         .aspectRatio(1, contentMode: .fit)
         .padding(2)
         .background(.black, in: Circle())

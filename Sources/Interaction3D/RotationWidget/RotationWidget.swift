@@ -52,6 +52,25 @@ public struct RotationWidget: View {
             slerpFrom = rotation
             slerpTo = rotation
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Rotation")
+        .accessibilityValue(accessibilityValue)
+        .accessibilityAdjustableAction(adjustRotation)
+    }
+
+    private var accessibilityValue: String {
+        let vector = rotation.vector
+        return "Quaternion \(vector.x.formatted(.number.precision(.fractionLength(2)))), \(vector.y.formatted(.number.precision(.fractionLength(2)))), \(vector.z.formatted(.number.precision(.fractionLength(2)))), \(vector.w.formatted(.number.precision(.fractionLength(2))))"
+    }
+
+    private func adjustRotation(_ direction: AccessibilityAdjustmentDirection) {
+        let angle: Float
+        switch direction {
+        case .increment: angle = .pi / 36
+        case .decrement: angle = -.pi / 36
+        @unknown default: return
+        }
+        rotation = simd_normalize(simd_quatf(angle: angle, axis: [0, 1, 0]) * rotation)
     }
 }
 

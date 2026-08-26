@@ -24,10 +24,7 @@ struct ParameterControl<Transformer>: View where Transformer: ParameterizedTrans
     let parameter: AnyTransformerParameter<Transformer>
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(parameter.name)
-                .font(.headline)
-
+        LabeledContent(parameter.name) {
             if let metadata = parameter.metadata {
                 ParameterMetadataEditorView(transformer: $transformer, parameter: parameter, metadata: metadata)
             } else {
