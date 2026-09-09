@@ -3,6 +3,16 @@ import SwiftUI
 public enum AngleOfViewAxis: String, CaseIterable, Sendable {
     case horizontal = "H"
     case vertical = "V"
+
+    public var title: LocalizedStringKey {
+        switch self {
+        case .horizontal:
+            "Horizontal"
+
+        case .vertical:
+            "Vertical"
+        }
+    }
 }
 
 public struct AngleOfView: Equatable, Sendable {
@@ -46,20 +56,17 @@ public struct AngleOfViewControl: View {
 
     public var body: some View {
         VStack {
-            LabeledContent("Angle of view") {
-                HStack {
-                    Picker("Axis", selection: $axis) {
-                        ForEach(AngleOfViewAxis.allCases, id: \.self) { axis in
-                            Text(axis.rawValue).tag(axis)
-                        }
+            HStack {
+                Picker("Angle of View", selection: $axis) {
+                    ForEach(AngleOfViewAxis.allCases, id: \.self) { axis in
+                        Text(axis.title).tag(axis)
                     }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .fixedSize()
-
-                    ScrubbableValueField("Angle", value: displayedDegrees, suffix: "°", range: 1 ... 179, sensitivity: 0.2, precision: 0)
-                        .labelsHidden()
                 }
+                .pickerStyle(.menu)
+                .fixedSize()
+
+                ScrubbableValueField("Angle", value: displayedDegrees, suffix: "°", range: 1 ... 179, sensitivity: 0.2, precision: 0)
+                    .labelsHidden()
             }
 
             Slider(value: displayedDegrees, in: 1 ... 179)
