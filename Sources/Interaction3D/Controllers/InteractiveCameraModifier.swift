@@ -5,6 +5,17 @@ public struct InteractiveCameraModifier: ViewModifier {
     public enum Mode {
         case turntable(TurntableTransformer = TurntableTransformer())
         case arcball(ArcballTransformer = ArcballTransformer())
+
+        /// The transforms tuned for this mode, used when the caller does not pass any.
+        public var defaultTransforms: InteractionAxisTransforms {
+            switch self {
+            case .turntable:
+                .turntableDefault
+
+            case .arcball:
+                .default
+            }
+        }
     }
 
     @Binding var rotation: simd_quatf
@@ -19,13 +30,13 @@ public struct InteractiveCameraModifier: ViewModifier {
         distance: Binding<Float>,
         target: Binding<SIMD3<Float>>,
         mode: Mode = .turntable(),
-        transforms: InteractionAxisTransforms = .default
+        transforms: InteractionAxisTransforms? = nil
     ) {
         self._rotation = rotation
         self._distance = distance
         self._target = target
         self.mode = mode
-        self.transforms = transforms
+        self.transforms = transforms ?? mode.defaultTransforms
     }
 
     public func body(content: Content) -> some View {
@@ -178,7 +189,7 @@ public extension View {
         distance: Binding<Float>,
         target: Binding<SIMD3<Float>>,
         mode: InteractiveCameraModifier.Mode = .turntable(),
-        transforms: InteractionAxisTransforms = .default
+        transforms: InteractionAxisTransforms? = nil
     ) -> some View {
         modifier(InteractiveCameraModifier(rotation: rotation, distance: distance, target: target, mode: mode, transforms: transforms))
     }

@@ -19,12 +19,12 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
     public init(
         cameraMatrix: Binding<simd_float4x4>,
         mode: InteractiveCameraModifier.Mode,
-        transforms: InteractionAxisTransforms = .default,
+        transforms: InteractionAxisTransforms? = nil,
         target: SIMD3<Float> = .zero
     ) {
         self._cameraMatrix = cameraMatrix
         self.mode = mode
-        self.transforms = transforms
+        self.transforms = transforms ?? mode.defaultTransforms
         self.target = target
         let synchronizer = CameraMatrixSynchronizer(target: target)
         self._interactionState = State(initialValue: synchronizer.interactionState(from: cameraMatrix.wrappedValue) ?? InteractionState(target: target))
@@ -82,7 +82,7 @@ public extension View {
     func interactiveCamera(
         cameraMatrix: Binding<simd_float4x4>,
         mode: InteractiveCameraModifier.Mode = .turntable(),
-        transforms: InteractionAxisTransforms = .default,
+        transforms: InteractionAxisTransforms? = nil,
         target: SIMD3<Float> = .zero
     ) -> some View {
         modifier(InteractiveCameraMatrixModifier(cameraMatrix: cameraMatrix, mode: mode, transforms: transforms, target: target))
