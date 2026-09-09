@@ -72,6 +72,8 @@ public struct AngleOfViewControl: View {
 
             ScrubbableValueField("Angle", value: displayedDegrees, suffix: "°", range: 1 ... 179, sensitivity: 0.2, precision: 0)
                 .labelsHidden()
+                // Fixed width so typing can't change the row's ideal size and resize the sidebar.
+                .frame(width: 90)
 
             Button("Adjust", systemImage: "slider.horizontal.3") {
                 sliderPopoverShown.toggle()
