@@ -48,6 +48,7 @@ public struct AngleOfViewControl: View {
     private let aspectRatio: Double
 
     @State private var axis = AngleOfViewAxis.horizontal
+    @State private var sliderPopoverShown = false
 
     public init(verticalDegrees: Binding<Double>, aspectRatio: Double) {
         self._verticalDegrees = verticalDegrees
@@ -69,13 +70,20 @@ public struct AngleOfViewControl: View {
             .labelsHidden()
             .fixedSize()
 
-            Slider(value: displayedDegrees, in: 1 ... 179)
-                .accessibilityLabel("Angle of view")
-                .frame(maxWidth: .infinity)
-
             ScrubbableValueField("Angle", value: displayedDegrees, suffix: "°", range: 1 ... 179, sensitivity: 0.2, precision: 0)
                 .labelsHidden()
-                .fixedSize()
+
+            Button("Adjust", systemImage: "slider.horizontal.3") {
+                sliderPopoverShown.toggle()
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.borderless)
+            .popover(isPresented: $sliderPopoverShown) {
+                Slider(value: displayedDegrees, in: 1 ... 179)
+                    .accessibilityLabel("Angle of view")
+                    .frame(minWidth: 220)
+                    .padding()
+            }
         }
     }
 
