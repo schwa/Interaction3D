@@ -38,7 +38,8 @@ public struct ScrubbableValueField: View {
                 .textFieldStyle(.roundedBorder)
                 .multilineTextAlignment(.trailing)
                 .monospacedDigit()
-                .frame(minWidth: style.valueWidth, maxWidth: .infinity)
+                // Flexible width: rows divide the available space instead of overflowing.
+                .frame(minWidth: 36, maxWidth: .infinity)
 
             if !suffix.isEmpty {
                 Text(suffix)
