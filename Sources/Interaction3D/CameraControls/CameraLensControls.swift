@@ -57,6 +57,8 @@ public struct AngleOfViewControl: View {
     public var body: some View {
         HStack {
             Text("Angle of View")
+                .lineLimit(1)
+                .fixedSize()
 
             Picker("Axis", selection: $axis) {
                 ForEach(AngleOfViewAxis.allCases, id: \.self) { axis in
@@ -95,11 +97,13 @@ public struct ClippingRangeControl: View {
     }
 
     public var body: some View {
-        LabeledContent("Clipping") {
-            HStack {
-                ScrubbableValueField("Near", value: nearValue, range: 0.0001 ... far, sensitivity: 0.001, precision: 3)
-                ScrubbableValueField("Far", value: farValue, range: near ... 1_000_000, sensitivity: 0.1, precision: 1)
-            }
+        HStack {
+            Text("Clipping")
+                .lineLimit(1)
+                .fixedSize()
+
+            ScrubbableValueField("Near", value: nearValue, range: 0.0001 ... far, sensitivity: 0.001, precision: 3)
+            ScrubbableValueField("Far", value: farValue, range: near ... 1_000_000, sensitivity: 0.1, precision: 1)
         }
     }
 
