@@ -9,9 +9,11 @@ public struct CameraPositionEditor: View {
     }
 
     public var body: some View {
-        ScrubbableValueField("X", value: component(\.position.x), sensitivity: 0.01, precision: 3, fillsWidth: true)
-        ScrubbableValueField("Y", value: component(\.position.y), sensitivity: 0.01, precision: 3, fillsWidth: true)
-        ScrubbableValueField("Z", value: component(\.position.z), sensitivity: 0.01, precision: 3, fillsWidth: true)
+        HStack {
+            ScrubbableValueField("X", value: component(\.position.x), sensitivity: 0.01, precision: 3)
+            ScrubbableValueField("Y", value: component(\.position.y), sensitivity: 0.01, precision: 3)
+            ScrubbableValueField("Z", value: component(\.position.z), sensitivity: 0.01, precision: 3)
+        }
     }
 
     private func component(_ keyPath: WritableKeyPath<CameraPose, Float>) -> Binding<Double> {
@@ -34,9 +36,11 @@ public struct CameraOrientationEditor: View {
     }
 
     public var body: some View {
-        ScrubbableValueField("Pitch", value: component(\.rotationDegrees.x), suffix: "°", range: -180 ... 180, sensitivity: 0.2, fillsWidth: true)
-        ScrubbableValueField("Yaw", value: component(\.rotationDegrees.y), suffix: "°", range: -180 ... 180, sensitivity: 0.2, fillsWidth: true)
-        ScrubbableValueField("Roll", value: component(\.rotationDegrees.z), suffix: "°", range: -180 ... 180, sensitivity: 0.2, fillsWidth: true)
+        HStack {
+            ScrubbableValueField("Pitch", value: component(\.rotationDegrees.x), suffix: "°", range: -180 ... 180, sensitivity: 0.2)
+            ScrubbableValueField("Yaw", value: component(\.rotationDegrees.y), suffix: "°", range: -180 ... 180, sensitivity: 0.2)
+            ScrubbableValueField("Roll", value: component(\.rotationDegrees.z), suffix: "°", range: -180 ... 180, sensitivity: 0.2)
+        }
     }
 
     private func component(_ keyPath: WritableKeyPath<CameraPose, Float>) -> Binding<Double> {

@@ -45,18 +45,25 @@ public struct AngleOfViewControl: View {
     }
 
     public var body: some View {
-        ScrubbableValueField("Angle of View", value: displayedDegrees, suffix: "°", range: 1 ... 179, sensitivity: 0.2, precision: 0, fillsWidth: true)
-        HStack {
-            Slider(value: displayedDegrees, in: 1 ... 179)
-                .accessibilityLabel("Angle of view")
-            Picker("Axis", selection: $axis) {
-                ForEach(AngleOfViewAxis.allCases, id: \.self) { axis in
-                    Text(axis.rawValue).tag(axis)
+        VStack {
+            LabeledContent("Angle of view") {
+                HStack {
+                    Picker("Axis", selection: $axis) {
+                        ForEach(AngleOfViewAxis.allCases, id: \.self) { axis in
+                            Text(axis.rawValue).tag(axis)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .fixedSize()
+
+                    ScrubbableValueField("Angle", value: displayedDegrees, suffix: "°", range: 1 ... 179, sensitivity: 0.2, precision: 0)
+                        .labelsHidden()
                 }
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .fixedSize()
+
+            Slider(value: displayedDegrees, in: 1 ... 179)
+                .accessibilityLabel("Angle of view")
         }
     }
 
@@ -78,8 +85,12 @@ public struct ClippingRangeControl: View {
     }
 
     public var body: some View {
-        ScrubbableValueField("Near Clip", value: nearValue, range: 0.0001 ... far, sensitivity: 0.001, precision: 3, fillsWidth: true)
-        ScrubbableValueField("Far Clip", value: farValue, range: near ... 1_000_000, sensitivity: 0.1, precision: 1, fillsWidth: true)
+        LabeledContent("Clipping") {
+            HStack {
+                ScrubbableValueField("Near", value: nearValue, range: 0.0001 ... far, sensitivity: 0.001, precision: 3)
+                ScrubbableValueField("Far", value: farValue, range: near ... 1_000_000, sensitivity: 0.1, precision: 1)
+            }
+        }
     }
 
     private var nearValue: Binding<Double> {

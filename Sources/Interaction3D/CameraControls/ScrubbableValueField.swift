@@ -6,21 +6,19 @@ public struct ScrubbableValueField: View {
     private let range: ClosedRange<Double>?
     private let sensitivity: Double
     private let precision: Int
-    private let fillsWidth: Bool
 
     @Binding private var value: Double
     @Environment(\.cameraControlStyle) private var style
     @Environment(\.labelsVisibility) private var labelsVisibility
     @State private var dragStartValue: Double?
 
-    public init(_ label: LocalizedStringKey, value: Binding<Double>, suffix: String = "", range: ClosedRange<Double>? = nil, sensitivity: Double = 0.01, precision: Int = 1, fillsWidth: Bool = false) {
+    public init(_ label: LocalizedStringKey, value: Binding<Double>, suffix: String = "", range: ClosedRange<Double>? = nil, sensitivity: Double = 0.01, precision: Int = 1) {
         self.label = label
         self._value = value
         self.suffix = suffix
         self.range = range
         self.sensitivity = sensitivity
         self.precision = precision
-        self.fillsWidth = fillsWidth
     }
 
     public var body: some View {
@@ -34,9 +32,6 @@ public struct ScrubbableValueField: View {
                     .contentShape(.rect)
                     .gesture(scrubGesture)
                     .accessibilityHint("Drag horizontally to adjust")
-            }
-            if fillsWidth {
-                Spacer(minLength: style.fieldSpacing)
             }
             TextField(label, value: clampedValue, format: .number.precision(.fractionLength(precision)))
                 .labelsHidden()
