@@ -35,15 +35,10 @@ public struct ScrubbableValueField: View {
             }
             TextField(label, value: clampedValue, format: .number.precision(.fractionLength(precision)))
                 .labelsHidden()
-                .textFieldStyle(.plain)
+                .textFieldStyle(.roundedBorder)
                 .multilineTextAlignment(.trailing)
                 .monospacedDigit()
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2)
                 .frame(minWidth: style.valueWidth, maxWidth: .infinity)
-                // Visible field chrome so values read as editable.
-                .background(RoundedRectangle(cornerRadius: style.fieldCornerRadius).fill(.quinary))
-                .overlay(RoundedRectangle(cornerRadius: style.fieldCornerRadius).strokeBorder(.quaternary))
 
             if !suffix.isEmpty {
                 Text(suffix)
