@@ -56,17 +56,20 @@ public struct AngleOfViewControl: View {
 
     public var body: some View {
         HStack {
-            Picker("Angle of View", selection: $axis) {
+            Text("Angle of View")
+
+            Picker("Axis", selection: $axis) {
                 ForEach(AngleOfViewAxis.allCases, id: \.self) { axis in
                     Text(axis.title).tag(axis)
                 }
             }
             .pickerStyle(.menu)
+            .labelsHidden()
             .fixedSize()
 
             Slider(value: displayedDegrees, in: 1 ... 179)
                 .accessibilityLabel("Angle of view")
-                .frame(minWidth: 60)
+                .frame(maxWidth: .infinity)
 
             ScrubbableValueField("Angle", value: displayedDegrees, suffix: "°", range: 1 ... 179, sensitivity: 0.2, precision: 0)
                 .labelsHidden()
