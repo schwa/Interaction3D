@@ -16,12 +16,14 @@ private struct AnimatedSizeModifier: ViewModifier, @MainActor Animatable {
         set {
             width = newValue.first
             height = newValue.second
-            onChange(CGSize(width: width, height: height))
         }
     }
 
     func body(content: Content) -> some View {
         content
+            .onChange(of: CGSize(width: width, height: height)) { _, size in
+                onChange(size)
+            }
     }
 }
 
