@@ -717,3 +717,20 @@ Found while evaluating Interaction3D for SolarSystem, whose orbit distance range
 Expected: a configurable zoom model (for example additive or multiplicative/log-scale) and configurable minimum and maximum distance.
 
 ---
+
+## 34: Pan cannot be turned off
+
++++
+status: new
+priority: low
+kind: enhancement
+created: 2026-09-30T18:21:51Z
++++
+
+InteractiveCameraModifier always installs Command-drag pan, which moves the target point. Apps whose target is fixed (orbit a selected object) must pass a constant binding for target and still get a gesture that does nothing.
+
+Found while evaluating Interaction3D for SolarSystem, where the target is always a body.
+
+Expected: an option to disable pan.
+
+---
