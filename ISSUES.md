@@ -751,3 +751,20 @@ Found while evaluating Interaction3D for SolarSystem, whose surface mode stands 
 Expected: a look-around mode that binds a view direction (or azimuth/altitude) and clamps altitude.
 
 ---
+
+## 36: Interaction state is Float only
+
++++
+status: new
+priority: low
+kind: enhancement
+created: 2026-09-30T18:21:51Z
++++
+
+InteractionState stores distance and target as Float. At large scales (planetary or astronomical distances) Float loses precision in distance and target, so apps must keep their own Double state and convert.
+
+Found while evaluating Interaction3D for SolarSystem, which uses Double km positions.
+
+Expected: generic or Double-precision distance and target. Rotation can stay Float.
+
+---
