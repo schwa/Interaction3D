@@ -683,3 +683,20 @@ Found while evaluating Interaction3D for SolarSystem, whose camera works in the 
 Expected: a way to configure the up axis (default Y), so that turntable yaw and pitch are relative to it.
 
 ---
+
+## 32: No turntable binding for yaw and pitch angles
+
++++
+status: new
+priority: low
+kind: enhancement
+created: 2026-09-30T18:21:50Z
++++
+
+InteractiveCameraModifier binds only a simd_quatf rotation. Apps that already store the camera as yaw and pitch angles must write a two-way quaternion adapter and duplicate the decomposition that TurntableTransformer does internally.
+
+Found while evaluating Interaction3D for SolarSystem, which stores orbitYaw and orbitPitch as Double radians.
+
+Expected: a turntable variant that binds yaw and pitch directly. The library still owns sensitivity, clamping and momentum.
+
+---
