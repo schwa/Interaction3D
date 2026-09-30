@@ -666,3 +666,20 @@ Pure projection behavior has a testable SIMD boundary. Invalid or behind-camera 
 - `2026-08-26T15:16:51Z`: Added a pure SIMD projection boundary, reject non-finite and behind-camera points, and reject polygons when any vertex cannot project. Preserved CGPoint and Path adapters; full frustum clipping remains out of scope. Strict SwiftLint, package tests, and macOS/iOS builds pass.
 
 ---
+
+## 31: Turntable orbit axis is fixed to world Y
+
++++
+status: new
+priority: medium
+kind: enhancement
+created: 2026-09-30T18:21:50Z
++++
+
+TurntableTransformer always yaws around world Y and pitches around world X. Apps with a Z-up world (astronomy, CAD, most GIS) must convert the rotation quaternion to and from their own frame with an axis-swap adapter.
+
+Found while evaluating Interaction3D for SolarSystem, whose camera works in the ecliptic frame (Z up).
+
+Expected: a way to configure the up axis (default Y), so that turntable yaw and pitch are relative to it.
+
+---
