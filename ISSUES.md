@@ -700,3 +700,20 @@ Found while evaluating Interaction3D for SolarSystem, which stores orbitYaw and 
 Expected: a turntable variant that binds yaw and pitch directly. The library still owns sensitivity, clamping and momentum.
 
 ---
+
+## 33: Zoom is additive only, with a fixed 0.01 minimum distance
+
++++
+status: new
+priority: medium
+kind: enhancement
+created: 2026-09-30T18:21:50Z
++++
+
+Scroll and magnify zoom add a fixed delta to distance, and InteractiveCameraModifier clamps distance to at least 0.01. For scenes whose scale spans orders of magnitude, one zoom step is either too small far away or too large close up, and the min/max limits cannot be set.
+
+Found while evaluating Interaction3D for SolarSystem, whose orbit distance ranges from 1.01 to 1e6 body radii.
+
+Expected: a configurable zoom model (for example additive or multiplicative/log-scale) and configurable minimum and maximum distance.
+
+---
