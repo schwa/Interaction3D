@@ -734,3 +734,20 @@ Found while evaluating Interaction3D for SolarSystem, where the target is always
 Expected: an option to disable pan.
 
 ---
+
+## 35: No look-around mode for a camera at a fixed position
+
++++
+status: new
+priority: low
+kind: enhancement
+created: 2026-09-30T18:21:51Z
++++
+
+The controllers either orbit a target (turntable, arcball) or move the camera (FPV). There is no mode where the camera stays at a fixed position and drag only changes where it looks, with configurable altitude clamps. FPV has parts of this but also does movement.
+
+Found while evaluating Interaction3D for SolarSystem, whose surface mode stands on a planet and looks around (azimuth and altitude).
+
+Expected: a look-around mode that binds a view direction (or azimuth/altitude) and clamps altitude.
+
+---
