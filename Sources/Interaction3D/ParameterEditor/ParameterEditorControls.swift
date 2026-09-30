@@ -1,17 +1,17 @@
 import GeometryLite3D
 import SwiftUI
 
-struct FloatSlider: View {
+struct FloatSlider<Value>: View where Value: BinaryFloatingPoint, Value.Stride: BinaryFloatingPoint {
     @Binding
-    var value: Double
+    var value: Value
     let range: ClosedRange<Double>
 
     var body: some View {
         HStack {
-            Text("\(value, format: .number.precision(.fractionLength(2)))")
+            Text("\(Double(value), format: .number.precision(.fractionLength(2)))")
                 .font(.system(.body, design: .monospaced))
                 .frame(width: 60, alignment: .trailing)
-            Slider(value: $value, in: range)
+            Slider(value: $value, in: Value(range.lowerBound) ... Value(range.upperBound))
         }
     }
 }
@@ -25,7 +25,7 @@ struct AngleSlider: View {
             Text("\(value.degrees, format: .number.precision(.fractionLength(1)))°")
                 .font(.system(.body, design: .monospaced))
                 .frame(width: 80, alignment: .trailing)
-            Slider(value: Binding(get: { Double(value.degrees) }, set: { value = .degrees(Float($0)) }), in: 0...360)
+            Slider(value: $value.degrees, in: 0...360)
         }
     }
 }

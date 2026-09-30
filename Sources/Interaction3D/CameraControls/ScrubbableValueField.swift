@@ -33,7 +33,7 @@ public struct ScrubbableValueField: View {
                     .gesture(scrubGesture)
                     .accessibilityHint("Drag horizontally to adjust")
             }
-            TextField(label, value: clampedValue, format: .number.precision(.fractionLength(precision)))
+            TextField(label, value: $value, format: .number.precision(.fractionLength(precision)))
                 .labelsHidden()
                 .textFieldStyle(.roundedBorder)
                 .multilineTextAlignment(.trailing)
@@ -46,15 +46,16 @@ public struct ScrubbableValueField: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .onChange(of: value) {
+            let clampedValue = clamped(value)
+            if clampedValue != value {
+                value = clampedValue
+            }
+        }
     }
 
-    private var clampedValue: Binding<Double> {
-        Binding(
-            get: { value },
-            set: { newValue in
-                value = range.map { min(max(newValue, $0.lowerBound), $0.upperBound) } ?? newValue
-            }
-        )
+    private func clamped(_ newValue: Double) -> Double {
+        range.map { min(max(newValue, $0.lowerBound), $0.upperBound) } ?? newValue
     }
 
     private var scrubGesture: some Gesture {
@@ -62,7 +63,7 @@ public struct ScrubbableValueField: View {
             .onChanged { gesture in
                 let initialValue = dragStartValue ?? value
                 dragStartValue = initialValue
-                clampedValue.wrappedValue = initialValue + gesture.translation.width * sensitivity
+                value = clamped(initialValue + gesture.translation.width * sensitivity)
             }
             .onEnded { _ in
                 dragStartValue = nil

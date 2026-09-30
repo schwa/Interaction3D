@@ -46,3 +46,26 @@ public extension AnyTransformerParameter {
         self.setValue = { $0[keyPath: keyPath] = $1 as! V }
     }
 }
+
+// Parameters are identified by name so they can key a `WritableKeyPath` subscript.
+extension AnyTransformerParameter: Hashable {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.name == rhs.name
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(name)
+    }
+}
+
+public extension Transformer {
+    subscript<V>(parameter parameter: AnyTransformerParameter<Self>) -> V {
+        get {
+            // swiftlint:disable:next force_cast
+            parameter.getValue(self) as! V
+        }
+        set {
+            parameter.setValue(&self, newValue)
+        }
+    }
+}

@@ -70,7 +70,7 @@ public struct AngleOfViewControl: View {
             .labelsHidden()
             .fixedSize()
 
-            ScrubbableValueField("Angle", value: displayedDegrees, suffix: "°", range: 1 ... 179, sensitivity: 0.2, precision: 0)
+            ScrubbableValueField("Angle", value: $verticalDegrees[displayedFor: axis, aspectRatio: aspectRatio], suffix: "°", range: 1 ... 179, sensitivity: 0.2, precision: 0)
                 .labelsHidden()
                 // Fixed width so typing can't change the row's ideal size and resize the sidebar.
                 .frame(width: 90)
@@ -81,7 +81,7 @@ public struct AngleOfViewControl: View {
             .labelStyle(.iconOnly)
             .buttonStyle(.borderless)
             .popover(isPresented: $sliderPopoverShown) {
-                Slider(value: displayedDegrees, in: 1 ... 179)
+                Slider(value: $verticalDegrees[displayedFor: axis, aspectRatio: aspectRatio], in: 1 ... 179)
                     .accessibilityLabel("Angle of view")
                     .frame(minWidth: 220)
                     .padding()
@@ -89,11 +89,13 @@ public struct AngleOfViewControl: View {
         }
     }
 
-    private var displayedDegrees: Binding<Double> {
-        Binding(
-            get: { AngleOfView(verticalDegrees: verticalDegrees, aspectRatio: aspectRatio).degrees(for: axis) },
-            set: { verticalDegrees = AngleOfView.verticalDegrees(from: $0, axis: axis, aspectRatio: aspectRatio) }
-        )
+}
+
+private extension Double {
+    // Treats `self` as vertical degrees and projects it onto `axis`.
+    subscript(displayedFor axis: AngleOfViewAxis, aspectRatio aspectRatio: Double) -> Double {
+        get { AngleOfView(verticalDegrees: self, aspectRatio: aspectRatio).degrees(for: axis) }
+        set { self = AngleOfView.verticalDegrees(from: newValue, axis: axis, aspectRatio: aspectRatio) }
     }
 }
 
@@ -112,17 +114,9 @@ public struct ClippingRangeControl: View {
                 .lineLimit(1)
                 .fixedSize()
 
-            ScrubbableValueField("Near", value: nearValue, range: 0.0001 ... far, sensitivity: 0.001, precision: 3)
-            ScrubbableValueField("Far", value: farValue, range: near ... 1_000_000, sensitivity: 0.1, precision: 1)
+            ScrubbableValueField("Near", value: $near, range: 0.0001 ... far, sensitivity: 0.001, precision: 3)
+            ScrubbableValueField("Far", value: $far, range: near ... 1_000_000, sensitivity: 0.1, precision: 1)
         }
-    }
-
-    private var nearValue: Binding<Double> {
-        Binding(get: { near }, set: { near = min(max($0, 0.0001), far) })
-    }
-
-    private var farValue: Binding<Double> {
-        Binding(get: { far }, set: { far = max($0, near) })
     }
 }
 

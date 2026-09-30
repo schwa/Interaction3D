@@ -67,10 +67,7 @@ struct PitchYawDemoView: View {
         Form {
             LabeledContent("Cube Scale") {
                 HStack {
-                    Slider(value: Binding(
-                        get: { Double(cubeScale) },
-                        set: { cubeScale = Float($0) }
-                    ), in: 0.1...5.0)
+                    Slider(value: $cubeScale, in: 0.1...5.0)
                     Text(Double(cubeScale), format: .number.precision(.fractionLength(2)))
                         .frame(width: 50, alignment: .trailing)
                 }

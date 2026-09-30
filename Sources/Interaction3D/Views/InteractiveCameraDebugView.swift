@@ -55,10 +55,7 @@ struct CameraStateSectionView: View {
         Section("State") {
             LabeledContent("Distance") {
                 HStack {
-                    Slider(value: Binding(
-                        get: { Double(distance) },
-                        set: { distance = Float($0) }
-                    ), in: 0.1...20)
+                    Slider(value: $distance, in: 0.1...20)
                     Text(Double(distance), format: .number.precision(.fractionLength(2)))
                         .frame(width: 50, alignment: .trailing)
                 }
@@ -87,30 +84,37 @@ struct CameraModeSectionView: View {
 
     var body: some View {
         Section("Mode") {
-            Picker("Interaction Mode", selection: modeBinding) {
-                Text("Turntable").tag(0)
-                Text("Arcball").tag(1)
+            Picker("Interaction Mode", selection: $mode.kind) {
+                Text("Turntable").tag(ModeKind.turntable)
+                Text("Arcball").tag(ModeKind.arcball)
             }
             .pickerStyle(.segmented)
         }
     }
+}
 
-    private var modeBinding: Binding<Int> {
-        Binding(
-            get: {
-                switch mode {
-                case .turntable: return 0
-                case .arcball: return 1
-                }
-            },
-            set: { newValue in
-                switch newValue {
-                case 0: mode = .turntable()
-                case 1: mode = .arcball()
-                default: mode = .turntable()
-                }
+private enum ModeKind: Hashable {
+    case turntable
+    case arcball
+}
+
+private extension InteractiveCameraModifier.Mode {
+    var kind: ModeKind {
+        get {
+            switch self {
+            case .turntable: .turntable
+            case .arcball: .arcball
             }
-        )
+        }
+        set {
+            guard newValue != kind else {
+                return
+            }
+            switch newValue {
+            case .turntable: self = .turntable()
+            case .arcball: self = .arcball()
+            }
+        }
     }
 }
 

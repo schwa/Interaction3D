@@ -187,14 +187,7 @@ struct FlightControlsPanelView: View {
                     Text(fpvController.controllerTurnSpeed, format: .number.precision(.fractionLength(2)))
                         .monospacedDigit()
                 }
-                Slider(
-                    value: Binding(
-                        get: { Double(fpvController.controllerTurnSpeed) },
-                        set: { fpvController.controllerTurnSpeed = Float($0) }
-                    ),
-                    in: 0.1...Double.pi * 2,
-                    step: 0.1
-                )
+                Slider(value: $fpvController.controllerTurnSpeed, in: 0.1...Float.pi * 2, step: 0.1)
             }
 
             Toggle("Capture Mouse", isOn: $fpvController.mouseTrackingEnabled)

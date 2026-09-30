@@ -90,9 +90,19 @@ struct GestureManagerDemo: View {
         .transformedDragGesture(.command, transformer: heightTransformer, writes: $commandDrag.height)
         .transformedDragGesture(.option, transformer: clampedWidthTransformer, writes: $optionDragX)
         #if os(macOS)
-        .transformedScrollGesture(transformer: ScalingTransformer(magnitude: scrollSensitivity), writes: lockZoom ? $scrollValue.synced(to: $magnifyValue) : $scrollValue)
+        .transformedScrollGesture(transformer: ScalingTransformer(magnitude: scrollSensitivity), writes: $scrollValue)
         #endif
-        .transformedMagnifyGesture(transformer: ScalingTransformer(magnitude: magnifySensitivity), writes: lockZoom ? $magnifyValue.synced(to: $scrollValue) : $magnifyValue)
+        .transformedMagnifyGesture(transformer: ScalingTransformer(magnitude: magnifySensitivity), writes: $magnifyValue)
+        .onChange(of: scrollValue) {
+            if lockZoom {
+                magnifyValue = scrollValue
+            }
+        }
+        .onChange(of: magnifyValue) {
+            if lockZoom {
+                scrollValue = magnifyValue
+            }
+        }
         .overlay(alignment: .bottom) {
             VStack(spacing: 4) {
                 Text("Drag horizontally")
@@ -200,18 +210,6 @@ private struct InspectorValueRow: View {
                 .contentTransition(.numericText())
                 .animation(.snappy, value: value)
         }
-    }
-}
-
-private extension Binding where Value: AdditiveArithmetic {
-    func synced(to other: Binding<Value>) -> Binding<Value> {
-        Binding(
-            get: { self.wrappedValue },
-            set: { newValue in
-                self.wrappedValue = newValue
-                other.wrappedValue = newValue
-            }
-        )
     }
 }
 
