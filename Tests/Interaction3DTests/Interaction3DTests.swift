@@ -361,7 +361,8 @@ private struct TestProjection: ProjectionProtocol {
 }
 
 @Test func zoomStepTransformerAppliesModel() {
-    let transforms = InteractionAxisTransforms(zoom: { $0 * 2 })
+    var transforms = InteractionAxisTransforms()
+    transforms.zoom = { $0 * 2 }
     #expect(CameraZoomStepTransformer(transforms: transforms, magnitude: 1, zoom: .additive).transform(3) == 6)
     #expect(CameraZoomStepTransformer(transforms: transforms, magnitude: 1, zoom: .multiplicative(rate: 0.5)).transform(3) == 3)
 }
