@@ -670,10 +670,12 @@ Pure projection behavior has a testable SIMD boundary. Invalid or behind-camera 
 ## 31: Turntable orbit axis is fixed to world Y
 
 +++
-status: new
+status: closed
 priority: medium
 kind: enhancement
 created: 2026-09-30T18:21:50Z
+updated: 2026-09-30T18:33:10Z
+closed: 2026-09-30T18:33:10Z
 +++
 
 TurntableTransformer always yaws around world Y and pitches around world X. Apps with a Z-up world (astronomy, CAD, most GIS) must convert the rotation quaternion to and from their own frame with an axis-swap adapter.
@@ -682,15 +684,19 @@ Found while evaluating Interaction3D for SolarSystem, whose camera works in the 
 
 Expected: a way to configure the up axis (default Y), so that turntable yaw and pitch are relative to it.
 
+- `2026-09-30T18:33:10Z`: Implemented; see commit.
+
 ---
 
 ## 32: No turntable binding for yaw and pitch angles
 
 +++
-status: new
+status: closed
 priority: low
 kind: enhancement
 created: 2026-09-30T18:21:50Z
+updated: 2026-09-30T18:33:10Z
+closed: 2026-09-30T18:33:10Z
 +++
 
 InteractiveCameraModifier binds only a simd_quatf rotation. Apps that already store the camera as yaw and pitch angles must write a two-way quaternion adapter and duplicate the decomposition that TurntableTransformer does internally.
@@ -699,15 +705,19 @@ Found while evaluating Interaction3D for SolarSystem, which stores orbitYaw and 
 
 Expected: a turntable variant that binds yaw and pitch directly. The library still owns sensitivity, clamping and momentum.
 
+- `2026-09-30T18:33:10Z`: Implemented; see commit.
+
 ---
 
 ## 33: Zoom is additive only, with a fixed 0.01 minimum distance
 
 +++
-status: new
+status: closed
 priority: medium
 kind: enhancement
 created: 2026-09-30T18:21:50Z
+updated: 2026-09-30T18:33:10Z
+closed: 2026-09-30T18:33:10Z
 +++
 
 Scroll and magnify zoom add a fixed delta to distance, and InteractiveCameraModifier clamps distance to at least 0.01. For scenes whose scale spans orders of magnitude, one zoom step is either too small far away or too large close up, and the min/max limits cannot be set.
@@ -716,15 +726,19 @@ Found while evaluating Interaction3D for SolarSystem, whose orbit distance range
 
 Expected: a configurable zoom model (for example additive or multiplicative/log-scale) and configurable minimum and maximum distance.
 
+- `2026-09-30T18:33:10Z`: Implemented; see commit.
+
 ---
 
 ## 34: Pan cannot be turned off
 
 +++
-status: new
+status: closed
 priority: low
 kind: enhancement
 created: 2026-09-30T18:21:51Z
+updated: 2026-09-30T18:33:10Z
+closed: 2026-09-30T18:33:10Z
 +++
 
 InteractiveCameraModifier always installs Command-drag pan, which moves the target point. Apps whose target is fixed (orbit a selected object) must pass a constant binding for target and still get a gesture that does nothing.
@@ -733,15 +747,19 @@ Found while evaluating Interaction3D for SolarSystem, where the target is always
 
 Expected: an option to disable pan.
 
+- `2026-09-30T18:33:10Z`: Implemented; see commit.
+
 ---
 
 ## 35: No look-around mode for a camera at a fixed position
 
 +++
-status: new
+status: closed
 priority: low
 kind: enhancement
 created: 2026-09-30T18:21:51Z
+updated: 2026-09-30T18:33:10Z
+closed: 2026-09-30T18:33:10Z
 +++
 
 The controllers either orbit a target (turntable, arcball) or move the camera (FPV). There is no mode where the camera stays at a fixed position and drag only changes where it looks, with configurable altitude clamps. FPV has parts of this but also does movement.
@@ -750,15 +768,19 @@ Found while evaluating Interaction3D for SolarSystem, whose surface mode stands 
 
 Expected: a look-around mode that binds a view direction (or azimuth/altitude) and clamps altitude.
 
+- `2026-09-30T18:33:10Z`: Implemented; see commit.
+
 ---
 
 ## 36: Interaction state is Float only
 
 +++
-status: new
+status: closed
 priority: low
 kind: enhancement
 created: 2026-09-30T18:21:51Z
+updated: 2026-09-30T18:33:10Z
+closed: 2026-09-30T18:33:10Z
 +++
 
 InteractionState stores distance and target as Float. At large scales (planetary or astronomical distances) Float loses precision in distance and target, so apps must keep their own Double state and convert.
@@ -766,5 +788,7 @@ InteractionState stores distance and target as Float. At large scales (planetary
 Found while evaluating Interaction3D for SolarSystem, which uses Double km positions.
 
 Expected: generic or Double-precision distance and target. Rotation can stay Float.
+
+- `2026-09-30T18:33:10Z`: Implemented at the view-modifier level: interactiveCamera accepts Float or Double distance and target. InteractionState and the transformers remain Float.
 
 ---

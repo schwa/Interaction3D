@@ -21,3 +21,12 @@ graph LR
 | **TurntableTransformer** | Fixed-axis orbit: yaw around world Y, pitch around world X, clamped |
 | **ArcballTransformer** | Free rotation via virtual trackball projection |
 | **InteractionState** | Camera state: rotation quaternion, distance, and target point |
+| **CameraZoomModel** | `.additive` or `.multiplicative(rate:)` (log-scale) zoom, with a configurable distance range |
+| **YawPitchDragModifier** | Drives yaw/pitch `Angle` bindings; backs `interactiveCamera(yaw:pitch:...)` and `interactiveLook(yaw:pitch:)` |
+
+## Options
+
+- **Up axis:** `TurntableTransformer(upAxis:)` orbits around any up axis (default +Y). `TurntableTransformer.yawPitch(of:upAxis:)` and `rotation(yaw:pitch:upAxis:)` convert between a rotation and angles.
+- **Precision:** `interactiveCamera(rotation:distance:target:)` accepts `Float` or `Double` distance and target.
+- **Pan:** pass `nil` for `target` (or `panEnabled: false` on `InteractiveCameraModifier`) to disable Command-drag pan.
+- **Look-around:** `interactiveLook(yaw:pitch:pitchRange:)` for a camera at a fixed position; dragging moves the scene with the pointer.

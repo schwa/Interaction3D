@@ -18,49 +18,75 @@ public struct InteractiveCameraModifier: ViewModifier {
         }
     }
 
-    @Binding var rotation: simd_quatf
-    @Binding var distance: Float
-    @Binding var target: SIMD3<Float>
+    var controls: CameraControlsModifier<Float>
 
-    var mode: Mode
-    var transforms: InteractionAxisTransforms
-
+    /// - Parameters:
+    ///   - zoom: How scroll and magnify change `distance`. Use `.multiplicative` for scenes whose scale spans orders
+    ///     of magnitude.
+    ///   - distanceRange: Limits for `distance`. Defaults to `0.01...`.
+    ///   - panEnabled: Whether Command-drag pans `target`.
     public init(
         rotation: Binding<simd_quatf>,
         distance: Binding<Float>,
         target: Binding<SIMD3<Float>>,
         mode: Mode = .turntable(),
-        transforms: InteractionAxisTransforms? = nil
+        transforms: InteractionAxisTransforms? = nil,
+        zoom: CameraZoomModel = .additive,
+        distanceRange: ClosedRange<Float> = 0.01...Float.greatestFiniteMagnitude,
+        panEnabled: Bool = true
     ) {
-        self._rotation = rotation
-        self._distance = distance
-        self._target = target
-        self.mode = mode
-        self.transforms = transforms ?? mode.defaultTransforms
+        controls = CameraControlsModifier(
+            rotation: rotation,
+            distance: distance,
+            target: panEnabled ? target : nil,
+            mode: mode,
+            transforms: transforms ?? mode.defaultTransforms,
+            zoom: zoom,
+            distanceRange: distanceRange
+        )
     }
 
     public func body(content: Content) -> some View {
+        content.modifier(controls)
+    }
+}
+
+/// Rotation, pan and zoom gestures for any floating-point distance and target type.
+struct CameraControlsModifier<Scalar: BinaryFloatingPoint & SIMDScalar>: ViewModifier {
+    @Binding var rotation: simd_quatf
+    @Binding var distance: Scalar
+    var target: Binding<SIMD3<Scalar>>?
+
+    var mode: InteractiveCameraModifier.Mode
+    var transforms: InteractionAxisTransforms
+    var zoom: CameraZoomModel
+    var distanceRange: ClosedRange<Scalar>
+
+    init(
+        rotation: Binding<simd_quatf>,
+        distance: Binding<Scalar>,
+        target: Binding<SIMD3<Scalar>>?,
+        mode: InteractiveCameraModifier.Mode,
+        transforms: InteractionAxisTransforms,
+        zoom: CameraZoomModel,
+        distanceRange: ClosedRange<Scalar>
+    ) {
+        self._rotation = rotation
+        self._distance = distance
+        self.target = target
+        self.mode = mode
+        self.transforms = transforms
+        self.zoom = zoom
+        self.distanceRange = distanceRange
+    }
+
+    func body(content: Content) -> some View {
         content
             .modifier(CameraRotationModifier(rotation: $rotation, mode: mode, transforms: transforms))
             #if os(macOS)
-            .modifier(CameraPanModifier(target: $target, transforms: transforms))
-            .transformedScrollGesture(
-                transformer: CameraZoomTransformer(transforms: transforms, magnitude: 1),
-                writes: clampedDistance
-            )
+            .modifier(OptionalCameraPanModifier(target: target, transforms: transforms))
             #endif
-            .transformedMagnifyGesture(
-                transformer: CameraZoomTransformer(transforms: transforms, magnitude: 100),
-                writes: clampedDistance
-            )
-    }
-
-    private var clampedDistance: Binding<Float> {
-        Binding {
-            distance
-        } set: { newDistance in
-            distance = max(0.01, newDistance)
-        }
+            .modifier(CameraZoomModifier(distance: $distance, transforms: transforms, zoom: zoom, distanceRange: distanceRange))
     }
 }
 
@@ -72,18 +98,31 @@ struct CameraPanTransformer: Transformer {
     }
 }
 
-private struct CameraPanModifier: ViewModifier {
-    @Binding var target: SIMD3<Float>
+struct OptionalCameraPanModifier<Scalar: BinaryFloatingPoint & SIMDScalar>: ViewModifier {
+    var target: Binding<SIMD3<Scalar>>?
     var transforms: InteractionAxisTransforms
 
-    @State private var targetAtDragStart: SIMD3<Float>?
+    func body(content: Content) -> some View {
+        if let target {
+            content.modifier(CameraPanModifier(target: target, transforms: transforms))
+        } else {
+            content
+        }
+    }
+}
+
+private struct CameraPanModifier<Scalar: BinaryFloatingPoint & SIMDScalar>: ViewModifier {
+    @Binding var target: SIMD3<Scalar>
+    var transforms: InteractionAxisTransforms
+
+    @State private var targetAtDragStart: SIMD3<Scalar>?
 
     func body(content: Content) -> some View {
         content.modifier(
             CoreDragModifier(modifiers: .command, minimumDistance: 10, momentum: false) { translation in
                 let startTarget = targetAtDragStart ?? target
                 targetAtDragStart = startTarget
-                target = startTarget + CameraPanTransformer(transforms: transforms).transform(translation)
+                target = startTarget + SIMD3<Scalar>(CameraPanTransformer(transforms: transforms).transform(translation))
             } onEnded: {
                 targetAtDragStart = nil
             }
@@ -184,14 +223,30 @@ private struct CameraRotationModifier: ViewModifier {
 }
 
 public extension View {
-    func interactiveCamera(
+    /// Orbit camera controls: drag rotates, scroll and magnify zoom, Command-drag pans the target.
+    ///
+    /// `distance` and `target` can be `Float` or `Double`; use `Double` for large-scale scenes. Pass `nil` for
+    /// `target` to disable pan, for example when orbiting a fixed object.
+    func interactiveCamera<Scalar: BinaryFloatingPoint & SIMDScalar>(
         rotation: Binding<simd_quatf>,
-        distance: Binding<Float>,
-        target: Binding<SIMD3<Float>>,
+        distance: Binding<Scalar>,
+        target: Binding<SIMD3<Scalar>>?,
         mode: InteractiveCameraModifier.Mode = .turntable(),
-        transforms: InteractionAxisTransforms? = nil
+        transforms: InteractionAxisTransforms? = nil,
+        zoom: CameraZoomModel = .additive,
+        distanceRange: ClosedRange<Scalar> = 0.01...Scalar.greatestFiniteMagnitude
     ) -> some View {
-        modifier(InteractiveCameraModifier(rotation: rotation, distance: distance, target: target, mode: mode, transforms: transforms))
+        modifier(
+            CameraControlsModifier(
+                rotation: rotation,
+                distance: distance,
+                target: target,
+                mode: mode,
+                transforms: transforms ?? mode.defaultTransforms,
+                zoom: zoom,
+                distanceRange: distanceRange
+            )
+        )
     }
 }
 

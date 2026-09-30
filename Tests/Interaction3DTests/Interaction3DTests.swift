@@ -299,6 +299,113 @@ private struct TestProjection: ProjectionProtocol {
     #expect(transformer.transform(CGSize(width: 4, height: 5)) == SIMD3<Float>(8, 15, 0))
 }
 
+// MARK: - Up axis (#31)
+
+@Test func turntableYawPitchRoundTripsWithDefaultUpAxis() {
+    let rotation = TurntableTransformer.rotation(yaw: 0.7, pitch: -0.3)
+    let angles = TurntableTransformer.yawPitch(of: rotation)
+    #expect(abs(angles.yaw - 0.7) < 1e-5)
+    #expect(abs(angles.pitch + 0.3) < 1e-5)
+    let identity = TurntableTransformer.yawPitch(of: simd_quatf(angle: 0, axis: [0, 1, 0]))
+    #expect(abs(identity.yaw) < 1e-6 && abs(identity.pitch) < 1e-6)
+}
+
+@Test func turntableHonoursZUpAxis() {
+    let up = SIMD3<Float>(0, 0, 1)
+    let level = TurntableTransformer.rotation(yaw: 1.2, pitch: 0, upAxis: up)
+    #expect(abs(level.act(SIMD3<Float>(0, 0, -1)).z) < 1e-5) // looking horizontally
+    #expect(simd_distance(level.act(SIMD3<Float>(0, 1, 0)), up) < 1e-5) // camera up is world up
+
+    let tilted = TurntableTransformer.rotation(yaw: 1.2, pitch: 0.4, upAxis: up)
+    #expect(abs(tilted.act(SIMD3<Float>(0, 0, -1)).z - sin(0.4)) < 1e-5)
+    let angles = TurntableTransformer.yawPitch(of: tilted, upAxis: up)
+    #expect(abs(angles.yaw - 1.2) < 1e-5 && abs(angles.pitch - 0.4) < 1e-5)
+}
+
+@Test func turntableYawDragRotatesAroundZUpAxis() {
+    let up = SIMD3<Float>(0, 0, 1)
+    let start = TurntableTransformer.rotation(yaw: 0, pitch: 0.3, upAxis: up)
+    let transformer = TurntableTransformer(input: InteractionInput(rotation: CGSize(width: 50, height: 0)), upAxis: up)
+    let result = transformer.transform(InteractionState(rotation: start)).rotation
+    let before = start.act(SIMD3<Float>(0, 0, -1))
+    let after = result.act(SIMD3<Float>(0, 0, -1))
+    #expect(abs(before.z - after.z) < 1e-5) // elevation above the XY plane unchanged
+    #expect(simd_distance(before, after) > 0.01)
+}
+
+@Test func turntableHandlesDownwardUpAxis() {
+    let rotation = TurntableTransformer.rotation(yaw: 0, pitch: 0, upAxis: [0, -1, 0])
+    #expect(simd_distance(rotation.act(SIMD3<Float>(0, 1, 0)), [0, -1, 0]) < 1e-5)
+}
+
+// MARK: - Zoom (#33)
+
+@Test func additiveZoomAddsAndClamps() {
+    let mapping = CameraZoomCoordinate<Float>(model: .additive, distanceRange: 1...10)
+    #expect(mapping.coordinate(for: 5) == 5)
+    #expect(mapping.distance(for: 7) == 7)
+    #expect(mapping.distance(for: 0) == 1)
+    #expect(mapping.distance(for: 20) == 10)
+}
+
+@Test func multiplicativeZoomScalesByTheSameFractionAtAnyDistance() {
+    let model = CameraZoomModel.multiplicative(rate: 0.1)
+    let mapping = CameraZoomCoordinate<Double>(model: model, distanceRange: 1.01...1e6)
+    let step = model.step(forZoomOutput: 1)
+    for distance in [2.0, 1_000, 500_000] {
+        let zoomed = mapping.distance(for: mapping.coordinate(for: distance) + step)
+        #expect(abs(zoomed / distance - exp(0.1)) < 1e-9)
+    }
+    #expect(mapping.distance(for: mapping.coordinate(for: 1.02) - 1) == 1.01)
+    #expect(mapping.distance(for: mapping.coordinate(for: 9e5) + 5) == 1e6)
+}
+
+@Test func zoomStepTransformerAppliesModel() {
+    let transforms = InteractionAxisTransforms(zoom: { $0 * 2 })
+    #expect(CameraZoomStepTransformer(transforms: transforms, magnitude: 1, zoom: .additive).transform(3) == 6)
+    #expect(CameraZoomStepTransformer(transforms: transforms, magnitude: 1, zoom: .multiplicative(rate: 0.5)).transform(3) == 3)
+}
+
+// MARK: - Yaw and pitch, look-around (#32, #35)
+
+@Test func yawPitchDragSessionTracksDeltas() {
+    var session = YawPitchDragSession()
+    #expect(session.delta(for: CGSize(width: 10, height: 4)) == CGSize(width: 10, height: 4))
+    #expect(session.delta(for: CGSize(width: 15, height: 9)) == CGSize(width: 5, height: 5))
+    session.end()
+    #expect(session.delta(for: CGSize(width: 3, height: 3)) == CGSize(width: 3, height: 3))
+}
+
+@Test func yawPitchDragClampsPitch() {
+    let result = YawPitchDragSession.apply(
+        delta: CGSize(width: 10, height: 1_000),
+        to: (SwiftUI.Angle.radians(0), SwiftUI.Angle.radians(0)),
+        pitchRange: SwiftUI.Angle.degrees(-30)...SwiftUI.Angle.degrees(30),
+        yawDelta: { $0 * 0.01 },
+        pitchDelta: { $0 * 0.01 }
+    )
+    #expect(abs(result.yaw.radians - 0.1) < 1e-12)
+    #expect(result.pitch == SwiftUI.Angle.degrees(30))
+}
+
+// MARK: - API (#32, #34, #35, #36)
+
+@MainActor
+@Test func cameraControlAPIsAcceptOptionsAndDoublePrecision() {
+    let rotation = Binding.constant(simd_quatf(angle: 0, axis: SIMD3<Float>(0, 1, 0)))
+    let yaw = Binding.constant(SwiftUI.Angle.radians(0))
+    let pitch = Binding.constant(SwiftUI.Angle.radians(0))
+    let floatDistance = Binding.constant(Float(5))
+    let doubleDistance = Binding.constant(1e8)
+    let doubleTarget = Binding.constant(SIMD3<Double>(1e9, 0, 0))
+
+    _ = Color.clear.interactiveCamera(rotation: rotation, distance: floatDistance, target: nil, zoom: .multiplicative())
+    _ = Color.clear.interactiveCamera(rotation: rotation, distance: doubleDistance, target: doubleTarget, mode: .turntable(TurntableTransformer(upAxis: [0, 0, 1])))
+    _ = Color.clear.modifier(InteractiveCameraModifier(rotation: rotation, distance: floatDistance, target: .constant(.zero), zoom: .multiplicative(), distanceRange: 1...100, panEnabled: false))
+    _ = Color.clear.interactiveCamera(yaw: yaw, pitch: pitch, distance: doubleDistance, zoom: .multiplicative(), distanceRange: 1.01...1e6)
+    _ = Color.clear.interactiveLook(yaw: yaw, pitch: pitch, pitchRange: SwiftUI.Angle.degrees(-89)...SwiftUI.Angle.degrees(89))
+}
+
 private extension SIMD4<Float> {
     var xyz: SIMD3<Float> {
         SIMD3<Float>(x, y, z)
