@@ -792,3 +792,17 @@ Expected: generic or Double-precision distance and target. Rotation can stay Flo
 - `2026-09-30T18:33:10Z`: Implemented at the view-modifier level: interactiveCamera accepts Float or Double distance and target. InteractionState and the transformers remain Float.
 
 ---
+
+## 37: visionOS is not a declared platform
+
++++
+status: new
+priority: low
+kind: task
+labels: platforms
+created: 2026-10-05T16:00:33Z
++++
+
+Package.swift declares only macOS 26 and iOS 26. Apps that target visionOS and depend on Interaction3D (e.g. MetalSprocketsGLTF's GLTFViewer demo) have no declared minimum or support for that platform.
+
+---
