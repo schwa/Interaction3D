@@ -796,11 +796,13 @@ Expected: generic or Double-precision distance and target. Rotation can stay Flo
 ## 37: visionOS is not a declared platform
 
 +++
-status: new
+status: closed
 priority: low
 kind: task
 labels: platforms
 created: 2026-10-05T16:00:33Z
+updated: 2026-10-07T17:22:24Z
+closed: 2026-10-07T17:22:24Z
 +++
 
 Package.swift declares only macOS 26 and iOS 26. Apps that target visionOS and depend on Interaction3D (e.g. MetalSprocketsGLTF's GLTFViewer demo) have no declared minimum or support for that platform.
