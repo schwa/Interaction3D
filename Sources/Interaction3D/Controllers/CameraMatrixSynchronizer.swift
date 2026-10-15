@@ -15,7 +15,7 @@ struct CameraMatrixSynchronizer {
             return nil
         }
 
-        let position = components.translate
+        let position = components.translation
         let offset = target - position
         let rawDistance = length(offset)
         let rotation = rawDistance > Float.ulpOfOne

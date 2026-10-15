@@ -184,6 +184,8 @@ import Testing
 }
 
 private struct TestProjection: ProjectionProtocol {
+    var isReversedDepth: Bool { false }
+
     func projectionMatrix(aspectRatio: Float) -> float4x4 {
         matrix_identity_float4x4
     }
