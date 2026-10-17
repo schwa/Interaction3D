@@ -16,11 +16,11 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/schwa/GeometryLite3D", from: "0.2.4"),
-        .package(url: "https://github.com/schwa/SwiftFormats", from: "0.3.6"),
+        .package(url: "https://github.com/schwa/GeometryLite3D", .upToNextMinor(from: "0.2.4")),
+        .package(url: "https://github.com/schwa/SwiftFormats", .upToNextMinor(from: "0.3.8")),
         .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-collections", from: "1.2.0"),
-        .package(url: "https://github.com/schwa/SpaceMouse", from: "0.0.1"),
+        .package(url: "https://github.com/schwa/SpaceMouse", .upToNextMinor(from: "0.0.1")),
     ],
     targets: [
         .target(
