@@ -48,6 +48,7 @@ public struct CoreDragModifier: ViewModifier {
 
     enum ClaimState { case unclaimed, claimed, rejected }
 
+    @Environment(\.interactionDragFilter) private var dragFilter
     @State private var claimState: ClaimState = .unclaimed
     @State private var startLocation: CGPoint = .zero
     @State private var animatingToTranslation: CGSize = .zero
@@ -120,37 +121,55 @@ public struct CoreDragModifier: ViewModifier {
                     .modifiers(modifiers)
                 #endif
                     .onChanged { value in
+                        claimIfNeeded(value, checkModifiers: false)
+                        guard claimState == .claimed else {
+                            return
+                        }
                         handleChanged(value)
                     }
                     .onEnded { value in
-                        handleEnded(value.translation, predicted: value.predictedEndTranslation)
+                        handleEndedIfClaimed(value)
                     }
             )
         }
         return AnyGesture(
             DragGesture(minimumDistance: minimumDistance)
                 .onChanged { value in
-                    #if os(macOS)
-                    if claimState == .unclaimed {
-                        claimState = modifiersMatchNow() ? .claimed : .rejected
-                    }
+                    claimIfNeeded(value, checkModifiers: true)
                     guard claimState == .claimed else {
                         return
                     }
-                    #endif
                     handleChanged(value)
                 }
                 .onEnded { value in
-                    #if os(macOS)
-                    let wasClaimed = claimState == .claimed
-                    claimState = .unclaimed
-                    guard wasClaimed else {
-                        return
-                    }
-                    #endif
-                    handleEnded(value.translation, predicted: value.predictedEndTranslation)
+                    handleEndedIfClaimed(value)
                 }
         )
+    }
+
+    private func claimIfNeeded(_ value: DragGesture.Value, checkModifiers: Bool) {
+        guard claimState == .unclaimed else {
+            return
+        }
+        var accepted = true
+        #if os(macOS)
+        if checkModifiers {
+            accepted = modifiersMatchNow()
+        }
+        #endif
+        if accepted, let dragFilter {
+            accepted = dragFilter(value.startLocation)
+        }
+        claimState = accepted ? .claimed : .rejected
+    }
+
+    private func handleEndedIfClaimed(_ value: DragGesture.Value) {
+        let wasClaimed = claimState == .claimed
+        claimState = .unclaimed
+        guard wasClaimed else {
+            return
+        }
+        handleEnded(value.translation, predicted: value.predictedEndTranslation)
     }
 
     private func handleChanged(_ value: DragGesture.Value) {
@@ -195,6 +214,21 @@ public struct CoreDragModifier: ViewModifier {
         startLocation = .zero
         animatingToTranslation = .zero
         onEnded()
+    }
+}
+
+// MARK: - Drag Filter
+
+public extension EnvironmentValues {
+    /// Decides once per drag, at its first change, whether Interaction3D drag controls may handle it.
+    /// Receives the drag start location in the view's local coordinate space. Return false to leave the drag to the caller.
+    @Entry var interactionDragFilter: (@MainActor (CGPoint) -> Bool)?
+}
+
+public extension View {
+    /// Rejects Interaction3D camera drags whose start location fails `filter`, for example drags that begin on a gizmo.
+    func interactionDragFilter(_ filter: @escaping @MainActor (CGPoint) -> Bool) -> some View {
+        environment(\.interactionDragFilter, filter)
     }
 }
 
