@@ -808,3 +808,30 @@ closed: 2026-10-07T17:22:24Z
 Package.swift declares only macOS 26 and iOS 26. Apps that target visionOS and depend on Interaction3D (e.g. MetalSprocketsGLTF's GLTFViewer demo) have no declared minimum or support for that platform.
 
 ---
+
+## 38: Let callers veto camera drags at drag start (hands off for gizmos)
+
++++
+status: new
+priority: high
+kind: feature
+created: 2026-10-22T21:57:51Z
++++
+
+Camera controls (`interactiveCamera`, and the drag modifiers in Controllers/GestureManager.swift) attach `simultaneousGesture` drags. When the view also has its own drag, for example a transform gizmo in SceneSprockets, both run: the camera orbits while the gizmo handle moves. Callers can not tell Interaction3D "hands off, this drag is ours".
+
+`GestureManager` already decides per drag at the start (`claimState`: claimed or rejected from the modifier keys). Add a caller hook into that decision, for example:
+
+```swift
+view.interactiveCamera(cameraMatrix: $matrix)
+    .interactionDragFilter { startLocation in !gizmo.hitTest(startLocation) }
+```
+
+- Evaluated once per drag, at the first change, with `startLocation` in the view's coordinate space.
+- False rejects the whole drag (rotate, pan, and anything else driven by drags), the same as a modifier mismatch today.
+- An environment value, so it reaches all camera modifiers at once and works with other controllers (FPV, rotation widget).
+- Maybe also a way to check scroll and magnify, though those rarely conflict.
+
+Needed by SceneSprockets (#173, transform gizmo needs a hover before a click) and SceneSprocketsComposer, which turned Interaction3D camera control off and wrote its own because of this conflict.
+
+---
