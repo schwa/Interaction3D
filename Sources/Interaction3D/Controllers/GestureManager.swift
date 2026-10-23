@@ -223,12 +223,30 @@ public extension EnvironmentValues {
     /// Decides once per drag, at its first change, whether Interaction3D drag controls may handle it.
     /// Receives the drag start location in the view's local coordinate space. Return false to leave the drag to the caller.
     @Entry var interactionDragFilter: (@MainActor (CGPoint) -> Bool)?
+
+    /// Decides per scroll wheel event whether Interaction3D scroll controls may handle it (macOS only).
+    /// Receives the pointer location in the view's local coordinate space. Rejected events pass to the next responder.
+    @Entry var interactionScrollFilter: (@MainActor (CGPoint) -> Bool)?
+
+    /// Decides once per magnify gesture, at its first change, whether Interaction3D magnify controls may handle it.
+    /// Receives the gesture start location in the view's local coordinate space.
+    @Entry var interactionMagnifyFilter: (@MainActor (CGPoint) -> Bool)?
 }
 
 public extension View {
     /// Rejects Interaction3D camera drags whose start location fails `filter`, for example drags that begin on a gizmo.
     func interactionDragFilter(_ filter: @escaping @MainActor (CGPoint) -> Bool) -> some View {
         environment(\.interactionDragFilter, filter)
+    }
+
+    /// Rejects Interaction3D scroll wheel events whose pointer location fails `filter`.
+    func interactionScrollFilter(_ filter: @escaping @MainActor (CGPoint) -> Bool) -> some View {
+        environment(\.interactionScrollFilter, filter)
+    }
+
+    /// Rejects Interaction3D magnify gestures whose start location fails `filter`.
+    func interactionMagnifyFilter(_ filter: @escaping @MainActor (CGPoint) -> Bool) -> some View {
+        environment(\.interactionMagnifyFilter, filter)
     }
 }
 
@@ -289,12 +307,21 @@ struct MagnifyGestureModifier<T: Transformer>: ViewModifier where T.Input == Dou
     let transformer: T
     @Binding var value: T.Output
 
+    @Environment(\.interactionMagnifyFilter) private var magnifyFilter
     @State private var lastMagnification: Double = 0
+    @State private var claimState: CoreDragModifier.ClaimState = .unclaimed
 
     func body(content: Content) -> some View {
         content.gesture(
             MagnifyGesture()
                 .onChanged { gestureValue in
+                    if claimState == .unclaimed {
+                        let accepted = magnifyFilter?(gestureValue.startLocation) ?? true
+                        claimState = accepted ? .claimed : .rejected
+                    }
+                    guard claimState == .claimed else {
+                        return
+                    }
                     let current = Double(gestureValue.magnification - 1)
                     let delta = current - lastMagnification
                     lastMagnification = current
@@ -302,6 +329,7 @@ struct MagnifyGestureModifier<T: Transformer>: ViewModifier where T.Input == Dou
                 }
                 .onEnded { _ in
                     lastMagnification = 0
+                    claimState = .unclaimed
                 }
         )
     }

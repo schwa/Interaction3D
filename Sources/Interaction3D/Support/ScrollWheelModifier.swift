@@ -7,10 +7,11 @@ import SwiftUI
 /// Captures macOS scroll wheel events via a local event monitor when the mouse is over the view.
 public struct ScrollWheelModifier: ViewModifier {
     @Binding var delta: Double
+    @Environment(\.interactionScrollFilter) private var scrollFilter
 
     public func body(content: Content) -> some View {
         content.overlay {
-            ScrollWheelView(delta: $delta)
+            ScrollWheelView(delta: $delta, filter: scrollFilter)
         }
     }
 }
@@ -27,15 +28,17 @@ public extension View {
 
 private struct ScrollWheelView: NSViewRepresentable {
     @Binding var delta: Double
+    let filter: (@MainActor (CGPoint) -> Bool)?
 
     func makeNSView(context: Context) -> ScrollWheelNSView {
         let view = ScrollWheelNSView()
-        view.onScroll = { delta += $0 }
+        updateNSView(view, context: context)
         return view
     }
 
     func updateNSView(_ nsView: ScrollWheelNSView, context: Context) {
         nsView.onScroll = { delta += $0 }
+        nsView.filter = filter
     }
 }
 
@@ -43,12 +46,19 @@ private struct ScrollWheelView: NSViewRepresentable {
 
 final class ScrollWheelNSView: NSView {
     var onScroll: ((Double) -> Void)?
+    var filter: (@MainActor (CGPoint) -> Bool)?
+
+    override var isFlipped: Bool { true }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
         NSApp.currentEvent?.type == .scrollWheel ? self : nil
     }
 
     override func scrollWheel(with event: NSEvent) {
+        if let filter, !filter(convert(event.locationInWindow, from: nil)) {
+            super.scrollWheel(with: event)
+            return
+        }
         let delta = event.hasPreciseScrollingDeltas
             ? Double(event.scrollingDeltaY)
             : Double(event.deltaY) * 10
