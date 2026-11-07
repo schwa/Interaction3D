@@ -844,12 +844,13 @@ Needed by SceneSprockets (#173, transform gizmo needs a hover before a click) an
 ## 39: FPV movement cannot start from an existing camera pose
 
 +++
-status: open
+status: closed
 priority: medium
 kind: enhancement
 labels: fpv, effort:m
 created: 2026-11-07T23:15:42Z
-updated: 2026-11-07T23:19:57Z
+updated: 2026-11-07T23:29:08Z
+closed: 2026-11-07T23:29:08Z
 +++
 
 FPVMovementController always starts at the origin with zero yaw and pitch, and FPVMovementModifier writes its transform into the bound cameraMatrix at once (onChange with initial: true). A host view that already has a camera, such as an orbit camera from interactiveCamera(cameraMatrix:), jumps to the origin when FPV is added. External changes to the bound matrix are also not read back, so FPV and another camera control on the same binding fight each other.

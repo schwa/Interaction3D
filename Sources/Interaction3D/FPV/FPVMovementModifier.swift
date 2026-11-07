@@ -36,7 +36,12 @@ public struct FPVMovementModifier: ViewModifier {
             .task { await handleKeyboardEvents() }
             .task { await handleGameControllerEvents() }
             .task { await updateMovement() }
-            .onChange(of: fpvController.movementController.transform, initial: true) {
+            .onChange(of: cameraMatrix, initial: true) {
+                if cameraMatrix != fpvController.movementController.transform {
+                    fpvController.setPose(cameraMatrix)
+                }
+            }
+            .onChange(of: fpvController.movementController.transform) {
                 cameraMatrix = fpvController.movementController.transform
             }
     }

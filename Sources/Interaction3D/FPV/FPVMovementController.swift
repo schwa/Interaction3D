@@ -33,6 +33,21 @@ public struct FPVMovementController {
         updateTransform()
     }
 
+    public init(transform: simd_float4x4) {
+        setPose(transform)
+    }
+
+    // Roll and scale are dropped; FPV keeps the camera upright.
+    public mutating func setPose(_ transform: simd_float4x4) {
+        let forward = -SIMD3<Float>(transform.columns.2.x, transform.columns.2.y, transform.columns.2.z)
+        let direction = length(forward) > 0 ? normalize(forward) : SIMD3<Float>(0, 0, -1)
+        yaw = atan2(-direction.x, -direction.z)
+        pitch = asin(max(-1, min(1, direction.y)))
+        clampPitch()
+        position = SIMD3<Float>(transform.columns.3.x, transform.columns.3.y, transform.columns.3.z)
+        updateTransform()
+    }
+
     public mutating func process(event: NavigationEvent) {
         switch event {
         case .axes(let forward, let sideways, let source):

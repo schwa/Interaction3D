@@ -184,6 +184,21 @@ import Testing
 }
 
 @MainActor
+@Test func fpvMovementStartsFromExistingPose() {
+    let yaw = simd_float4x4(simd_quatf(angle: 0.7, axis: [0, 1, 0]))
+    let pitch = simd_float4x4(simd_quatf(angle: -0.3, axis: [1, 0, 0]))
+    var pose = yaw * pitch
+    pose.columns.3 = [3, 4, 5, 1]
+
+    let controller = FPVMovementController(transform: pose)
+    let transform = controller.movementController.transform
+    for column in 0..<4 {
+        #expect(simd_length(transform[column] - pose[column]) < 0.0001)
+    }
+    #expect(abs(controller.pitch - -0.3) < 0.0001)
+}
+
+@MainActor
 @Test func fpvKeyboardLooksUpAndTurnsLeft() {
     var controller = FPVMovementController()
     controller.process(event: .keyboardState(move: .zero, look: [-1, 1], altitude: 0, isFast: false))

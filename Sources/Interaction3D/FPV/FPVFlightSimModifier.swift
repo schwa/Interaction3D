@@ -68,7 +68,12 @@ public struct FPVFlightSimModifier: ViewModifier {
             .toolbar { toolbarContent }
             .task { await handleKeyboardEvents() }
             .task { await handleGameControllerEvents() }
-            .onChange(of: fpvController.movementController.transform, initial: true) {
+            .onChange(of: cameraMatrix, initial: true) {
+                if cameraMatrix != fpvController.movementController.transform {
+                    fpvController.setPose(cameraMatrix)
+                }
+            }
+            .onChange(of: fpvController.movementController.transform) {
                 cameraMatrix = fpvController.movementController.transform
                 updateBreadcrumbs()
             }
