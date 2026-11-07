@@ -173,6 +173,7 @@ updated: 2026-08-25T21:05:45Z
 Both .inspector() and .overlay() hint text may dominate the screen on iPadOS, especially in compact width. Inspector likely takes over the full screen instead of appearing as a sidebar. The hint overlay at the bottom could also obscure too much content. Need to test on iPad and consider adaptive layouts or popovers.
 
 - `2026-08-25T21:11:58Z`: Inspected all inspector and hint-overlay call sites across the demo views. Punting: the report is speculative and does not identify a reproducing demo, iPad size class, or desired compact presentation. Can you provide a screenshot/repro for one demo and confirm whether compact width should hide hints, use a popover, or present a sheet?
+- `2026-11-07T23:28:19Z`: Re-checked during an autonomous run: no new info since the previous punt. Still punting: the compact-width presentation (hide hints, popover, or sheet) is a design decision. Unblocker: pick one, or share an iPad screenshot of a demo where it is a problem.
 
 ---
 
