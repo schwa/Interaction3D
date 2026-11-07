@@ -1,5 +1,3 @@
-#if os(macOS)
-
 import AsyncAlgorithms
 import simd
 import SwiftUI
@@ -20,8 +18,12 @@ public struct FPVMovementModifier: ViewModifier {
     @FocusState
     private var isFocused: Bool
 
-    public init(cameraMatrix: Binding<matrix_float4x4>) {
+    let showsControls: Bool
+
+    // showsControls adds toolbar buttons and ⌘T/⌘M/⌘0 shortcuts to the host window.
+    public init(cameraMatrix: Binding<matrix_float4x4>, showsControls: Bool = false) {
         self._cameraMatrix = cameraMatrix
+        self.showsControls = showsControls
     }
 
     public func body(content: Content) -> some View {
@@ -32,7 +34,11 @@ public struct FPVMovementModifier: ViewModifier {
                 wasdController.isKeyboardEnabled = isFocused
             }
             .disableWASDKeys()
-            .toolbar { toolbarContent }
+            .toolbar {
+                if showsControls {
+                    toolbarContent
+                }
+            }
             .task { await handleKeyboardEvents() }
             .task { await handleGameControllerEvents() }
             .task { await updateMovement() }
@@ -99,8 +105,8 @@ public struct FPVMovementModifier: ViewModifier {
 }
 
 public extension View {
-    func fpvMovement(cameraMatrix: Binding<matrix_float4x4>) -> some View {
-        modifier(FPVMovementModifier(cameraMatrix: cameraMatrix))
+    func fpvMovement(cameraMatrix: Binding<matrix_float4x4>, showsControls: Bool = false) -> some View {
+        modifier(FPVMovementModifier(cameraMatrix: cameraMatrix, showsControls: showsControls))
     }
 }
 
@@ -110,5 +116,3 @@ private extension Duration {
         return Float(components.seconds) + Float(components.attoseconds) / 1e18
     }
 }
-
-#endif

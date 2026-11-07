@@ -59,8 +59,10 @@ public struct WorldView<Content: View>: View {
                     )
                 }
                 .tool("Rotation Widget", group: .interaction, id: "rotation-widget", enabled: tools.contains(.rotationWidget)) { RotationWidgetToolModifier(cameraMatrix: $cameraMatrix) }
+                .tool("FPV", group: .interaction, id: "fpv-flight", enabled: tools.contains(.fpvFlight)) {
+                    FPVMovementModifier(cameraMatrix: $cameraMatrix, showsControls: true)
+                }
                 #if os(macOS)
-                .tool("FPV", group: .interaction, id: "fpv-flight", enabled: tools.contains(.fpvFlight)) { FPVMovementModifier(cameraMatrix: $cameraMatrix) }
                 .tool(
                     "FPV Flight Sim",
                     group: .interaction,

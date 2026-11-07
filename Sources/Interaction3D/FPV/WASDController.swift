@@ -1,6 +1,6 @@
 #if os(macOS)
-
 import AppKit
+#endif
 import AsyncAlgorithms
 import CoreGraphics
 import GameController
@@ -50,6 +50,7 @@ public final class WASDController {
         mouseBecameCurrentTask?.cancel()
         timerTask?.cancel()
         eventContinuation.finish()
+        #if os(macOS)
         if let monitor = mouseMonitor {
             NSEvent.removeMonitor(monitor)
         }
@@ -57,6 +58,7 @@ public final class WASDController {
             CGDisplayShowCursor(CGMainDisplayID())
             CGAssociateMouseAndMouseCursorPosition(1)
         }
+        #endif
     }
 
     // WASD moves, Q/E go down/up, arrows look, Shift moves faster.
@@ -111,12 +113,15 @@ public final class WASDController {
             if let mouse = mice.first {
                 registerMouse(mouse)
             } else {
+                #if os(macOS)
                 print("No mouse/trackpad found - setting up NSEvent monitor")
                 setupNSEventMonitor()
+                #endif
             }
         }
     }
 
+    #if os(macOS)
     private func setupNSEventMonitor() {
         mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved]) { [weak self] event in
             guard let self else {
@@ -137,6 +142,7 @@ public final class WASDController {
             return event
         }
     }
+    #endif
 
     public func toggleMouseCapture() {
         if isMouseCaptured {
@@ -146,16 +152,20 @@ public final class WASDController {
         }
     }
 
+    // Cursor capture is macOS-only; elsewhere these do nothing.
     public func captureMouse() {
+        #if os(macOS)
         guard !isMouseCaptured else {
             return
         }
         CGDisplayHideCursor(CGMainDisplayID())
         CGAssociateMouseAndMouseCursorPosition(0)
         isMouseCaptured = true
+        #endif
     }
 
     public func releaseMouse() {
+        #if os(macOS)
         guard isMouseCaptured else {
             return
         }
@@ -164,6 +174,7 @@ public final class WASDController {
         CGAssociateMouseAndMouseCursorPosition(1)
 
         isMouseCaptured = false
+        #endif
     }
 
     private func registerMouse(_ mouse: GCMouse) {
@@ -182,5 +193,3 @@ public final class WASDController {
         }
     }
 }
-
-#endif

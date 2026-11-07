@@ -862,12 +862,13 @@ Seen while adding fly navigation to SceneSprockets' SceneView (SceneSprockets #3
 ## 40: FPVMovementModifier is macOS-only and adds toolbar items to the host window
 
 +++
-status: open
+status: closed
 priority: medium
 kind: enhancement
 labels: fpv, effort:m
 created: 2026-11-07T23:15:42Z
-updated: 2026-11-07T23:19:57Z
+updated: 2026-11-07T23:32:26Z
+closed: 2026-11-07T23:32:26Z
 +++
 
 FPVMovementModifier and WASDController are inside #if os(macOS). There is no FPV keyboard or game controller movement on iOS, iPadOS or visionOS, although GameControllerMovementController works on those platforms.
