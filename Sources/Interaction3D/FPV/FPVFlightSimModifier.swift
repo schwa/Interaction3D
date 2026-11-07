@@ -21,6 +21,9 @@ public struct FPVFlightSimModifier: ViewModifier {
     @State
     private var gameController = GameControllerMovementController()
 
+    @FocusState
+    private var isFocused: Bool
+
     @State
     private var breadcrumbs: [SIMD2<Float>] = []
 
@@ -38,6 +41,10 @@ public struct FPVFlightSimModifier: ViewModifier {
     public func body(content: Content) -> some View {
         content
             .focusable()
+            .focused($isFocused)
+            .onChange(of: isFocused, initial: true) {
+                wasdController.isKeyboardEnabled = isFocused
+            }
             .disableWASDKeys()
             .overlay {
                 FlightSimControlsView(

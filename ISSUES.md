@@ -879,12 +879,13 @@ FPVMovementModifier also always adds three ToolbarItems (Enable/Disable Mouse ‚å
 ## 41: WASDController reads keys even when the FPV view does not have focus
 
 +++
-status: open
+status: closed
 priority: high
 kind: bug
 labels: fpv, effort:s
 created: 2026-11-07T23:15:42Z
-updated: 2026-11-07T23:19:57Z
+updated: 2026-11-07T23:26:54Z
+closed: 2026-11-07T23:26:54Z
 +++
 
 WASDController polls GCKeyboard.coalesced every 16 ms. It does not depend on SwiftUI focus, so WASD moves the FPV camera while the user types in a text field or uses another view in the same app. FPVMovementModifier makes the view focusable, but key polling does not check that focus.

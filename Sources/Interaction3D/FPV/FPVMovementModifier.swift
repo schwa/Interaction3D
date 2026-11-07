@@ -17,6 +17,9 @@ public struct FPVMovementModifier: ViewModifier {
     @State
     private var gameController = GameControllerMovementController()
 
+    @FocusState
+    private var isFocused: Bool
+
     public init(cameraMatrix: Binding<matrix_float4x4>) {
         self._cameraMatrix = cameraMatrix
     }
@@ -24,6 +27,10 @@ public struct FPVMovementModifier: ViewModifier {
     public func body(content: Content) -> some View {
         content
             .focusable()
+            .focused($isFocused)
+            .onChange(of: isFocused, initial: true) {
+                wasdController.isKeyboardEnabled = isFocused
+            }
             .disableWASDKeys()
             .toolbar { toolbarContent }
             .task { await handleKeyboardEvents() }

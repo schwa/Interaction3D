@@ -30,6 +30,15 @@ public final class WASDController {
 
     public var isMouseCaptured = false
 
+    // GCKeyboard is global, so the owning view must clear this when it loses focus.
+    @ObservationIgnored
+    public var isKeyboardEnabled = true
+
+    @ObservationIgnored
+    var isKeyPressed: (GCKeyCode) -> Bool = { keyCode in
+        GCKeyboard.coalesced?.keyboardInput?.button(forKeyCode: keyCode)?.isPressed ?? false
+    }
+
     public init() {
         (events, eventContinuation) = AsyncStream.makeStream(of: NavigationEvent.self, bufferingPolicy: .bufferingNewest(1))
         setupMouseHandling()
@@ -50,8 +59,17 @@ public final class WASDController {
         }
     }
 
-    func snapshot() -> GCKeyboardInput? {
-        GCKeyboard.coalesced?.keyboardInput?.capture()
+    func keyboardAxes() -> (forward: Float, sideways: Float) {
+        guard isKeyboardEnabled else {
+            return (0, 0)
+        }
+        var forward: Float = 0
+        var sideways: Float = 0
+        if isKeyPressed(.keyW) { forward += 1 }
+        if isKeyPressed(.keyS) { forward -= 1 }
+        if isKeyPressed(.keyD) { sideways += 1 }
+        if isKeyPressed(.keyA) { sideways -= 1 }
+        return (forward, sideways)
     }
 
     private func startTimerLoop() {
@@ -61,23 +79,8 @@ public final class WASDController {
                     return
                 }
 
-                var forwardAxis: Float = 0
-                var sidewaysAxis: Float = 0
-
-                if let snapshot = snapshot() {
-                    let w = snapshot.button(forKeyCode: .keyW)?.isPressed ?? false
-                    let s = snapshot.button(forKeyCode: .keyS)?.isPressed ?? false
-                    let a = snapshot.button(forKeyCode: .keyA)?.isPressed ?? false
-                    let d = snapshot.button(forKeyCode: .keyD)?.isPressed ?? false
-
-                    if w { forwardAxis += 1 }
-                    if s { forwardAxis -= 1 }
-
-                    if d { sidewaysAxis += 1 }
-                    if a { sidewaysAxis -= 1 }
-                }
-
-                eventContinuation.yield(.axes(forward: forwardAxis, sideways: sidewaysAxis, source: .keyboard))
+                let axes = keyboardAxes()
+                eventContinuation.yield(.axes(forward: axes.forward, sideways: axes.sideways, source: .keyboard))
             }
         }
     }
