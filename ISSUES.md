@@ -839,3 +839,74 @@ Needed by SceneSprockets (#173, transform gizmo needs a hover before a click) an
 - `2026-10-23T12:49:55Z`: Done: interactionDragFilter (e9fa23de), interactionScrollFilter + interactionMagnifyFilter (88d9e330).
 
 ---
+
+## 39: FPV movement cannot start from an existing camera pose
+
++++
+status: open
+priority: medium
+kind: enhancement
+labels: fpv, effort:m
+created: 2026-11-07T23:15:42Z
+updated: 2026-11-07T23:19:57Z
++++
+
+FPVMovementController always starts at the origin with zero yaw and pitch, and FPVMovementModifier writes its transform into the bound cameraMatrix at once (onChange with initial: true). A host view that already has a camera, such as an orbit camera from interactiveCamera(cameraMatrix:), jumps to the origin when FPV is added. External changes to the bound matrix are also not read back, so FPV and another camera control on the same binding fight each other.
+
+Seen while adding fly navigation to SceneSprockets' SceneView (SceneSprockets #313).
+
+---
+
+## 40: FPVMovementModifier is macOS-only and adds toolbar items to the host window
+
++++
+status: open
+priority: medium
+kind: enhancement
+labels: fpv, effort:m
+created: 2026-11-07T23:15:42Z
+updated: 2026-11-07T23:19:57Z
++++
+
+FPVMovementModifier and WASDController are inside #if os(macOS). There is no FPV keyboard or game controller movement on iOS, iPadOS or visionOS, although GameControllerMovementController works on those platforms.
+
+FPVMovementModifier also always adds three ToolbarItems (Enable/Disable Mouse ⌘T, Capture/Release Mouse ⌘M, Reset to Origin ⌘0) and their keyboard shortcuts. A library view that embeds FPV, such as a scene view in a host app, gets these buttons and shortcuts in the app's toolbar without asking for them.
+
+- `2026-11-07T23:19:54Z`: Related: #41 (focus handling) and #42 (keyboard controls) touch the same WASDController/FPVMovementModifier code.
+
+---
+
+## 41: WASDController reads keys even when the FPV view does not have focus
+
++++
+status: open
+priority: high
+kind: bug
+labels: fpv, effort:s
+created: 2026-11-07T23:15:42Z
+updated: 2026-11-07T23:19:57Z
++++
+
+WASDController polls GCKeyboard.coalesced every 16 ms. It does not depend on SwiftUI focus, so WASD moves the FPV camera while the user types in a text field or uses another view in the same app. FPVMovementModifier makes the view focusable, but key polling does not check that focus.
+
+---
+
+## 42: FPV has no keyboard controls for vertical movement, looking, or speed
+
++++
+status: open
+priority: medium
+kind: enhancement
+labels: fpv, effort:s
+created: 2026-11-07T23:15:42Z
+updated: 2026-11-07T23:19:57Z
++++
+
+Keyboard FPV input supports only WASD for planar movement. Missing compared with common fly-camera controls:
+- Up and down from the keyboard (for example Q/E). Altitude comes only from a game controller.
+- Turn and look from the keyboard (for example arrow keys). Looking needs mouse capture or a controller.
+- A fast-move modifier (for example Shift or a stick click).
+
+SceneSprockets #313 needed all three.
+
+---
