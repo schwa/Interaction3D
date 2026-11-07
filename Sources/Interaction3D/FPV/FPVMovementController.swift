@@ -10,6 +10,10 @@ public struct FPVMovementController {
     private var controllerYawAxis: Float = 0
     private var controllerPitchAxis: Float = 0
     private var controllerAltitudeAxis: Float = 0
+    private var keyboardYawAxis: Float = 0
+    private var keyboardPitchAxis: Float = 0
+    private var keyboardAltitudeAxis: Float = 0
+    private var isFast = false
 
     private var yaw: Float = 0
     public private(set) var pitch: Float = 0
@@ -22,6 +26,8 @@ public struct FPVMovementController {
     public var mouseSensitivity: Float = 0.01
     public var mouseTrackingEnabled: Bool = false
     public var controllerTurnSpeed: Float = .pi
+    public var keyboardTurnSpeed: Float = .pi / 2
+    public var fastSpeedMultiplier: Float = 4
 
     public init() {
         updateTransform()
@@ -55,6 +61,12 @@ public struct FPVMovementController {
             controllerYawAxis = -look.x
             controllerPitchAxis = -look.y
             controllerAltitudeAxis = altitude
+        case .keyboardState(let move, let look, let altitude, let isFast):
+            keyboardAxes = move
+            keyboardYawAxis = -look.x
+            keyboardPitchAxis = look.y
+            keyboardAltitudeAxis = altitude
+            self.isFast = isFast
         }
 
         updateTransform()
@@ -71,6 +83,10 @@ public struct FPVMovementController {
         controllerYawAxis = 0
         controllerPitchAxis = 0
         controllerAltitudeAxis = 0
+        keyboardYawAxis = 0
+        keyboardPitchAxis = 0
+        keyboardAltitudeAxis = 0
+        isFast = false
         yaw = 0
         pitch = 0
         position = .zero
@@ -84,8 +100,8 @@ public struct FPVMovementController {
             return
         }
 
-        yaw += controllerYawAxis * controllerTurnSpeed * deltaTime
-        pitch += controllerPitchAxis * controllerTurnSpeed * deltaTime
+        yaw += (controllerYawAxis * controllerTurnSpeed + keyboardYawAxis * keyboardTurnSpeed) * deltaTime
+        pitch += (controllerPitchAxis * controllerTurnSpeed + keyboardPitchAxis * keyboardTurnSpeed) * deltaTime
         clampPitch()
 
         var movementInput = keyboardAxes + controllerAxes
@@ -98,13 +114,15 @@ public struct FPVMovementController {
         let cosYaw = cos(yaw)
         let right = SIMD3<Float>(cosYaw, 0, -sinYaw)
         let forward = SIMD3<Float>(-sinYaw, 0, -cosYaw)
-        let deltaPosition = (right * movementInput.x + forward * movementInput.y) * speed * deltaTime
+        let currentSpeed = isFast ? speed * fastSpeedMultiplier : speed
+        let deltaPosition = (right * movementInput.x + forward * movementInput.y) * currentSpeed * deltaTime
+        let altitudeInput = max(-1, min(1, controllerAltitudeAxis + keyboardAltitudeAxis))
 
         position += deltaPosition
-        position.y += controllerAltitudeAxis * speed * deltaTime
+        position.y += altitudeInput * currentSpeed * deltaTime
 
         let planarVelocity = deltaPosition / deltaTime
-        let altitudeVelocity = controllerAltitudeAxis * speed
+        let altitudeVelocity = altitudeInput * currentSpeed
         movementController.linearVelocity = SIMD3<Float>(planarVelocity.x, altitudeVelocity, planarVelocity.z)
         movementController.angularVelocity = .zero
     }

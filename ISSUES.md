@@ -895,12 +895,13 @@ WASDController polls GCKeyboard.coalesced every 16 ms. It does not depend on Swi
 ## 42: FPV has no keyboard controls for vertical movement, looking, or speed
 
 +++
-status: open
+status: closed
 priority: medium
 kind: enhancement
 labels: fpv, effort:s
 created: 2026-11-07T23:15:42Z
-updated: 2026-11-07T23:19:57Z
+updated: 2026-11-07T23:28:19Z
+closed: 2026-11-07T23:28:19Z
 +++
 
 Keyboard FPV input supports only WASD for planar movement. Missing compared with common fly-camera controls:

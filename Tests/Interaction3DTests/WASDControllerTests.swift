@@ -7,20 +7,24 @@ import Testing
 @MainActor
 @Test func wasdControllerReadsKeysWhenEnabled() {
     let controller = WASDController()
-    controller.isKeyPressed = { $0 == .keyW || $0 == .keyD }
-    let axes = controller.keyboardAxes()
-    #expect(axes.forward == 1)
-    #expect(axes.sideways == 1)
+    controller.isKeyPressed = { [.keyW, .keyD, .keyE, .leftArrow, .upArrow, .leftShift].contains($0) }
+    let state = controller.keyboardState()
+    #expect(state.move == [1, 1])
+    #expect(state.look == [-1, 1])
+    #expect(state.altitude == 1)
+    #expect(state.isFast)
 }
 
 @MainActor
 @Test func wasdControllerIgnoresKeysWhenNotFocused() {
     let controller = WASDController()
-    controller.isKeyPressed = { $0 == .keyW || $0 == .keyD }
+    controller.isKeyPressed = { _ in true }
     controller.isKeyboardEnabled = false
-    let axes = controller.keyboardAxes()
-    #expect(axes.forward == 0)
-    #expect(axes.sideways == 0)
+    let state = controller.keyboardState()
+    #expect(state.move == .zero)
+    #expect(state.look == .zero)
+    #expect(state.altitude == 0)
+    #expect(!state.isFast)
 }
 
 #endif

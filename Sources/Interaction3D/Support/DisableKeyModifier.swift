@@ -18,6 +18,9 @@ extension View {
     }
 
     func disableWASDKeys() -> some View {
-        disableKeys([.init("w"), .init("a"), .init("s"), .init("d")])
+        disableKeys([
+            .init("w"), .init("a"), .init("s"), .init("d"), .init("q"), .init("e"),
+            .upArrow, .downArrow, .leftArrow, .rightArrow
+        ])
     }
 }

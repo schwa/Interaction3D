@@ -59,17 +59,19 @@ public final class WASDController {
         }
     }
 
-    func keyboardAxes() -> (forward: Float, sideways: Float) {
+    // WASD moves, Q/E go down/up, arrows look, Shift moves faster.
+    func keyboardState() -> (move: SIMD2<Float>, look: SIMD2<Float>, altitude: Float, isFast: Bool) {
         guard isKeyboardEnabled else {
-            return (0, 0)
+            return (.zero, .zero, 0, false)
         }
-        var forward: Float = 0
-        var sideways: Float = 0
-        if isKeyPressed(.keyW) { forward += 1 }
-        if isKeyPressed(.keyS) { forward -= 1 }
-        if isKeyPressed(.keyD) { sideways += 1 }
-        if isKeyPressed(.keyA) { sideways -= 1 }
-        return (forward, sideways)
+        func axis(_ positive: GCKeyCode, _ negative: GCKeyCode) -> Float {
+            (isKeyPressed(positive) ? 1 : 0) - (isKeyPressed(negative) ? 1 : 0)
+        }
+        let move = SIMD2<Float>(axis(.keyD, .keyA), axis(.keyW, .keyS))
+        let look = SIMD2<Float>(axis(.rightArrow, .leftArrow), axis(.upArrow, .downArrow))
+        let altitude = axis(.keyE, .keyQ)
+        let isFast = isKeyPressed(.leftShift) || isKeyPressed(.rightShift)
+        return (move, look, altitude, isFast)
     }
 
     private func startTimerLoop() {
@@ -79,8 +81,8 @@ public final class WASDController {
                     return
                 }
 
-                let axes = keyboardAxes()
-                eventContinuation.yield(.axes(forward: axes.forward, sideways: axes.sideways, source: .keyboard))
+                let state = keyboardState()
+                eventContinuation.yield(.keyboardState(move: state.move, look: state.look, altitude: state.altitude, isFast: state.isFast))
             }
         }
     }

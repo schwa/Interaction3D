@@ -169,6 +169,31 @@ import Testing
     #expect(abs(controller.pitch - (.pi / 2 - 0.01)) < 0.0001)
 }
 
+@MainActor
+@Test func fpvKeyboardMovesVerticallyAndFaster() {
+    var controller = FPVMovementController()
+    controller.process(event: .keyboardState(move: .zero, look: .zero, altitude: 1, isFast: false))
+    controller.update(deltaTime: 1)
+    #expect(controller.movementController.transform.columns.3.y == controller.speed)
+
+    controller.reset()
+    controller.process(event: .keyboardState(move: [0, 1], look: .zero, altitude: 0, isFast: true))
+    controller.update(deltaTime: 1)
+    let distance = simd_length(controller.movementController.transform.columns.3.xyz)
+    #expect(abs(distance - controller.speed * controller.fastSpeedMultiplier) < 0.0001)
+}
+
+@MainActor
+@Test func fpvKeyboardLooksUpAndTurnsLeft() {
+    var controller = FPVMovementController()
+    controller.process(event: .keyboardState(move: .zero, look: [-1, 1], altitude: 0, isFast: false))
+    controller.update(deltaTime: 0.1)
+    #expect(controller.pitch > 0)
+    let forward = -controller.movementController.transform.columns.2.xyz
+    #expect(forward.x < 0)
+    #expect(forward.y > 0)
+}
+
 @Test func worldViewDerivesFlightSimulationFieldOfViewFromPerspectiveProjection() {
     let projection = PerspectiveProjection(verticalAngleOfView: .degrees(75))
     let fieldOfView = WorldViewProjectionCapabilities.verticalFOV(for: projection, override: nil)
