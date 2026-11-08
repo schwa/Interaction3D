@@ -1271,12 +1271,13 @@ updated: 2026-11-08T16:36:22Z
 ## 61: FlightSim map zoom buttons and RotationWidget hover buttons are unlabeled for VoiceOver
 
 +++
-status: open
+status: closed
 priority: medium
 kind: bug
 labels: effort:s, area:accessibility
 created: 2026-11-08T16:34:16Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-08T16:38:09Z
+closed: 2026-11-08T16:38:09Z
 +++
 
 - `FPV/FPVFlightSimModifier.swift:155-165`: map zoom in/out buttons have only `Image(systemName:)` labels, so VoiceOver has no name for them.
@@ -1284,6 +1285,7 @@ updated: 2026-11-08T16:36:22Z
 - `RotationWidget.swift:39`: the reset rotation animation ignores Reduce Motion.
 
 - `2026-11-08T16:36:22Z`: Related: #65 (HoverArea tuple has no field for an accessibility name).
+- `2026-11-08T16:38:09Z`: Fixed: labeled map zoom buttons, VoiceOver 'View <face>' actions on RotationWidget, Reduce Motion skips the slerp. No unit test: accessibility/UI behavior is not reachable from the unit test target.
 
 ---
 

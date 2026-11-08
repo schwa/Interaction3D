@@ -121,6 +121,14 @@ public struct FPVFlightSimModifier: ViewModifier {
         }
     }
 
+    private func zoomMapOut() {
+        mapScale = max(mapScale / 1.2, 0.25)
+    }
+
+    private func zoomMapIn() {
+        mapScale = min(mapScale * 1.2, 20)
+    }
+
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem {
@@ -152,17 +160,11 @@ public struct FPVFlightSimModifier: ViewModifier {
 
         ToolbarItem {
             HStack(spacing: 4) {
-                Button {
-                    mapScale = max(mapScale / 1.2, 0.25)
-                } label: {
-                    Image(systemName: "minus.magnifyingglass")
-                }
+                Button("Zoom Map Out", systemImage: "minus.magnifyingglass", action: zoomMapOut)
+                    .labelStyle(.iconOnly)
 
-                Button {
-                    mapScale = min(mapScale * 1.2, 20)
-                } label: {
-                    Image(systemName: "plus.magnifyingglass")
-                }
+                Button("Zoom Map In", systemImage: "plus.magnifyingglass", action: zoomMapIn)
+                    .labelStyle(.iconOnly)
             }
         }
     }

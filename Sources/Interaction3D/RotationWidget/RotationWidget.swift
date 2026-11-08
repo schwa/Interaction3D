@@ -18,6 +18,9 @@ public struct RotationWidget: View {
     @State
     private var isDragging: Bool = false
 
+    @Environment(\.accessibilityReduceMotion)
+    private var reduceMotion
+
     @State
     private var slerpProgress: Double = 1.0
 
@@ -32,14 +35,7 @@ public struct RotationWidget: View {
             cube: cube,
             rotation: $rotation,
             isDragging: $isDragging,
-            onRotateTo: { target in
-                slerpFrom = rotation
-                slerpTo = target
-                slerpProgress = 0
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    slerpProgress = 1.0
-                }
-            },
+            onRotateTo: rotate(to:),
             verticalFOV: verticalFOV
         )
         .modifier(PitchYawDragModifier(rotation: $rotation, isDragging: $isDragging))
@@ -56,6 +52,32 @@ public struct RotationWidget: View {
         .accessibilityLabel("Rotation")
         .accessibilityValue(accessibilityValue)
         .accessibilityAdjustableAction(adjustRotation)
+        .accessibilityActions {
+            // The hover targets only exist under the pointer, so expose face views as named actions.
+            ForEach(cube.faces.indices, id: \.self) { faceIndex in
+                Button("View \(Self.faceNames[faceIndex])") {
+                    rotate(to: cube.calculateLookAt(at: cube.faceCentroid(faceIndex)))
+                }
+            }
+        }
+    }
+
+    // Matches the face order in Cube.faces.
+    private static let faceNames = ["Back", "Front", "Bottom", "Top", "Right", "Left"]
+
+    private func rotate(to target: simd_quatf) {
+        guard !reduceMotion else {
+            rotation = target
+            slerpFrom = target
+            slerpTo = target
+            return
+        }
+        slerpFrom = rotation
+        slerpTo = target
+        slerpProgress = 0
+        withAnimation(.easeInOut(duration: 0.5)) {
+            slerpProgress = 1.0
+        }
     }
 
     private var accessibilityValue: String {
