@@ -1038,3 +1038,43 @@ The latest tag, 0.1.16, lacks these merged changes, so packages depending on `up
 Seen in CBTerrain.
 
 ---
+
+## 49: FPV W/S movement stays on the horizontal plane with no free-flight option
+
++++
+status: new
+priority: medium
+kind: enhancement
+labels: fpv
+created: 2026-11-08T06:44:51Z
++++
+
+`FPVMovementController.applyContinuousInputs` builds the movement basis from yaw only (`forward = (-sin yaw, 0, -cos yaw)`), so W/S never change altitude even when looking up or down; only Q/E move vertically. This walking-style movement is a good default, but there is no way to choose free flight, where W/S move along the full view direction (including pitch). CBTerrain's original fly camera moved along the view direction, and losing it makes descending toward terrain awkward.
+
+Expected: a setting (e.g. on `FPVMovementSettings`) to move along the view direction; horizontal-plane movement stays the default.
+Actual: movement is always horizontal.
+
+---
+
+## 50: Holding Shift with WASD/QE in the FPV view makes the system beep
+
++++
+status: new
+priority: medium
+kind: bug
+labels: fpv
+created: 2026-11-08T06:44:51Z
++++
+
+`disableWASDKeys()` swallows key presses with `onKeyPress(keys:)` for the lowercase `KeyEquivalent`s w, a, s, d, q, e plus the arrows. With Shift held (fast movement), the presses arrive as uppercase characters (W, A, ...), don't match, fall through unhandled, and AppKit beeps on every repeat.
+
+Steps:
+1. Focus a view using `fpvMovement`.
+2. Hold Shift and W.
+
+Expected: fast forward movement, no sound.
+Actual: fast movement plus repeated system beeps.
+
+The uppercase-character cause is inferred from the code, not confirmed with a key log.
+
+---
