@@ -1189,12 +1189,13 @@ Two library views build `Binding { get } set: { set }` adapters, which the Swift
 ## 56: SwiftUI view types without a View suffix
 
 +++
-status: open
+status: closed
 priority: low
 kind: task
 labels: effort:m, area:swiftui
 created: 2026-11-08T16:30:56Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-08T16:55:02Z
+closed: 2026-11-08T16:55:02Z
 +++
 
 House rules require SwiftUI view types to end in `View`. About 24 do not, including public API:
@@ -1202,6 +1203,8 @@ House rules require SwiftUI view types to end in `View`. About 24 do not, includ
 Library: `RotationWidget`, `RotationWidgetCanvas`, `HoverArea`, `HorizonCue`, `FloatSlider`, `AngleSlider`, `TransformerParameterEditor`, `ParameterControl`, `ToolPickerHost`, `CameraPositionEditor`, `CameraOrientationEditor`, `ScrubbableValueField`, `AngleOfViewControl`, `ClippingRangeControl`.
 
 Demo: `WidgetsDemo`, `TurntableDemo`, `GestureManagerDemo`, `InspectorXYRow`, `InspectorValueRow`, `WorldViewDemo`, `AnimatedConstraintDemo`, `DragDemo`, `ConstraintDemo`, `SpaceMouseDemo`.
+
+- `2026-11-08T16:55:02Z`: Won't fix: house rules updated. Role suffixes (Editor, Field, Control, Widget, Row, ...) are fine; View is the suffix of last resort, and existing types shouldn't be renamed just to add it.
 
 ---
 
