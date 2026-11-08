@@ -1157,3 +1157,25 @@ The demos (e.g. WorldView via `showsControls`) relied on the library-provided to
 Expose mouse look state as a `@Binding` (or similar) so clients can wire their own shortcut, and have the demos add their own ⌘T shortcut.
 
 ---
+
+## 54: Closure-typed @Entry environment values produce compiler warnings
+
++++
+status: new
+priority: low
+kind: bug
+labels: swiftui
+created: 2026-11-08T07:15:34Z
++++
+
+Building Interaction3D (and every package that depends on it) emits three warnings from `GestureManager.swift`:
+
+```
+GestureManager.swift:225: Storing a closure in '@Entry var interactionDragFilter' may invalidate dependents on every update because closures may not be comparable. (from macro 'Entry')
+GestureManager.swift:229: Storing a closure in '@Entry var interactionScrollFilter' may invalidate dependents on every update because closures may not be comparable. (from macro 'Entry')
+GestureManager.swift:233: Storing a closure in '@Entry var interactionMagnifyFilter' may invalidate dependents on every update because closures may not be comparable. (from macro 'Entry')
+```
+
+Besides the noise in client builds (seen in CBTerrain with Xcode 27.2), the warning points at a real cost: views reading these values may be invalidated on every environment update.
+
+---
