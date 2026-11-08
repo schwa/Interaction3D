@@ -1468,14 +1468,17 @@ updated: 2026-11-08T16:36:22Z
 ## 71: AnimatedSizeModifier hand-writes animatableData
 
 +++
-status: open
+status: closed
 priority: low
 kind: task
 labels: effort:xs, area:swiftui
 created: 2026-11-08T16:35:41Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-08T16:43:02Z
+closed: 2026-11-08T16:43:02Z
 +++
 
 `AnimatedSizeModifier` (`Controllers/GestureManager.swift`) implements `animatableData` with `AnimatablePair` manually. The deployment target (macOS/iOS 26) supports the `@Animatable` macro (with `@AnimatableIgnored` for `onChange`), which Apple guidance prefers.
+
+- `2026-11-08T16:43:02Z`: AnimatedSizeModifier now uses @Animatable with @AnimatableIgnored on the callback. No test: equivalent synthesized conformance; momentum animation not unit-testable.
 
 ---

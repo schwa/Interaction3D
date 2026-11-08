@@ -6,18 +6,12 @@ import SwiftUI
 // MARK: - Animated CGSize Helper
 
 /// Bridges SwiftUI animation to a CGSize callback, interpolating frame-by-frame.
-private struct AnimatedSizeModifier: ViewModifier, @MainActor Animatable {
+@Animatable
+private struct AnimatedSizeModifier: ViewModifier {
     var width: CGFloat
     var height: CGFloat
+    @AnimatableIgnored
     var onChange: (CGSize) -> Void
-
-    var animatableData: AnimatablePair<CGFloat, CGFloat> {
-        get { AnimatablePair(width, height) }
-        set {
-            width = newValue.first
-            height = newValue.second
-        }
-    }
 
     func body(content: Content) -> some View {
         content
