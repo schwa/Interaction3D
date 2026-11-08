@@ -1022,27 +1022,6 @@ closed: 2026-11-08T06:41:08Z
 
 ---
 
-## 48: FPV fixes on main are not in a release
-
-+++
-status: new
-priority: medium
-kind: task
-labels: fpv
-created: 2026-11-08T06:35:35Z
-+++
-
-The latest tag, 0.1.16, lacks these merged changes, so packages depending on `upToNextMinor(from: "0.1.16")` don't get them:
-
-- #39 / a1d6d37: FPV starts from the bound camera pose. In 0.1.16 the camera always starts at the origin with zero yaw and pitch, overwriting the host's initial camera.
-- #40 / cc8f4e5: `FPVMovementModifier` is macOS-only in 0.1.16 and always adds toolbar items.
-- #41: keyboard input gated on view focus.
-- #42: Q/E altitude, arrow-key look, Shift fast-move.
-
-Seen in CBTerrain.
-
----
-
 ## 49: FPV W/S movement stays on the horizontal plane with no free-flight option
 
 +++

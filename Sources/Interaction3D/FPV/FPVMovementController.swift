@@ -78,24 +78,13 @@ public struct FPVMovementController {
         switch event {
         case .axes(let forward, let sideways, let source):
             let vector = SIMD2<Float>(sideways, forward)
-            switch source {
-            case .keyboard:
+            if source == .keyboard {
                 keyboardAxes = vector
-            case .controller:
+            } else {
                 controllerAxes = vector
             }
         case .look(let deltaX, let deltaY, let source):
-            switch source {
-            case .mouse:
-                guard mouseTrackingEnabled, isLookHeld else { break }
-                // Deltas use GCMouse convention: +X right, +Y up.
-                yaw -= deltaX * mouseSensitivity
-                pitch += deltaY * mouseSensitivity
-                clampPitch()
-            case .controller:
-                controllerYawAxis = -deltaX
-                controllerPitchAxis = -deltaY
-            }
+            processLook(deltaX: deltaX, deltaY: deltaY, source: source)
         case .altitude(let value, _):
             controllerAltitudeAxis = value
         case .controllerState(let move, let look, let altitude):
@@ -121,6 +110,22 @@ public struct FPVMovementController {
         }
 
         updateTransform()
+    }
+
+    private mutating func processLook(deltaX: Float, deltaY: Float, source: NavigationEvent.LookSource) {
+        switch source {
+        case .mouse:
+            guard mouseTrackingEnabled, isLookHeld else {
+                return
+            }
+            // Deltas use GCMouse convention: +X right, +Y up.
+            yaw -= deltaX * mouseSensitivity
+            pitch += deltaY * mouseSensitivity
+            clampPitch()
+        case .controller:
+            controllerYawAxis = -deltaX
+            controllerPitchAxis = -deltaY
+        }
     }
 
     public mutating func update(deltaTime: Float) {
