@@ -92,7 +92,6 @@ public final class WASDController {
     private func setupMouseHandling() {
         mouseConnectTask = Task { [weak self] in
             for await notification in NotificationCenter.default.notifications(named: .GCMouseDidConnect) {
-                print("Mouse connected via notification")
                 if let mouse = notification.object as? GCMouse {
                     self?.registerMouse(mouse)
                 }
@@ -114,7 +113,6 @@ public final class WASDController {
                 registerMouse(mouse)
             } else {
                 #if os(macOS)
-                print("No mouse/trackpad found - setting up NSEvent monitor")
                 setupNSEventMonitor()
                 #endif
             }
@@ -133,7 +131,8 @@ public final class WASDController {
                 let deltaX = event.deltaX
                 let deltaY = event.deltaY
                 if deltaX != 0 || deltaY != 0 {
-                    eventContinuation.yield(.look(deltaX: Float(deltaX), deltaY: Float(deltaY)))
+                    // NSEvent +Y is down; flip to match GCMouse.
+                    eventContinuation.yield(.look(deltaX: Float(deltaX), deltaY: Float(-deltaY)))
                 }
             default:
                 break
@@ -178,18 +177,11 @@ public final class WASDController {
     }
 
     private func registerMouse(_ mouse: GCMouse) {
-        print("Registering mouse handlers")
-
         if let mouseInput = mouse.mouseInput {
-            print("Mouse input available")
-
             mouseInput.mouseMovedHandler = { [weak self] _, deltaX, deltaY in
                 self?.eventContinuation.yield(.look(deltaX: deltaX, deltaY: deltaY))
             }
             _ = mouseInput.capture()
-            print("Mouse input is ready")
-        } else {
-            print("No mouse input available on this mouse device")
         }
     }
 }

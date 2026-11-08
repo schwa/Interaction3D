@@ -454,3 +454,12 @@ private extension SIMD4<Float> {
         SIMD3<Float>(x, y, z)
     }
 }
+
+@MainActor
+@Test func fpvMouseLookTurnsTowardMouseMovement() {
+    var controller = FPVMovementController()
+    controller.process(event: .look(deltaX: 10, deltaY: 10))
+    let forward = -controller.movementController.transform.columns.2
+    #expect(forward.x > 0)
+    #expect(forward.y > 0)
+}

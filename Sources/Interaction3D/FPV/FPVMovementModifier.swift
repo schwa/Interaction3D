@@ -2,6 +2,31 @@ import AsyncAlgorithms
 import simd
 import SwiftUI
 
+public struct FPVMovementSettings: Equatable, Sendable {
+    public var speed: Float
+    public var fastSpeedMultiplier: Float
+    public var mouseSensitivity: Float
+    public var controllerTurnSpeed: Float
+    public var keyboardTurnSpeed: Float
+    public var isMouseLookEnabled: Bool
+
+    public init(
+        speed: Float = 10,
+        fastSpeedMultiplier: Float = 4,
+        mouseSensitivity: Float = 0.01,
+        controllerTurnSpeed: Float = .pi,
+        keyboardTurnSpeed: Float = .pi / 2,
+        isMouseLookEnabled: Bool = true
+    ) {
+        self.isMouseLookEnabled = isMouseLookEnabled
+        self.speed = speed
+        self.fastSpeedMultiplier = fastSpeedMultiplier
+        self.mouseSensitivity = mouseSensitivity
+        self.controllerTurnSpeed = controllerTurnSpeed
+        self.keyboardTurnSpeed = keyboardTurnSpeed
+    }
+}
+
 public struct FPVMovementModifier: ViewModifier {
     @Binding
     var cameraMatrix: matrix_float4x4
@@ -19,10 +44,12 @@ public struct FPVMovementModifier: ViewModifier {
     private var isFocused: Bool
 
     let showsControls: Bool
+    let settings: FPVMovementSettings
 
-    // showsControls adds toolbar buttons and ⌘T/⌘M/⌘0 shortcuts to the host window.
-    public init(cameraMatrix: Binding<matrix_float4x4>, showsControls: Bool = false) {
+    // showsControls adds Capture Mouse and Reset toolbar buttons to the host window.
+    public init(cameraMatrix: Binding<matrix_float4x4>, settings: FPVMovementSettings = .init(), showsControls: Bool = false) {
         self._cameraMatrix = cameraMatrix
+        self.settings = settings
         self.showsControls = showsControls
     }
 
@@ -37,6 +64,17 @@ public struct FPVMovementModifier: ViewModifier {
             .toolbar {
                 if showsControls {
                     toolbarContent
+                }
+            }
+            .onChange(of: settings, initial: true) {
+                fpvController.speed = settings.speed
+                fpvController.fastSpeedMultiplier = settings.fastSpeedMultiplier
+                fpvController.mouseSensitivity = settings.mouseSensitivity
+                fpvController.controllerTurnSpeed = settings.controllerTurnSpeed
+                fpvController.keyboardTurnSpeed = settings.keyboardTurnSpeed
+                fpvController.mouseTrackingEnabled = settings.isMouseLookEnabled
+                if !settings.isMouseLookEnabled {
+                    wasdController.releaseMouse()
                 }
             }
             .task { await handleKeyboardEvents() }
@@ -78,35 +116,23 @@ public struct FPVMovementModifier: ViewModifier {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem {
-            Button(fpvController.mouseTrackingEnabled ? "Disable Mouse (⌘T)" : "Enable Mouse (⌘T)") {
-                fpvController.mouseTrackingEnabled.toggle()
-                if !fpvController.mouseTrackingEnabled, wasdController.isMouseCaptured {
-                    wasdController.toggleMouseCapture()
-                }
-            }
-            .keyboardShortcut("t", modifiers: .command)
-        }
-
-        ToolbarItem {
-            Button(wasdController.isMouseCaptured ? "Release Mouse (⌘M)" : "Capture Mouse (⌘M)") {
+            Button(wasdController.isMouseCaptured ? "Release Mouse" : "Capture Mouse") {
                 wasdController.toggleMouseCapture()
             }
-            .keyboardShortcut("m", modifiers: .command)
             .disabled(!fpvController.mouseTrackingEnabled)
         }
 
         ToolbarItem {
-            Button("Reset to Origin (⌘0)") {
+            Button("Reset to Origin") {
                 fpvController.reset()
             }
-            .keyboardShortcut("0", modifiers: .command)
         }
     }
 }
 
 public extension View {
-    func fpvMovement(cameraMatrix: Binding<matrix_float4x4>, showsControls: Bool = false) -> some View {
-        modifier(FPVMovementModifier(cameraMatrix: cameraMatrix, showsControls: showsControls))
+    func fpvMovement(cameraMatrix: Binding<matrix_float4x4>, settings: FPVMovementSettings = .init(), showsControls: Bool = false) -> some View {
+        modifier(FPVMovementModifier(cameraMatrix: cameraMatrix, settings: settings, showsControls: showsControls))
     }
 }
 

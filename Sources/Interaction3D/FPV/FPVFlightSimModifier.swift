@@ -103,29 +103,17 @@ public struct FPVFlightSimModifier: ViewModifier {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem {
-            Button(fpvController.mouseTrackingEnabled ? "Disable Mouse (⌘T)" : "Enable Mouse (⌘T)") {
-                fpvController.mouseTrackingEnabled.toggle()
-                if !fpvController.mouseTrackingEnabled, wasdController.isMouseCaptured {
-                    wasdController.toggleMouseCapture()
-                }
-            }
-            .keyboardShortcut("t", modifiers: .command)
-        }
-
-        ToolbarItem {
-            Button(wasdController.isMouseCaptured ? "Release Mouse (⌘M)" : "Capture Mouse (⌘M)") {
+            Button(wasdController.isMouseCaptured ? "Release Mouse" : "Capture Mouse") {
                 wasdController.toggleMouseCapture()
             }
-            .keyboardShortcut("m", modifiers: .command)
             .disabled(!fpvController.mouseTrackingEnabled)
         }
 
         ToolbarItem {
-            Button("Reset to Origin (⌘0)") {
+            Button("Reset to Origin") {
                 fpvController.reset()
                 breadcrumbs.removeAll()
             }
-            .keyboardShortcut("0", modifiers: .command)
         }
 
         ToolbarItem {
@@ -202,7 +190,7 @@ struct FlightControlsPanelView: View {
                 Slider(value: $fpvController.controllerTurnSpeed, in: 0.1...Float.pi * 2, step: 0.1)
             }
 
-            Toggle("Capture Mouse", isOn: $fpvController.mouseTrackingEnabled)
+            Toggle("Mouse Look", isOn: $fpvController.mouseTrackingEnabled)
                 .toggleStyle(.switch)
 
             Button("Reset") {

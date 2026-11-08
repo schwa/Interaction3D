@@ -919,11 +919,13 @@ SceneSprockets #313 needed all three.
 ## 43: fpvMovement has no way to set movement speed
 
 +++
-status: new
+status: closed
 priority: medium
 kind: enhancement
 labels: fpv
 created: 2026-11-08T06:33:02Z
+updated: 2026-11-08T06:41:08Z
+closed: 2026-11-08T06:41:08Z
 +++
 
 `View.fpvMovement(cameraMatrix:)` (`FPVMovementModifier`) owns its `FPVMovementController` as private state, so callers cannot change `speed` (fixed at 10 units/s), `fastSpeedMultiplier` (4), `mouseSensitivity`, or the turn speeds.
@@ -939,11 +941,13 @@ Seen with 0.1.16; main (cc8f4e5) has the same API.
 ## 44: FPV mouse look is off by default and needs a ⌘T toolbar toggle
 
 +++
-status: new
+status: closed
 priority: medium
 kind: enhancement
 labels: fpv
 created: 2026-11-08T06:35:34Z
+updated: 2026-11-08T06:41:08Z
+closed: 2026-11-08T06:41:08Z
 +++
 
 Mouse look in `fpvMovement` and `FPVFlightSimModifier` does nothing until the user presses ⌘T or the toolbar's "Enable Mouse" button (`FPVMovementController.mouseTrackingEnabled` defaults to false). Capture is a second step (⌘M), and ⌘0 resets.
@@ -983,11 +987,13 @@ Found by code reading (WASDController.registerMouse); not yet confirmed at runti
 ## 46: FPV mouse look axes may be inverted on the GCMouse path
 
 +++
-status: new
+status: closed
 priority: low
 kind: bug
 labels: fpv
 created: 2026-11-08T06:35:34Z
+updated: 2026-11-08T06:41:08Z
+closed: 2026-11-08T06:41:08Z
 +++
 
 `FPVMovementController.process(event:)` applies mouse deltas as `yaw += deltaX * mouseSensitivity` and `pitch -= deltaY * mouseSensitivity`. The transform is built from a +Y-axis yaw rotation, where positive yaw turns left, so moving the mouse right appears to turn the camera left. `GCMouse` reports +Y for upward movement, so the pitch sign may also be reversed; the `NSEvent` fallback path reports +Y downward, so the two paths may disagree with each other.
@@ -999,11 +1005,13 @@ Found by code reading; not yet confirmed at runtime. Reported as "mouse tracking
 ## 47: WASDController prints debug messages to the console
 
 +++
-status: new
+status: closed
 priority: low
 kind: bug
 labels: fpv
 created: 2026-11-08T06:35:35Z
+updated: 2026-11-08T06:41:08Z
+closed: 2026-11-08T06:41:08Z
 +++
 
 `WASDController` calls `print` for routine mouse setup: "Mouse connected via notification", "No mouse/trackpad found - setting up NSEvent monitor", "Registering mouse handlers", "Mouse input available", "Mouse input is ready", "No mouse input available on this mouse device". These appear in every host app's console.

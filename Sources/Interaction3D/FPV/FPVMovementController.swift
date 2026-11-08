@@ -24,7 +24,7 @@ public struct FPVMovementController {
 
     public var speed: Float = 10.0
     public var mouseSensitivity: Float = 0.01
-    public var mouseTrackingEnabled: Bool = false
+    public var mouseTrackingEnabled: Bool = true
     public var controllerTurnSpeed: Float = .pi
     public var keyboardTurnSpeed: Float = .pi / 2
     public var fastSpeedMultiplier: Float = 4
@@ -62,8 +62,9 @@ public struct FPVMovementController {
             switch source {
             case .mouse:
                 guard mouseTrackingEnabled else { break }
-                yaw += deltaX * mouseSensitivity
-                pitch -= deltaY * mouseSensitivity
+                // Deltas use GCMouse convention: +X right, +Y up.
+                yaw -= deltaX * mouseSensitivity
+                pitch += deltaY * mouseSensitivity
                 clampPitch()
             case .controller:
                 controllerYawAxis = -deltaX
