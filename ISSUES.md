@@ -1243,17 +1243,20 @@ updated: 2026-11-08T16:36:22Z
 ## 59: AppKit usage and os() conditionals where SwiftUI or canImport fit
 
 +++
-status: open
+status: closed
 priority: low
 kind: task
 labels: effort:s, area:platforms
 created: 2026-11-08T16:31:03Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-08T16:44:03Z
+closed: 2026-11-08T16:44:03Z
 +++
 
 - `Controllers/GestureManager.swift:90` and `Controllers/DragGestureModifier.swift` read `NSEvent.modifierFlags`; SwiftUI has `onModifierKeysChanged` (macOS 15+, availability vs deployment target not checked).
 - `FPV/WASDController.swift` uses `NSEvent` monitors and `pressedMouseButtons` with no comment explaining why AppKit is required.
 - AppKit imports are guarded with `#if os(macOS)` rather than `#if canImport(AppKit)`.
+
+- `2026-11-08T16:44:03Z`: Dropped redundant AppKit imports (SwiftUI re-exports it), switched #if guards around NSEvent/CG APIs to canImport(AppKit) (kept os(macOS) for behavior-only gates like scroll gestures), and documented why AppKit is needed: NSEvent.modifierFlags is a synchronous read at drag start (onModifierKeysChanged only reports changes), and WASDController needs cursor capture and global pointer deltas. Built for macOS and iOS simulator. No test: conditional-compilation/comments only.
 
 ---
 

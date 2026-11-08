@@ -1,6 +1,3 @@
-#if os(macOS)
-import AppKit
-#endif
 import SwiftUI
 
 // MARK: - Animated CGSize Helper
@@ -76,7 +73,8 @@ public struct CoreDragModifier: ViewModifier {
         self.onEnded = onEnded
     }
 
-    #if os(macOS)
+    // NSEvent samples modifier state synchronously at drag start; SwiftUI's onModifierKeysChanged only reports changes.
+    #if canImport(AppKit)
     private func modifiersMatchNow() -> Bool {
         guard let required = modifiers else {
             return true
@@ -146,7 +144,7 @@ public struct CoreDragModifier: ViewModifier {
             return
         }
         var accepted = true
-        #if os(macOS)
+        #if canImport(AppKit)
         if checkModifiers {
             accepted = modifiersMatchNow()
         }

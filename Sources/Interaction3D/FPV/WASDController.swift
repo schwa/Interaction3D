@@ -1,6 +1,3 @@
-#if os(macOS)
-import AppKit
-#endif
 import AsyncAlgorithms
 import CoreGraphics
 import GameController
@@ -42,9 +39,11 @@ public final class WASDController {
         GCKeyboard.coalesced?.keyboardInput?.button(forKeyCode: keyCode)?.isPressed ?? false
     }
 
+    // AppKit is needed for mouse button state, cursor capture, and the fallback mouse monitor;
+    // SwiftUI has no API for global pointer deltas or hiding/locking the cursor.
     @ObservationIgnored
     var isRightMouseButtonPressed: () -> Bool = {
-        #if os(macOS)
+        #if canImport(AppKit)
         NSEvent.pressedMouseButtons & (1 << 1) != 0
         #else
         GCMouse.current?.mouseInput?.rightButton?.isPressed ?? false
@@ -68,7 +67,7 @@ public final class WASDController {
         mouseBecameCurrentTask?.cancel()
         timerTask?.cancel()
         eventContinuation.finish()
-        #if os(macOS)
+        #if canImport(AppKit)
         if let monitor = mouseMonitor {
             NSEvent.removeMonitor(monitor)
         }
@@ -178,14 +177,14 @@ public final class WASDController {
             if let mouse = mice.first {
                 registerMouse(mouse)
             } else {
-                #if os(macOS)
+                #if canImport(AppKit)
                 setupNSEventMonitor()
                 #endif
             }
         }
     }
 
-    #if os(macOS)
+    #if canImport(AppKit)
     private func setupNSEventMonitor() {
         mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved, .scrollWheel]) { [weak self] event in
             guard let self else {
@@ -223,7 +222,7 @@ public final class WASDController {
 
     // Cursor capture is macOS-only; elsewhere these do nothing.
     public func captureMouse() {
-        #if os(macOS)
+        #if canImport(AppKit)
         guard !isMouseCaptured else {
             return
         }
@@ -234,7 +233,7 @@ public final class WASDController {
     }
 
     public func releaseMouse() {
-        #if os(macOS)
+        #if canImport(AppKit)
         guard isMouseCaptured else {
             return
         }

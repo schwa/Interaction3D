@@ -1,7 +1,4 @@
 import SwiftUI
-#if os(macOS)
-import AppKit
-#endif
 
 /// A view modifier that wraps `DragGesture` with enhanced behavior:
 /// - Momentum animation on release using predicted end translation
@@ -70,10 +67,11 @@ public struct DragGestureModifier: ViewModifier {
             })
     }
 
+    // Reads NSEvent.modifierFlags inside the gesture callbacks: SwiftUI has no synchronous query for current modifier keys.
     var dragGesture: some Gesture {
         DragGesture(minimumDistance: minimumDistance)
             .onChanged { gesture in
-                #if os(macOS)
+                #if canImport(AppKit)
                 guard !NSEvent.modifierFlags.contains(.command) else {
                     return
                 }
@@ -89,7 +87,7 @@ public struct DragGestureModifier: ViewModifier {
                 state.currentLocation = gesture.location
                 animatedState.currentLocation = gesture.location
 
-                #if os(macOS)
+                #if canImport(AppKit)
                 let axisConstrained = NSEvent.modifierFlags.contains(.shift)
                 #else
                 let axisConstrained = false
@@ -124,7 +122,7 @@ public struct DragGestureModifier: ViewModifier {
                 lastEventTime = .now
             }
             .onEnded { gesture in
-                #if os(macOS)
+                #if canImport(AppKit)
                 guard !NSEvent.modifierFlags.contains(.command) else {
                     return
                 }
@@ -146,7 +144,7 @@ public struct DragGestureModifier: ViewModifier {
                     return
                 }
 
-                #if os(macOS)
+                #if canImport(AppKit)
                 let axisConstrained = NSEvent.modifierFlags.contains(.shift)
                 #else
                 let axisConstrained = false
