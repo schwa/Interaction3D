@@ -219,34 +219,56 @@ public struct CoreDragModifier: ViewModifier {
 
 // MARK: - Drag Filter
 
+/// A location predicate for Interaction3D input filters.
+/// SwiftUI compares filters by `id`, so change `id` whenever the predicate's behavior changes.
+public struct InteractionLocationFilter: Equatable {
+    public let id: AnyHashable
+    private let predicate: @MainActor (CGPoint) -> Bool
+
+    public init(id: some Hashable, _ predicate: @escaping @MainActor (CGPoint) -> Bool) {
+        self.id = AnyHashable(id)
+        self.predicate = predicate
+    }
+
+    @MainActor
+    public func callAsFunction(_ location: CGPoint) -> Bool {
+        predicate(location)
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
 public extension EnvironmentValues {
     /// Decides once per drag, at its first change, whether Interaction3D drag controls may handle it.
     /// Receives the drag start location in the view's local coordinate space. Return false to leave the drag to the caller.
-    @Entry var interactionDragFilter: (@MainActor (CGPoint) -> Bool)?
+    @Entry var interactionDragFilter: InteractionLocationFilter?
 
     /// Decides per scroll wheel event whether Interaction3D scroll controls may handle it (macOS only).
     /// Receives the pointer location in the view's local coordinate space. Rejected events pass to the next responder.
-    @Entry var interactionScrollFilter: (@MainActor (CGPoint) -> Bool)?
+    @Entry var interactionScrollFilter: InteractionLocationFilter?
 
     /// Decides once per magnify gesture, at its first change, whether Interaction3D magnify controls may handle it.
     /// Receives the gesture start location in the view's local coordinate space.
-    @Entry var interactionMagnifyFilter: (@MainActor (CGPoint) -> Bool)?
+    @Entry var interactionMagnifyFilter: InteractionLocationFilter?
 }
 
 public extension View {
     /// Rejects Interaction3D camera drags whose start location fails `filter`, for example drags that begin on a gizmo.
-    func interactionDragFilter(_ filter: @escaping @MainActor (CGPoint) -> Bool) -> some View {
-        environment(\.interactionDragFilter, filter)
+    /// `id` identifies the filter's behavior; change it when the predicate's captured state changes.
+    func interactionDragFilter(id: some Hashable, _ filter: @escaping @MainActor (CGPoint) -> Bool) -> some View {
+        environment(\.interactionDragFilter, InteractionLocationFilter(id: id, filter))
     }
 
     /// Rejects Interaction3D scroll wheel events whose pointer location fails `filter`.
-    func interactionScrollFilter(_ filter: @escaping @MainActor (CGPoint) -> Bool) -> some View {
-        environment(\.interactionScrollFilter, filter)
+    func interactionScrollFilter(id: some Hashable, _ filter: @escaping @MainActor (CGPoint) -> Bool) -> some View {
+        environment(\.interactionScrollFilter, InteractionLocationFilter(id: id, filter))
     }
 
     /// Rejects Interaction3D magnify gestures whose start location fails `filter`.
-    func interactionMagnifyFilter(_ filter: @escaping @MainActor (CGPoint) -> Bool) -> some View {
-        environment(\.interactionMagnifyFilter, filter)
+    func interactionMagnifyFilter(id: some Hashable, _ filter: @escaping @MainActor (CGPoint) -> Bool) -> some View {
+        environment(\.interactionMagnifyFilter, InteractionLocationFilter(id: id, filter))
     }
 }
 

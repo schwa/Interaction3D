@@ -28,7 +28,7 @@ public extension View {
 
 private struct ScrollWheelView: NSViewRepresentable {
     @Binding var delta: Double
-    let filter: (@MainActor (CGPoint) -> Bool)?
+    let filter: InteractionLocationFilter?
 
     func makeNSView(context: Context) -> ScrollWheelNSView {
         let view = ScrollWheelNSView()
@@ -46,7 +46,7 @@ private struct ScrollWheelView: NSViewRepresentable {
 
 final class ScrollWheelNSView: NSView {
     var onScroll: ((Double) -> Void)?
-    var filter: (@MainActor (CGPoint) -> Bool)?
+    var filter: InteractionLocationFilter?
 
     override var isFlipped: Bool { true }
 

@@ -1140,11 +1140,13 @@ Expose mouse look state as a `@Binding` (or similar) so clients can wire their o
 ## 54: Closure-typed @Entry environment values produce compiler warnings
 
 +++
-status: new
+status: closed
 priority: low
 kind: bug
 labels: swiftui
 created: 2026-11-08T07:15:34Z
+updated: 2026-11-08T15:06:28Z
+closed: 2026-11-08T15:06:28Z
 +++
 
 Building Interaction3D (and every package that depends on it) emits three warnings from `GestureManager.swift`:
