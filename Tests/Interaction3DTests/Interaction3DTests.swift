@@ -327,9 +327,14 @@ private struct TestProjection: ProjectionProtocol {
     _ = Color.clear.interactiveCamera(cameraMatrix: matrix)
 }
 
+// #68: gesture modifiers take transforms as input, so SwiftUI must be able to compare them.
+@Test func interactionAxisTransformsCompareByValue() {
+    #expect(InteractionAxisTransforms() == InteractionAxisTransforms.default)
+    #expect(InteractionAxisTransforms(zoom: 2) != InteractionAxisTransforms.default)
+}
+
 @Test func cameraScrollAndMagnifyZoomUseIndependentEquivalentScales() {
-    let zoom: InteractionAxisTransforms.AxisTransform = { $0 * 2 }
-    let transforms = InteractionAxisTransforms(zoom: zoom)
+    let transforms = InteractionAxisTransforms(zoom: 2)
     let scroll = CameraZoomTransformer(transforms: transforms, magnitude: 1)
     let magnify = CameraZoomTransformer(transforms: transforms, magnitude: 100)
 
@@ -383,8 +388,7 @@ private struct TestProjection: ProjectionProtocol {
 }
 
 @Test func cameraPanUsesConfiguredTransform() {
-    let pan: InteractionAxisTransforms.PanTransform = { SIMD3(Float($0.x * 2), Float($0.y * 3), 0) }
-    let transforms = InteractionAxisTransforms(pan: pan)
+    let transforms = InteractionAxisTransforms(pan: [2, 3])
     let transformer = CameraPanTransformer(transforms: transforms)
 
     #expect(transformer.transform(CGSize(width: 4, height: 5)) == SIMD3<Float>(8, 15, 0))
@@ -453,7 +457,7 @@ private struct TestProjection: ProjectionProtocol {
 
 @Test func zoomStepTransformerAppliesModel() {
     var transforms = InteractionAxisTransforms()
-    transforms.zoom = { $0 * 2 }
+    transforms.zoomScale = 2
     #expect(CameraZoomStepTransformer(transforms: transforms, magnitude: 1, zoom: .additive).transform(3) == 6)
     #expect(CameraZoomStepTransformer(transforms: transforms, magnitude: 1, zoom: .multiplicative(rate: 0.5)).transform(3) == 3)
 }

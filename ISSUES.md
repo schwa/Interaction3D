@@ -1399,12 +1399,13 @@ The `id`-based equality also means that if a client changes what the closure cap
 ## 68: InteractionAxisTransforms closures defeat gesture modifier input comparison
 
 +++
-status: open
+status: closed
 priority: medium
 kind: bug
 labels: effort:m, area:camera
 created: 2026-11-08T16:35:40Z
-updated: 2026-11-08T16:36:23Z
+updated: 2026-11-08T16:39:43Z
+closed: 2026-11-08T16:39:43Z
 +++
 
 `InteractionAxisTransforms` (`Controllers/InteractionTypes.swift`) is a struct of four `@Sendable` closures (yaw, pitch, zoom, pan). It is passed as an input to `CameraControlsModifier`, `CameraRotationModifier`, `OptionalCameraPanModifier`, `CameraZoomModifier`, and the transformers. `YawPitchDragModifier` (`Controllers/YawPitchCameraModifiers.swift`) also takes `yawDelta`/`pitchDelta` closures built fresh in `interactiveCamera(yaw:pitch:...)` and `interactiveLook`.
@@ -1412,6 +1413,7 @@ updated: 2026-11-08T16:36:23Z
 SwiftUI cannot compare closures, so these modifier inputs are treated as changed on every parent body evaluation, and the gesture modifier chain re-evaluates each time, including during drags when the camera binding updates every frame.
 
 - `2026-11-08T16:36:23Z`: Related: #55 and #67.
+- `2026-11-08T16:39:43Z`: InteractionAxisTransforms is now an Equatable struct of linear scales (yaw/pitch/zoom/pan) with yaw(_:)/pitch(_:)/zoom(_:)/pan(_:) methods; YawPitchDragModifier takes transforms + sign instead of closures. Breaking: custom closure transforms (nonlinear curves) are no longer expressible; all in-repo uses were linear. Test interactionAxisTransformsCompareByValue failed to compile before (not Equatable) and passes now.
 
 ---
 

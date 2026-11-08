@@ -50,54 +50,44 @@ public struct InteractionInput: Equatable, Sendable {
 
 // MARK: - Axis Transforms
 
-/// Sensitivity and scaling closures for each interaction axis (yaw, pitch, zoom, pan).
-public struct InteractionAxisTransforms: Sendable {
-    public typealias AxisTransform = @Sendable (Double) -> Double
-    public typealias PanTransform = @Sendable (SIMD2<Double>) -> SIMD3<Float>
+/// Linear sensitivity for each interaction axis (yaw, pitch, zoom, pan).
+/// Plain values rather than closures, so SwiftUI can compare gesture modifier inputs. Negative scales invert an axis.
+public struct InteractionAxisTransforms: Equatable, Sendable {
+    public var yawScale: Double
+    public var pitchScale: Double
+    public var zoomScale: Double
+    // Maps drag x/y points to pan x/y; pan never moves along z.
+    public var panScale: SIMD2<Double>
 
-    public var yaw: AxisTransform
-    public var pitch: AxisTransform
-    public var zoom: AxisTransform
-    public var pan: PanTransform
+    public init(yaw: Double = 0.005, pitch: Double = 0.005, zoom: Double = -0.01, pan: SIMD2<Double> = [0.01, -0.01]) {
+        self.yawScale = yaw
+        self.pitchScale = pitch
+        self.zoomScale = zoom
+        self.panScale = pan
+    }
 
-    public init(
-        yaw: @escaping AxisTransform = Self.defaultYaw,
-        pitch: @escaping AxisTransform = Self.defaultPitch,
-        zoom: @escaping AxisTransform = Self.defaultZoom,
-        pan: @escaping PanTransform = Self.defaultPan
-    ) {
-        self.yaw = yaw
-        self.pitch = pitch
-        self.zoom = zoom
-        self.pan = pan
+    public func yaw(_ delta: Double) -> Double {
+        delta * yawScale
+    }
+
+    public func pitch(_ delta: Double) -> Double {
+        delta * pitchScale
+    }
+
+    public func zoom(_ delta: Double) -> Double {
+        delta * zoomScale
+    }
+
+    public func pan(_ delta: SIMD2<Double>) -> SIMD3<Float> {
+        let scaled = delta * panScale
+        return SIMD3<Float>(Float(scaled.x), Float(scaled.y), 0)
     }
 }
 
 public extension InteractionAxisTransforms {
     static let `default` = InteractionAxisTransforms()
 
-    static let defaultYaw: AxisTransform = { delta in
-        delta * 0.005
-    }
-
-    static let defaultPitch: AxisTransform = { delta in
-        delta * 0.005
-    }
-
-    static let defaultZoom: AxisTransform = { delta in
-        -delta * 0.01
-    }
-
-    static let defaultPan: PanTransform = { delta in
-        SIMD3<Float>(Float(delta.x * 0.01), Float(-delta.y * 0.01), 0)
-    }
-
-    static let turntableDefault = InteractionAxisTransforms(
-        yaw: { $0 * 0.01 },
-        pitch: { $0 * 0.01 },
-        zoom: { -$0 * 0.5 },
-        pan: { delta in SIMD3<Float>(Float(delta.x * 0.02), Float(-delta.y * 0.02), 0) }
-    )
+    static let turntableDefault = InteractionAxisTransforms(yaw: 0.01, pitch: 0.01, zoom: -0.5, pan: [0.02, -0.02])
 }
 
 // MARK: - Transformers Protocol

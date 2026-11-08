@@ -24,8 +24,8 @@ public extension View {
                 yaw: yaw,
                 pitch: pitch,
                 pitchRange: pitchRange,
-                yawDelta: { -transforms.yaw($0) },
-                pitchDelta: { -transforms.pitch($0) }
+                transforms: transforms,
+                sign: -1
             )
         )
         #if os(macOS)
@@ -50,8 +50,8 @@ public extension View {
                 yaw: yaw,
                 pitch: pitch,
                 pitchRange: pitchRange,
-                yawDelta: { transforms.yaw($0) },
-                pitchDelta: { transforms.pitch($0) }
+                transforms: transforms,
+                sign: 1
             )
         )
     }
@@ -62,9 +62,9 @@ struct YawPitchDragModifier: ViewModifier {
     @Binding var yaw: Angle
     @Binding var pitch: Angle
     var pitchRange: ClosedRange<Angle>
-    /// Radians of yaw and pitch for points dragged horizontally and vertically.
-    var yawDelta: (Double) -> Double
-    var pitchDelta: (Double) -> Double
+    // transforms.yaw/pitch give radians per point dragged; sign flips both for orbit versus look-around.
+    var transforms: InteractionAxisTransforms
+    var sign: Double
 
     @State private var session = YawPitchDragSession()
 
@@ -76,8 +76,8 @@ struct YawPitchDragModifier: ViewModifier {
                     delta: delta,
                     to: (yaw, pitch),
                     pitchRange: pitchRange,
-                    yawDelta: yawDelta,
-                    pitchDelta: pitchDelta
+                    yawDelta: { sign * transforms.yaw($0) },
+                    pitchDelta: { sign * transforms.pitch($0) }
                 )
                 yaw = angles.yaw
                 pitch = angles.pitch
