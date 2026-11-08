@@ -1086,3 +1086,49 @@ Actual: fast movement plus repeated system beeps.
 The uppercase-character cause is inferred from the code, not confirmed with a key log.
 
 ---
+
+## 51: FPV view needs a click before keyboard movement works
+
++++
+status: new
+priority: medium
+kind: bug
+labels: fpv
+created: 2026-11-08T06:49:21Z
++++
+
+`FPVMovementModifier` makes its content focusable and gates keyboard input on its private `@FocusState` (#41), but nothing gives the view focus when it appears. After launch, WASD/QE do nothing until the user clicks the view.
+
+The host can't fix this: the focus state is private, and wrapping the view with `.focusScope` plus `.prefersDefaultFocus(in:)` (tried in CBTerrain on macOS) did not focus it.
+
+Steps:
+1. Show a view with `.fpvMovement(cameraMatrix:)` as the window's main content.
+2. Press W without clicking.
+
+Expected: the camera moves.
+Actual: nothing happens until the view is clicked.
+
+---
+
+## 52: FPV is missing common 3D navigation controls
+
++++
+status: new
+priority: low
+kind: enhancement
+labels: fpv
+created: 2026-11-08T06:50:23Z
++++
+
+FPV keyboard/mouse navigation (`fpvMovement`) supports WASD, Q/E down/up, arrow-key look and Shift for fast movement. Several controls common in 3D editors and games are missing:
+
+- **Speed adjustment while moving:** mouse wheel (Unreal, Blender fly mode) or +/- to change the base speed. Hosts with large scenes currently need their own speed slider (e.g. CBTerrain, 10 to 2,000 m/s).
+- **Slow modifier:** Ctrl or Alt for precise movement (Unreal uses Alt), the counterpart to Shift.
+- **Roll:** 6DOF roll for flight/space-style navigation. Q/E are taken by altitude, so roll would need other keys (commonly Z/C).
+- **Alternative up/down:** Space and C (or Ctrl), the game convention, in addition to Q/E.
+- **Frame/reset:** F to frame a target and Home to reset the view, as in Unity, Unreal and Blender.
+- **Hold-to-look:** look and move only while the right mouse button is held (Unity/Unreal scene views), which avoids permanent mouse capture.
+
+Some of these overlap or conflict (Ctrl for slow vs down, Q/E for altitude vs roll), so not all can be on at once.
+
+---
