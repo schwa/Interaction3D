@@ -165,9 +165,9 @@ Two separate transformer protocols exist: Transformer (transform(_:)) and Transf
 status: open
 priority: medium
 kind: bug
-labels: effort:m
+labels: effort:m, area:layout
 created: 2026-04-12T20:36:52Z
-updated: 2026-08-25T21:05:45Z
+updated: 2026-11-08T16:36:22Z
 +++
 
 Both .inspector() and .overlay() hint text may dominate the screen on iPadOS, especially in compact width. Inspector likely takes over the full screen instead of appearing as a sidebar. The hint overlay at the bottom could also obscure too much content. Need to test on iPad and consider adaptive layouts or popovers.
@@ -1158,5 +1158,300 @@ GestureManager.swift:233: Storing a closure in '@Entry var interactionMagnifyFil
 ```
 
 Besides the noise in client builds (seen in CBTerrain with Xcode 27.2), the warning points at a real cost: views reading these values may be invalidated on every environment update.
+
+---
+
+## 55: Closure-based Bindings in CameraZoom and ToolPicker
+
++++
+status: open
+priority: medium
+kind: enhancement
+labels: effort:s, area:swiftui
+created: 2026-11-08T16:30:56Z
+updated: 2026-11-08T16:36:22Z
++++
+
+Two library views build `Binding { get } set: { set }` adapters, which the SwiftUI house rules treat as a performance hazard (new binding locations on every rebuild can invalidate child views):
+
+- `Controllers/CameraZoom.swift:80` — `coordinate` maps distance to zoom coordinate.
+- `Support/ToolPicker.swift:170` — `binding(for:)` per tool group.
+
+`FPV/FPVFlightSimModifier.swift:42` (`isMouseLookEnabled`) selects between an external and a local binding in a computed property; its update behavior has not been verified.
+
+- `2026-11-08T16:36:23Z`: Related: #67 and #68 (closures defeating SwiftUI comparison).
+
+---
+
+## 56: SwiftUI view types without a View suffix
+
++++
+status: open
+priority: low
+kind: task
+labels: effort:m, area:swiftui
+created: 2026-11-08T16:30:56Z
+updated: 2026-11-08T16:36:22Z
++++
+
+House rules require SwiftUI view types to end in `View`. About 24 do not, including public API:
+
+Library: `RotationWidget`, `RotationWidgetCanvas`, `HoverArea`, `HorizonCue`, `FloatSlider`, `AngleSlider`, `TransformerParameterEditor`, `ParameterControl`, `ToolPickerHost`, `CameraPositionEditor`, `CameraOrientationEditor`, `ScrubbableValueField`, `AngleOfViewControl`, `ClippingRangeControl`.
+
+Demo: `WidgetsDemo`, `TurntableDemo`, `GestureManagerDemo`, `InspectorXYRow`, `InspectorValueRow`, `WorldViewDemo`, `AnimatedConstraintDemo`, `DragDemo`, `ConstraintDemo`, `SpaceMouseDemo`.
+
+---
+
+## 57: Hand-rolled label/value rows instead of LabeledContent
+
++++
+status: open
+priority: low
+kind: task
+labels: effort:xs, area:swiftui
+created: 2026-11-08T16:30:56Z
+updated: 2026-11-08T16:36:22Z
++++
+
+`FlightControlsPanelView` (`FPV/FPVFlightSimModifier.swift`) builds three rows as `HStack { Text(label); Spacer(); Text(value) }` (Movement Speed, Mouse Sensitivity, Controller Turn Speed). `ConnectedDevicesDemo` may have the same pattern. House rules call for `LabeledContent` here.
+
+---
+
+## 58: Fixed font sizes in instrument views
+
++++
+status: open
+priority: low
+kind: task
+labels: effort:s, area:swiftui, area:accessibility
+created: 2026-11-08T16:30:56Z
+updated: 2026-11-08T16:36:22Z
++++
+
+13 uses of `.font(.system(size:))` bypass Dynamic Type: `SpeedometerView`, `SpeedometerDialView`, `ArtificialHorizonView`, `MapView`, `CompassView`. Canvas-drawn labels in fixed-size instruments may justify fixed sizes, but `CompassView.swift:162` and `SpeedometerDialView.swift:83,104,109` are regular view text.
+
+---
+
+## 59: AppKit usage and os() conditionals where SwiftUI or canImport fit
+
++++
+status: open
+priority: low
+kind: task
+labels: effort:s, area:platforms
+created: 2026-11-08T16:31:03Z
+updated: 2026-11-08T16:36:22Z
++++
+
+- `Controllers/GestureManager.swift:90` and `Controllers/DragGestureModifier.swift` read `NSEvent.modifierFlags`; SwiftUI has `onModifierKeysChanged` (macOS 15+, availability vs deployment target not checked).
+- `FPV/WASDController.swift` uses `NSEvent` monitors and `pressedMouseButtons` with no comment explaining why AppKit is required.
+- AppKit imports are guarded with `#if os(macOS)` rather than `#if canImport(AppKit)`.
+
+---
+
+## 60: SwiftUI house-rule cleanups: spacing literals, easeInOut, previews, dead code
+
++++
+status: open
+priority: low
+kind: task
+labels: effort:m, area:swiftui
+created: 2026-11-08T16:31:03Z
+updated: 2026-11-08T16:36:22Z
++++
+
+- Numeric padding/spacing literals in library views: `GameControllerSnapshotView` (`.padding(12)`, `spacing: 4`), `CompassView` (`.padding(2)`), `TransformerParameterEditor` (`spacing: 12`), `FPVFlightSimModifier` (`.padding(20)`, `spacing: 16/8/4`). Demos have ~25 more.
+- `RotationWidget.swift:39` uses `.easeInOut(duration: 0.5)`; house style is `.smooth`.
+- Only 21 of 39 view files have a `#Preview`; leaf views such as `HorizonCue`, `ScrubbableValueField`, and the camera pose editors have none.
+- `PitchYawDemoView` uses `GeometryReader` and a computed `cubePanel: some View`.
+- Commented-out code at `CompassView.swift:138`.
+
+---
+
+## 61: FlightSim map zoom buttons and RotationWidget hover buttons are unlabeled for VoiceOver
+
++++
+status: open
+priority: medium
+kind: bug
+labels: effort:s, area:accessibility
+created: 2026-11-08T16:34:16Z
+updated: 2026-11-08T16:36:22Z
++++
+
+- `FPV/FPVFlightSimModifier.swift:155-165`: map zoom in/out buttons have only `Image(systemName:)` labels, so VoiceOver has no name for them.
+- `RotationWidget/RotationWidget.swift:277` (`HoverArea`): the button label is a filled `Path` with no accessibility label. The button exists only while the pointer hovers over it, so keyboard and VoiceOver users cannot reach these actions at all.
+- `RotationWidget.swift:39`: the reset rotation animation ignores Reduce Motion.
+
+- `2026-11-08T16:36:22Z`: Related: #65 (HoverArea tuple has no field for an accessibility name).
+
+---
+
+## 62: Elapsed-time measurements use wall-clock Date()
+
++++
+status: open
+priority: low
+kind: bug
+labels: effort:s, area:swiftui
+created: 2026-11-08T16:34:16Z
+updated: 2026-11-08T16:36:22Z
++++
+
+Velocity and inactivity timing use `Date()` / `Date().timeIntervalSinceReferenceDate`, which jumps when the system clock changes:
+
+- `Controllers/DragGestureModifier.swift:124`
+- `Support/DraggableValueViewModifier.swift:80,108`
+- `Support/NewDraggableValueViewModifier.swift:59,86`
+- `FPV/GameControllerMovementController.swift:126,134,228,236`
+
+---
+
+## 63: CityModel in WorldViewDemo is @Observable without @MainActor
+
++++
+status: open
+priority: low
+kind: task
+labels: effort:xs, area:swiftui
+created: 2026-11-08T16:34:16Z
+updated: 2026-11-08T16:36:22Z
++++
+
+`Interaction3DDemo/Interaction3D/Demos/Old/WorldViewDemo.swift:41`: `CityModel` is `@Observable` but not `@MainActor`, unlike the other observable classes in the project.
+
+---
+
+## 64: Duplicate DraggableValueViewModifier and NewDraggableValueViewModifier
+
++++
+status: open
+priority: low
+kind: task
+labels: effort:s, area:swiftui
+created: 2026-11-08T16:34:16Z
+updated: 2026-11-08T16:36:22Z
++++
+
+`Support/DraggableValueViewModifier.swift` and `Support/NewDraggableValueViewModifier.swift` contain near-duplicate drag-value modifiers. It is unclear which is current; one may be dead code.
+
+---
+
+## 65: HoverArea actions use an unlabeled tuple
+
++++
+status: open
+priority: low
+kind: task
+labels: effort:xs, area:swiftui
+created: 2026-11-08T16:34:16Z
+updated: 2026-11-08T16:36:22Z
++++
+
+`RotationWidget/RotationWidget.swift:268`: `HoverArea.actions` is `[(Path, Color, () -> Void)]` and is accessed as `.0`/`.1`/`.2`. There is no field for an accessibility name.
+
+- `2026-11-08T16:36:22Z`: Related: #61 (HoverArea buttons lack VoiceOver labels).
+
+---
+
+## 66: C-style String(format:) number formatting
+
++++
+status: open
+priority: low
+kind: task
+labels: effort:xs, area:swiftui
+created: 2026-11-08T16:34:16Z
+updated: 2026-11-08T16:36:22Z
++++
+
+- `Views/SpeedometerView.swift:56`
+- `Views/GameControllerSnapshotView.swift:96`
+- `Interaction3DDemo/Interaction3D/Demos/SpaceMouseDemo.swift:88,174`
+
+These format numbers with `String(format:)` instead of `FormatStyle`, so output is not localized.
+
+---
+
+## 67: InteractionLocationFilter still stores a closure in the environment
+
++++
+status: open
+priority: medium
+kind: bug
+labels: effort:m, area:swiftui
+created: 2026-11-08T16:35:40Z
+updated: 2026-11-08T16:36:22Z
++++
+
+The #54 fix wrapped the filter closures in `InteractionLocationFilter` (`Controllers/GestureManager.swift`), with `==` comparing a caller-supplied `id`. Apple guidance (swiftui-specialist, environment.md, "Not a fix: Wrapping the closure in a struct") says a struct that stores a closure is not an acceptable fix for closures in custom environment keys, and that the closure should be eliminated in favor of stored data plus a method.
+
+The `id`-based equality also means that if a client changes what the closure captures without changing `id`, SwiftUI can keep the old predicate and readers will use stale filter logic.
+
+- `2026-11-08T16:36:22Z`: Related: #54 (introduced InteractionLocationFilter) and #55 (closure-based bindings).
+
+---
+
+## 68: InteractionAxisTransforms closures defeat gesture modifier input comparison
+
++++
+status: open
+priority: medium
+kind: bug
+labels: effort:m, area:camera
+created: 2026-11-08T16:35:40Z
+updated: 2026-11-08T16:36:23Z
++++
+
+`InteractionAxisTransforms` (`Controllers/InteractionTypes.swift`) is a struct of four `@Sendable` closures (yaw, pitch, zoom, pan). It is passed as an input to `CameraControlsModifier`, `CameraRotationModifier`, `OptionalCameraPanModifier`, `CameraZoomModifier`, and the transformers. `YawPitchDragModifier` (`Controllers/YawPitchCameraModifiers.swift`) also takes `yawDelta`/`pitchDelta` closures built fresh in `interactiveCamera(yaw:pitch:...)` and `interactiveLook`.
+
+SwiftUI cannot compare closures, so these modifier inputs are treated as changed on every parent body evaluation, and the gesture modifier chain re-evaluates each time, including during drags when the camera binding updates every frame.
+
+- `2026-11-08T16:36:23Z`: Related: #55 and #67.
+
+---
+
+## 69: InteractiveCameraMatrixModifier decomposes the camera matrix in init
+
++++
+status: open
+priority: low
+kind: task
+labels: effort:xs, area:camera
+created: 2026-11-08T16:35:40Z
+updated: 2026-11-08T16:36:22Z
++++
+
+`InteractiveCameraMatrixModifier.init` (`Controllers/InteractiveCameraMatrixModifier.swift`) builds a `CameraMatrixSynchronizer` and decomposes `cameraMatrix` to seed `State(initialValue:)`. The initializer runs every time the parent body is evaluated, which during interaction is every frame, but the result is only used the first time.
+
+---
+
+## 70: ScrollGestureModifier uses @State plus onChange as an event channel
+
++++
+status: open
+priority: low
+kind: task
+labels: effort:s, area:camera
+created: 2026-11-08T16:35:41Z
+updated: 2026-11-08T16:36:22Z
++++
+
+`ScrollGestureModifier` (`Controllers/GestureManager.swift`) writes each scroll delta into `@State delta`, reacts in `onChange(of: delta)`, then resets `delta = 0`. Each scroll event causes two state writes and two body evaluations of the modifier.
+
+---
+
+## 71: AnimatedSizeModifier hand-writes animatableData
+
++++
+status: open
+priority: low
+kind: task
+labels: effort:xs, area:swiftui
+created: 2026-11-08T16:35:41Z
+updated: 2026-11-08T16:36:22Z
++++
+
+`AnimatedSizeModifier` (`Controllers/GestureManager.swift`) implements `animatableData` with `AnimatablePair` manually. The deployment target (macOS/iOS 26) supports the `@Animatable` macro (with `@AnimatableIgnored` for `onChange`), which Apple guidance prefers.
 
 ---
