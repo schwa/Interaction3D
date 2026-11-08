@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// How scroll and magnify gestures change camera distance.
-public enum CameraZoomModel: Equatable, Sendable {
+public enum CameraZoomModel: Hashable, Sendable {
     /// Adds the zoom transform's output to the distance. One step moves the same amount at any distance.
     case additive
 
@@ -21,7 +21,7 @@ public enum CameraZoomModel: Equatable, Sendable {
 }
 
 /// Maps between a distance and the coordinate that zoom gestures add to: the distance itself, or its logarithm.
-struct CameraZoomCoordinate<Scalar: BinaryFloatingPoint> {
+struct CameraZoomCoordinate<Scalar: BinaryFloatingPoint>: Hashable {
     var model: CameraZoomModel
     var distanceRange: ClosedRange<Scalar>
 
@@ -77,12 +77,15 @@ struct CameraZoomModifier<Scalar: BinaryFloatingPoint>: ViewModifier {
             )
     }
 
+    // A key-path projection keeps the binding's identity stable across body evaluations.
     private var coordinate: Binding<Double> {
-        let mapping = CameraZoomCoordinate(model: zoom, distanceRange: distanceRange)
-        return Binding {
-            mapping.coordinate(for: distance)
-        } set: { newValue in
-            distance = mapping.distance(for: newValue)
-        }
+        $distance[zoomCoordinate: CameraZoomCoordinate(model: zoom, distanceRange: distanceRange)]
+    }
+}
+
+extension BinaryFloatingPoint {
+    subscript(zoomCoordinate mapping: CameraZoomCoordinate<Self>) -> Double {
+        get { mapping.coordinate(for: self) }
+        set { self = mapping.distance(for: newValue) }
     }
 }

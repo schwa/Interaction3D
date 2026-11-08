@@ -137,7 +137,7 @@ public struct ToolPickerHost<Content: View>: View {
             .toolbar {
                 ForEach(groupedEnabledTools.keys, id: \.self) { group in
                     if let tools = groupedEnabledTools[group], tools.count > 1 {
-                        Picker(selection: binding(for: group), label: Text(group.label)) {
+                        Picker(selection: $model.activeTools[group], label: Text(group.label)) {
                             ForEach(tools) { entry in
                                 entry.label.tag(Optional(entry.id))
                             }
@@ -166,19 +166,6 @@ public struct ToolPickerHost<Content: View>: View {
         }
     }
 
-    @MainActor
-    private func binding(for group: ToolPickerGroup) -> Binding<AnyHashable?> {
-        Binding {
-            model.activeTools[group]
-        } set: { newValue in
-            if let newValue {
-                model.activeTools[group] = newValue
-            }
-            else {
-                model.activeTools.removeValue(forKey: group)
-            }
-        }
-    }
 }
 
 private struct ToolRegistrationKey: Equatable {

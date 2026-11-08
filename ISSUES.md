@@ -1165,12 +1165,13 @@ Besides the noise in client builds (seen in CBTerrain with Xcode 27.2), the warn
 ## 55: Closure-based Bindings in CameraZoom and ToolPicker
 
 +++
-status: open
+status: closed
 priority: medium
 kind: enhancement
 labels: effort:s, area:swiftui
 created: 2026-11-08T16:30:56Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-08T16:40:33Z
+closed: 2026-11-08T16:40:33Z
 +++
 
 Two library views build `Binding { get } set: { set }` adapters, which the SwiftUI house rules treat as a performance hazard (new binding locations on every rebuild can invalidate child views):
@@ -1181,6 +1182,7 @@ Two library views build `Binding { get } set: { set }` adapters, which the Swift
 `FPV/FPVFlightSimModifier.swift:42` (`isMouseLookEnabled`) selects between an external and a local binding in a computed property; its update behavior has not been verified.
 
 - `2026-11-08T16:36:23Z`: Related: #67 and #68 (closures defeating SwiftUI comparison).
+- `2026-11-08T16:40:33Z`: Replaced both Binding(get:set:) adapters with key-path projections: $model.activeTools[group] in ToolPicker, and a BinaryFloatingPoint[zoomCoordinate:] subscript in CameraZoom. Added zoomCoordinateSubscriptMapsAndClamps test.
 
 ---
 

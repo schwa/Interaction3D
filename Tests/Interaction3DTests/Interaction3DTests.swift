@@ -455,6 +455,14 @@ private struct TestProjection: ProjectionProtocol {
     #expect(mapping.distance(for: mapping.coordinate(for: 9e5) + 5) == 1e6)
 }
 
+@Test func zoomCoordinateSubscriptMapsAndClamps() {
+    var distance: Float = 10
+    let mapping = CameraZoomCoordinate<Float>(model: .multiplicative(), distanceRange: 1...20)
+    #expect(abs(distance[zoomCoordinate: mapping] - log(10)) < 0.0001)
+    distance[zoomCoordinate: mapping] = log(100)
+    #expect(distance == 20)
+}
+
 @Test func zoomStepTransformerAppliesModel() {
     var transforms = InteractionAxisTransforms()
     transforms.zoomScale = 2
