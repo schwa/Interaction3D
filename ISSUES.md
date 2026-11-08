@@ -1342,15 +1342,18 @@ closed: 2026-11-08T16:41:29Z
 ## 64: Duplicate DraggableValueViewModifier and NewDraggableValueViewModifier
 
 +++
-status: open
+status: closed
 priority: low
 kind: task
 labels: effort:s, area:swiftui
 created: 2026-11-08T16:34:16Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-08T16:44:30Z
+closed: 2026-11-08T16:44:30Z
 +++
 
 `Support/DraggableValueViewModifier.swift` and `Support/NewDraggableValueViewModifier.swift` contain near-duplicate drag-value modifiers. It is unclear which is current; one may be dead code.
+
+- `2026-11-08T16:44:30Z`: Deleted NewDraggableValueViewModifier: internal, no callers, and a subset of DraggableValueViewModifier (no scale/behavior). DraggableValueViewModifier is also internal with no callers but is kept since its DraggableValueAxis/Behavior types are used elsewhere; flagging that it may be dead too. No test: dead-code removal.
 
 ---
 
