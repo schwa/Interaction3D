@@ -11,7 +11,19 @@ public struct ScrollWheelModifier: ViewModifier {
 
     public func body(content: Content) -> some View {
         content.overlay {
-            ScrollWheelView(delta: $delta, filter: scrollFilter)
+            ScrollWheelView(filter: scrollFilter) { delta += $0 }
+        }
+    }
+}
+
+/// Delivers each scroll wheel delta straight to `onScroll`, with no intermediate state.
+struct ScrollWheelActionModifier: ViewModifier {
+    let onScroll: (Double) -> Void
+    @Environment(\.interactionScrollFilter) private var scrollFilter
+
+    func body(content: Content) -> some View {
+        content.overlay {
+            ScrollWheelView(filter: scrollFilter, onScroll: onScroll)
         }
     }
 }
@@ -27,8 +39,8 @@ public extension View {
 // MARK: - NSViewRepresentable
 
 private struct ScrollWheelView: NSViewRepresentable {
-    @Binding var delta: Double
     let filter: (any InteractionLocationFilter)?
+    let onScroll: (Double) -> Void
 
     func makeNSView(context: Context) -> ScrollWheelNSView {
         let view = ScrollWheelNSView()
@@ -37,7 +49,7 @@ private struct ScrollWheelView: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: ScrollWheelNSView, context: Context) {
-        nsView.onScroll = { delta += $0 }
+        nsView.onScroll = onScroll
         nsView.filter = filter
     }
 }

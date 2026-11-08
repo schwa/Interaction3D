@@ -1461,15 +1461,18 @@ closed: 2026-11-08T16:42:43Z
 ## 70: ScrollGestureModifier uses @State plus onChange as an event channel
 
 +++
-status: open
+status: closed
 priority: low
 kind: task
 labels: effort:s, area:camera
 created: 2026-11-08T16:35:41Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-08T16:44:55Z
+closed: 2026-11-08T16:44:55Z
 +++
 
 `ScrollGestureModifier` (`Controllers/GestureManager.swift`) writes each scroll delta into `@State delta`, reacts in `onChange(of: delta)`, then resets `delta = 0`. Each scroll event causes two state writes and two body evaluations of the modifier.
+
+- `2026-11-08T16:44:56Z`: ScrollGestureModifier now applies each delta directly via an internal ScrollWheelActionModifier callback; the @State delta + onChange + reset round trip is gone. Public onScrollWheel(delta:) is unchanged. No test: NSView scroll events are not reachable from the unit test target; not runtime-verified.
 
 ---
 

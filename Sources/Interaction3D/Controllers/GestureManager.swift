@@ -286,17 +286,10 @@ struct ScrollGestureModifier<T: Transformer>: ViewModifier where T.Input == Doub
     let transformer: T
     @Binding var value: T.Output
 
-    @State private var delta: Double = 0
-
     func body(content: Content) -> some View {
-        content
-            .onScrollWheel(delta: $delta)
-            .onChange(of: delta) { _, newValue in
-                if newValue != 0 {
-                    value += transformer.transform(newValue)
-                    delta = 0
-                }
-            }
+        content.modifier(ScrollWheelActionModifier { delta in
+            value += transformer.transform(delta)
+        })
     }
 }
 #endif
