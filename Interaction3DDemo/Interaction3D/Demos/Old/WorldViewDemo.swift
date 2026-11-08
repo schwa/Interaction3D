@@ -38,6 +38,7 @@ extension WorldViewDemo: DemoView {
     )
 }
 
+@MainActor
 @Observable
 class CityModel {
     var scene: SCNScene

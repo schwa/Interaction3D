@@ -1321,12 +1321,13 @@ Velocity and inactivity timing use `Date()` / `Date().timeIntervalSinceReference
 ## 63: CityModel in WorldViewDemo is @Observable without @MainActor
 
 +++
-status: open
+status: closed
 priority: low
 kind: task
 labels: effort:xs, area:swiftui
 created: 2026-11-08T16:34:16Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-08T16:41:29Z
+closed: 2026-11-08T16:41:29Z
 +++
 
 `Interaction3DDemo/Interaction3D/Demos/Old/WorldViewDemo.swift:41`: `CityModel` is `@Observable` but not `@MainActor`, unlike the other observable classes in the project.
