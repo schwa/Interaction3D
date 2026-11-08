@@ -1352,17 +1352,19 @@ updated: 2026-11-08T16:36:22Z
 ## 65: HoverArea actions use an unlabeled tuple
 
 +++
-status: open
+status: closed
 priority: low
 kind: task
 labels: effort:xs, area:swiftui
 created: 2026-11-08T16:34:16Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-08T16:42:02Z
+closed: 2026-11-08T16:42:02Z
 +++
 
 `RotationWidget/RotationWidget.swift:268`: `HoverArea.actions` is `[(Path, Color, () -> Void)]` and is accessed as `.0`/`.1`/`.2`. There is no field for an accessibility name.
 
 - `2026-11-08T16:36:22Z`: Related: #61 (HoverArea buttons lack VoiceOver labels).
+- `2026-11-08T16:42:02Z`: Replaced the (Path, Color, () -> Void) tuple with a HoverTarget struct (path, color, rotation); HoverArea takes targets plus one onSelect callback instead of a closure per target. Accessibility naming was handled by #61 (face actions on the widget). No test: pure refactor.
 
 ---
 

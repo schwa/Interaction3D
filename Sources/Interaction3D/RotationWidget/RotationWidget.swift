@@ -119,7 +119,7 @@ private struct RotationWidgetCanvas: View {
     private var leastVertex: SIMD3<Float> = .zero
 
     @State
-    private var hoverAreas: [(Path, Color, () -> Void)] = []
+    private var hoverAreas: [HoverTarget] = []
 
     var body: some View {
         ZStack {
@@ -168,7 +168,7 @@ private struct RotationWidgetCanvas: View {
                 }
             }
             if !isDragging {
-                HoverArea(actions: hoverAreas)
+                HoverArea(targets: hoverAreas, onSelect: onRotateTo)
             }
         }
         .onChange(of: cube, initial: true) {
@@ -184,17 +184,14 @@ private struct RotationWidgetCanvas: View {
         renderState.update(cube: cube, rotation: rotation, size: size, verticalFOV: verticalFOV)
 
         hoverAreas = []
-        hoverAreas += cube.positions.compactMap { vertex -> (Path, Color, () -> Void)? in
+        hoverAreas += cube.positions.compactMap { vertex -> HoverTarget? in
             guard let center = renderState.rendererContext.project(vertex) else {
                 return nil
             }
             let rect = CGRect(x: center.x - 5, y: center.y - 5, width: 10, height: 10)
-            let path = Path(ellipseIn: rect)
-            return (path, Color.accentColor, {
-                onRotateTo(cube.calculateLookAt(at: vertex))
-            })
+            return HoverTarget(path: Path(ellipseIn: rect), color: .accentColor, rotation: cube.calculateLookAt(at: vertex))
         }
-        hoverAreas += renderState.frontEdges.compactMap { edge -> (Path, Color, () -> Void)? in
+        hoverAreas += renderState.frontEdges.compactMap { edge -> HoverTarget? in
             guard let start = renderState.rendererContext.project(edge.start), let end = renderState.rendererContext.project(edge.end) else {
                 return nil
             }
@@ -203,15 +200,11 @@ private struct RotationWidgetCanvas: View {
                 path.addLine(to: end)
                 path = path.strokedPath(StrokeStyle(lineWidth: 5, lineCap: .round))
             }
-            return (path, Color.accentColor, {
-                onRotateTo(cube.calculateLookAt(at: edge.center))
-            })
+            return HoverTarget(path: path, color: .accentColor, rotation: cube.calculateLookAt(at: edge.center))
         }
         hoverAreas += renderState.frontFaceIndices.compactMap { faceIndex in
             let path = cube.path(forFace: faceIndex, context: renderState.rendererContext, modelMatrix: matrix_identity_float4x4)
-            return (path, Color.accentColor.opacity(0.3), {
-                onRotateTo(cube.calculateLookAt(at: cube.faceCentroid(faceIndex)))
-            })
+            return HoverTarget(path: path, color: .accentColor.opacity(0.3), rotation: cube.calculateLookAt(at: cube.faceCentroid(faceIndex)))
         }
     }
 
@@ -286,8 +279,16 @@ private struct PitchYawDragModifier: ViewModifier {
     }
 }
 
+struct HoverTarget: Equatable {
+    var path: Path
+    var color: Color
+    // The widget rotation that looks at this vertex, edge, or face.
+    var rotation: simd_quatf
+}
+
 struct HoverArea: View {
-    let actions: [(Path, Color, () -> Void)]
+    let targets: [HoverTarget]
+    let onSelect: (simd_quatf) -> Void
 
     @State
     private var activePath: Path?
@@ -295,11 +296,11 @@ struct HoverArea: View {
     var body: some View {
         ZStack {
             Color.clear
-            if let activePath, let index = actions.firstIndex(where: { $0.0 == activePath }) {
+            if let activePath, let target = targets.first(where: { $0.path == activePath }) {
                 Button {
-                    actions[index].2()
+                    onSelect(target.rotation)
                 } label: {
-                    activePath.fill(actions[index].1)
+                    activePath.fill(target.color)
                 }
                 .buttonStyle(.plain)
                 .contentShape(activePath)
@@ -308,7 +309,7 @@ struct HoverArea: View {
         .onContinuousHover { phase in
             switch phase {
             case .active(let position):
-                activePath = actions.first { $0.0.contains(position) }?.0
+                activePath = targets.first { $0.path.contains(position) }?.path
             case .ended:
                 activePath = nil
             }
