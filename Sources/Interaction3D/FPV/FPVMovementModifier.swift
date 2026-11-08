@@ -8,7 +8,6 @@ public struct FPVMovementSettings: Equatable, Sendable {
     public var mouseSensitivity: Float
     public var controllerTurnSpeed: Float
     public var keyboardTurnSpeed: Float
-    public var isMouseLookEnabled: Bool
     public var isFreeFlightEnabled: Bool
     public var extraControls: FPVExtraControls
     public var slowSpeedMultiplier: Float
@@ -21,7 +20,6 @@ public struct FPVMovementSettings: Equatable, Sendable {
         mouseSensitivity: Float = 0.01,
         controllerTurnSpeed: Float = .pi,
         keyboardTurnSpeed: Float = .pi / 2,
-        isMouseLookEnabled: Bool = true,
         isFreeFlightEnabled: Bool = false,
         extraControls: FPVExtraControls = [],
         slowSpeedMultiplier: Float = 0.25,
@@ -33,7 +31,6 @@ public struct FPVMovementSettings: Equatable, Sendable {
         self.speedAdjustmentFactor = speedAdjustmentFactor
         self.rollSpeed = rollSpeed
         self.isFreeFlightEnabled = isFreeFlightEnabled
-        self.isMouseLookEnabled = isMouseLookEnabled
         self.speed = speed
         self.fastSpeedMultiplier = fastSpeedMultiplier
         self.mouseSensitivity = mouseSensitivity
@@ -58,12 +55,21 @@ public struct FPVMovementModifier: ViewModifier {
     @FocusState
     private var isFocused: Bool
 
+    @Binding
+    var isMouseLookEnabled: Bool
+
     let showsControls: Bool
     let settings: FPVMovementSettings
 
     // showsControls adds Capture Mouse and Reset toolbar buttons to the host window.
-    public init(cameraMatrix: Binding<matrix_float4x4>, settings: FPVMovementSettings = .init(), showsControls: Bool = false) {
+    public init(
+        cameraMatrix: Binding<matrix_float4x4>,
+        isMouseLookEnabled: Binding<Bool> = .constant(true),
+        settings: FPVMovementSettings = .init(),
+        showsControls: Bool = false
+    ) {
         self._cameraMatrix = cameraMatrix
+        self._isMouseLookEnabled = isMouseLookEnabled
         self.settings = settings
         self.showsControls = showsControls
     }
@@ -91,14 +97,16 @@ public struct FPVMovementModifier: ViewModifier {
                 fpvController.mouseSensitivity = settings.mouseSensitivity
                 fpvController.controllerTurnSpeed = settings.controllerTurnSpeed
                 fpvController.keyboardTurnSpeed = settings.keyboardTurnSpeed
-                fpvController.mouseTrackingEnabled = settings.isMouseLookEnabled
                 fpvController.isFreeFlightEnabled = settings.isFreeFlightEnabled
                 fpvController.slowSpeedMultiplier = settings.slowSpeedMultiplier
                 fpvController.speedAdjustmentFactor = settings.speedAdjustmentFactor
                 fpvController.rollSpeed = settings.rollSpeed
                 fpvController.isRollEnabled = settings.extraControls.contains(.roll)
                 wasdController.extraControls = settings.extraControls
-                if !settings.isMouseLookEnabled {
+            }
+            .onChange(of: isMouseLookEnabled, initial: true) {
+                fpvController.mouseTrackingEnabled = isMouseLookEnabled
+                if !isMouseLookEnabled {
                     wasdController.releaseMouse()
                 }
             }
@@ -156,8 +164,13 @@ public struct FPVMovementModifier: ViewModifier {
 }
 
 public extension View {
-    func fpvMovement(cameraMatrix: Binding<matrix_float4x4>, settings: FPVMovementSettings = .init(), showsControls: Bool = false) -> some View {
-        modifier(FPVMovementModifier(cameraMatrix: cameraMatrix, settings: settings, showsControls: showsControls))
+    func fpvMovement(
+        cameraMatrix: Binding<matrix_float4x4>,
+        isMouseLookEnabled: Binding<Bool> = .constant(true),
+        settings: FPVMovementSettings = .init(),
+        showsControls: Bool = false
+    ) -> some View {
+        modifier(FPVMovementModifier(cameraMatrix: cameraMatrix, isMouseLookEnabled: isMouseLookEnabled, settings: settings, showsControls: showsControls))
     }
 }
 

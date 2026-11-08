@@ -1140,12 +1140,13 @@ Some of these overlap or conflict (Ctrl for slow vs down, Q/E for altitude vs ro
 ## 53: Clients have no two-way way to toggle FPV mouse look
 
 +++
-status: new
+status: closed
 priority: low
 kind: enhancement
 labels: fpv
 created: 2026-11-08T06:54:36Z
-updated: 2026-11-08T06:54:41Z
+updated: 2026-11-08T07:05:27Z
+closed: 2026-11-08T07:05:27Z
 +++
 
 The library no longer adds a ⌘T shortcut for mouse look (removed in #44), but clients that want such a toggle have no convenient way to build one. `FPVMovementSettings.isMouseLookEnabled` is a one-way value: the client cannot observe the current state, and the toolbar capture/release state lives in private `WASDController` state.

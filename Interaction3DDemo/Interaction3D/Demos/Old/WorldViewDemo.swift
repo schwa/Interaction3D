@@ -12,13 +12,20 @@ struct WorldViewDemo: View {
     @State
     private var projection: any ProjectionProtocol = PerspectiveProjection()
 
+    @State
+    private var isMouseLookEnabled = true
+
     var body: some View {
-        WorldView(projection: $projection, cameraMatrix: $model.cameraNode.simdTransform) {
+        WorldView(projection: $projection, cameraMatrix: $model.cameraNode.simdTransform, isMouseLookEnabled: $isMouseLookEnabled) {
             SceneView(
                 scene: model.scene,
                 pointOfView: model.cameraNode,
                 options: [.autoenablesDefaultLighting, .rendersContinuously]
             )
+        }
+        .toolbar {
+            Toggle("Mouse Look", isOn: $isMouseLookEnabled)
+                .keyboardShortcut("t", modifiers: .command)
         }
     }
 }

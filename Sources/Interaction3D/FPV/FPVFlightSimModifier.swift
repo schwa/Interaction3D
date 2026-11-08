@@ -33,8 +33,19 @@ public struct FPVFlightSimModifier: ViewModifier {
     @State
     private var isShowingControlsPopover = false
 
-    public init(cameraMatrix: Binding<matrix_float4x4>, verticalFOV: CGFloat = 60) {
+    @State
+    private var localMouseLookEnabled = true
+
+    private let externalMouseLookEnabled: Binding<Bool>?
+
+    // Without a binding, the controls popover owns the mouse look toggle.
+    private var isMouseLookEnabled: Binding<Bool> {
+        externalMouseLookEnabled ?? $localMouseLookEnabled
+    }
+
+    public init(cameraMatrix: Binding<matrix_float4x4>, isMouseLookEnabled: Binding<Bool>? = nil, verticalFOV: CGFloat = 60) {
         self._cameraMatrix = cameraMatrix
+        self.externalMouseLookEnabled = isMouseLookEnabled
         self.verticalFOV = verticalFOV
     }
 
@@ -45,6 +56,12 @@ public struct FPVFlightSimModifier: ViewModifier {
             .task {
                 // Claim focus on appear so WASD works without a click.
                 isFocused = true
+            }
+            .onChange(of: isMouseLookEnabled.wrappedValue, initial: true) {
+                fpvController.mouseTrackingEnabled = isMouseLookEnabled.wrappedValue
+                if !isMouseLookEnabled.wrappedValue {
+                    wasdController.releaseMouse()
+                }
             }
             .onChange(of: isFocused, initial: true) {
                 wasdController.isKeyboardEnabled = isFocused
@@ -127,7 +144,7 @@ public struct FPVFlightSimModifier: ViewModifier {
                 Label("Flight Controls", systemImage: "slider.horizontal.3")
             }
             .popover(isPresented: $isShowingControlsPopover) {
-                FlightControlsPanelView(fpvController: $fpvController, breadcrumbs: $breadcrumbs)
+                FlightControlsPanelView(fpvController: $fpvController, isMouseLookEnabled: isMouseLookEnabled, breadcrumbs: $breadcrumbs)
                     .padding(20)
                     .frame(minWidth: 320)
             }
@@ -155,6 +172,9 @@ public struct FPVFlightSimModifier: ViewModifier {
 struct FlightControlsPanelView: View {
     @Binding
     var fpvController: FPVMovementController
+
+    @Binding
+    var isMouseLookEnabled: Bool
 
     @Binding
     var breadcrumbs: [SIMD2<Float>]
@@ -194,7 +214,7 @@ struct FlightControlsPanelView: View {
                 Slider(value: $fpvController.controllerTurnSpeed, in: 0.1...Float.pi * 2, step: 0.1)
             }
 
-            Toggle("Mouse Look", isOn: $fpvController.mouseTrackingEnabled)
+            Toggle("Mouse Look", isOn: $isMouseLookEnabled)
                 .toggleStyle(.switch)
 
             Button("Reset") {
@@ -208,8 +228,8 @@ struct FlightControlsPanelView: View {
 }
 
 public extension View {
-    func fpvFlightSim(cameraMatrix: Binding<matrix_float4x4>, verticalFOV: CGFloat = 60) -> some View {
-        modifier(FPVFlightSimModifier(cameraMatrix: cameraMatrix, verticalFOV: verticalFOV))
+    func fpvFlightSim(cameraMatrix: Binding<matrix_float4x4>, isMouseLookEnabled: Binding<Bool>? = nil, verticalFOV: CGFloat = 60) -> some View {
+        modifier(FPVFlightSimModifier(cameraMatrix: cameraMatrix, isMouseLookEnabled: isMouseLookEnabled, verticalFOV: verticalFOV))
     }
 }
 

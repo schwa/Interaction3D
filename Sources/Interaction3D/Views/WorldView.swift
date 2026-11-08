@@ -27,6 +27,9 @@ public struct WorldView<Content: View>: View {
     @Binding
     private var cameraMatrix: simd_float4x4
 
+    @Binding
+    private var isMouseLookEnabled: Bool
+
     var content: Content
     var tools: [Tool]
     var turntableTarget: SIMD3<Float>
@@ -35,6 +38,7 @@ public struct WorldView<Content: View>: View {
     public init(
         projection: Binding<any ProjectionProtocol>,
         cameraMatrix: Binding<simd_float4x4>,
+        isMouseLookEnabled: Binding<Bool> = .constant(true),
         tools: [Tool] = Tool.default,
         turntableTarget: SIMD3<Float> = .zero,
         flightSimulationVerticalFOV: CGFloat? = nil,
@@ -42,6 +46,7 @@ public struct WorldView<Content: View>: View {
     ) {
         self._projection = projection
         self._cameraMatrix = cameraMatrix
+        self._isMouseLookEnabled = isMouseLookEnabled
         self.tools = tools
         self.turntableTarget = turntableTarget
         self.flightSimulationVerticalFOV = flightSimulationVerticalFOV
@@ -60,7 +65,7 @@ public struct WorldView<Content: View>: View {
                 }
                 .tool("Rotation Widget", group: .interaction, id: "rotation-widget", enabled: tools.contains(.rotationWidget)) { RotationWidgetToolModifier(cameraMatrix: $cameraMatrix) }
                 .tool("FPV", group: .interaction, id: "fpv-flight", enabled: tools.contains(.fpvFlight)) {
-                    FPVMovementModifier(cameraMatrix: $cameraMatrix, showsControls: true)
+                    FPVMovementModifier(cameraMatrix: $cameraMatrix, isMouseLookEnabled: $isMouseLookEnabled, showsControls: true)
                 }
                 #if os(macOS)
                 .tool(
@@ -69,7 +74,7 @@ public struct WorldView<Content: View>: View {
                     id: "fpv-flight-sim",
                     enabled: tools.contains(.fpvFlightSim) && verticalFOV != nil
                 ) {
-                    FPVFlightSimModifier(cameraMatrix: $cameraMatrix, verticalFOV: requiredVerticalFOV)
+                    FPVFlightSimModifier(cameraMatrix: $cameraMatrix, isMouseLookEnabled: $isMouseLookEnabled, verticalFOV: requiredVerticalFOV)
                 }
                 #endif
                 .tool("Off", group: .debug, id: "debug-off", enabled: tools.contains(.debugOverlay)) { EmptyModifier() }
