@@ -158,7 +158,7 @@ public struct CoreDragModifier: ViewModifier {
         }
         #endif
         if accepted, let dragFilter {
-            accepted = dragFilter(value.startLocation)
+            accepted = dragFilter.accepts(value.startLocation)
         }
         claimState = accepted ? .claimed : .rejected
     }
@@ -219,56 +219,42 @@ public struct CoreDragModifier: ViewModifier {
 
 // MARK: - Drag Filter
 
-/// A location predicate for Interaction3D input filters.
-/// SwiftUI compares filters by `id`, so change `id` whenever the predicate's behavior changes.
-public struct InteractionLocationFilter: Equatable {
-    public let id: AnyHashable
-    private let predicate: @MainActor (CGPoint) -> Bool
-
-    public init(id: some Hashable, _ predicate: @escaping @MainActor (CGPoint) -> Bool) {
-        self.id = AnyHashable(id)
-        self.predicate = predicate
-    }
-
+/// Decides whether Interaction3D input at a location may be handled.
+/// Conform a struct whose stored properties hold the data the decision needs (for example gizmo bounds).
+/// Don't store closures in conforming types: SwiftUI compares environment values by their stored properties.
+public protocol InteractionLocationFilter {
     @MainActor
-    public func callAsFunction(_ location: CGPoint) -> Bool {
-        predicate(location)
-    }
-
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.id == rhs.id
-    }
+    func accepts(_ location: CGPoint) -> Bool
 }
 
 public extension EnvironmentValues {
     /// Decides once per drag, at its first change, whether Interaction3D drag controls may handle it.
     /// Receives the drag start location in the view's local coordinate space. Return false to leave the drag to the caller.
-    @Entry var interactionDragFilter: InteractionLocationFilter?
+    @Entry var interactionDragFilter: (any InteractionLocationFilter)?
 
     /// Decides per scroll wheel event whether Interaction3D scroll controls may handle it (macOS only).
     /// Receives the pointer location in the view's local coordinate space. Rejected events pass to the next responder.
-    @Entry var interactionScrollFilter: InteractionLocationFilter?
+    @Entry var interactionScrollFilter: (any InteractionLocationFilter)?
 
     /// Decides once per magnify gesture, at its first change, whether Interaction3D magnify controls may handle it.
     /// Receives the gesture start location in the view's local coordinate space.
-    @Entry var interactionMagnifyFilter: InteractionLocationFilter?
+    @Entry var interactionMagnifyFilter: (any InteractionLocationFilter)?
 }
 
 public extension View {
     /// Rejects Interaction3D camera drags whose start location fails `filter`, for example drags that begin on a gizmo.
-    /// `id` identifies the filter's behavior; change it when the predicate's captured state changes.
-    func interactionDragFilter(id: some Hashable, _ filter: @escaping @MainActor (CGPoint) -> Bool) -> some View {
-        environment(\.interactionDragFilter, InteractionLocationFilter(id: id, filter))
+    func interactionDragFilter(_ filter: some InteractionLocationFilter) -> some View {
+        environment(\.interactionDragFilter, filter)
     }
 
     /// Rejects Interaction3D scroll wheel events whose pointer location fails `filter`.
-    func interactionScrollFilter(id: some Hashable, _ filter: @escaping @MainActor (CGPoint) -> Bool) -> some View {
-        environment(\.interactionScrollFilter, InteractionLocationFilter(id: id, filter))
+    func interactionScrollFilter(_ filter: some InteractionLocationFilter) -> some View {
+        environment(\.interactionScrollFilter, filter)
     }
 
     /// Rejects Interaction3D magnify gestures whose start location fails `filter`.
-    func interactionMagnifyFilter(id: some Hashable, _ filter: @escaping @MainActor (CGPoint) -> Bool) -> some View {
-        environment(\.interactionMagnifyFilter, InteractionLocationFilter(id: id, filter))
+    func interactionMagnifyFilter(_ filter: some InteractionLocationFilter) -> some View {
+        environment(\.interactionMagnifyFilter, filter)
     }
 }
 
@@ -338,7 +324,7 @@ struct MagnifyGestureModifier<T: Transformer>: ViewModifier where T.Input == Dou
             MagnifyGesture()
                 .onChanged { gestureValue in
                     if claimState == .unclaimed {
-                        let accepted = magnifyFilter?(gestureValue.startLocation) ?? true
+                        let accepted = magnifyFilter?.accepts(gestureValue.startLocation) ?? true
                         claimState = accepted ? .claimed : .rejected
                     }
                     guard claimState == .claimed else {

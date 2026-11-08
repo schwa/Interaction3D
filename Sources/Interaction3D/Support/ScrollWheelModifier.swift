@@ -28,7 +28,7 @@ public extension View {
 
 private struct ScrollWheelView: NSViewRepresentable {
     @Binding var delta: Double
-    let filter: InteractionLocationFilter?
+    let filter: (any InteractionLocationFilter)?
 
     func makeNSView(context: Context) -> ScrollWheelNSView {
         let view = ScrollWheelNSView()
@@ -46,7 +46,7 @@ private struct ScrollWheelView: NSViewRepresentable {
 
 final class ScrollWheelNSView: NSView {
     var onScroll: ((Double) -> Void)?
-    var filter: InteractionLocationFilter?
+    var filter: (any InteractionLocationFilter)?
 
     override var isFlipped: Bool { true }
 
@@ -55,7 +55,7 @@ final class ScrollWheelNSView: NSView {
     }
 
     override func scrollWheel(with event: NSEvent) {
-        if let filter, !filter(convert(event.locationInWindow, from: nil)) {
+        if let filter, !filter.accepts(convert(event.locationInWindow, from: nil)) {
             super.scrollWheel(with: event)
             return
         }

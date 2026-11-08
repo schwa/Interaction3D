@@ -1378,12 +1378,13 @@ These format numbers with `String(format:)` instead of `FormatStyle`, so output 
 ## 67: InteractionLocationFilter still stores a closure in the environment
 
 +++
-status: open
+status: closed
 priority: medium
 kind: bug
 labels: effort:m, area:swiftui
 created: 2026-11-08T16:35:40Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-08T16:38:47Z
+closed: 2026-11-08T16:38:47Z
 +++
 
 The #54 fix wrapped the filter closures in `InteractionLocationFilter` (`Controllers/GestureManager.swift`), with `==` comparing a caller-supplied `id`. Apple guidance (swiftui-specialist, environment.md, "Not a fix: Wrapping the closure in a struct") says a struct that stores a closure is not an acceptable fix for closures in custom environment keys, and that the closure should be eliminated in favor of stored data plus a method.
@@ -1391,6 +1392,7 @@ The #54 fix wrapped the filter closures in `InteractionLocationFilter` (`Control
 The `id`-based equality also means that if a client changes what the closure captures without changing `id`, SwiftUI can keep the old predicate and readers will use stale filter logic.
 
 - `2026-11-08T16:36:22Z`: Related: #54 (introduced InteractionLocationFilter) and #55 (closure-based bindings).
+- `2026-11-08T16:38:47Z`: Replaced the closure wrapper with an InteractionLocationFilter protocol (accepts(_:)); environment holds any InteractionLocationFilter, so clients store data, not closures. Breaking: interaction*Filter modifiers now take a conforming value instead of id + closure. No unit test: environment comparison/invalidation is not observable from the unit test target.
 
 ---
 
