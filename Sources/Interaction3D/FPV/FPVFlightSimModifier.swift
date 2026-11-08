@@ -187,9 +187,7 @@ struct FlightControlsPanelView: View {
                 .font(.headline)
 
             VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Movement Speed")
-                    Spacer()
+                LabeledContent("Movement Speed") {
                     Text(fpvController.speed, format: .number.precision(.fractionLength(1)))
                         .monospacedDigit()
                 }
@@ -197,9 +195,7 @@ struct FlightControlsPanelView: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Mouse Sensitivity")
-                    Spacer()
+                LabeledContent("Mouse Sensitivity") {
                     Text(fpvController.mouseSensitivity, format: .number.precision(.fractionLength(3)))
                         .monospacedDigit()
                 }
@@ -207,9 +203,7 @@ struct FlightControlsPanelView: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Controller Turn Speed")
-                    Spacer()
+                LabeledContent("Controller Turn Speed") {
                     Text(fpvController.controllerTurnSpeed, format: .number.precision(.fractionLength(2)))
                         .monospacedDigit()
                 }

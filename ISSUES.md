@@ -1208,15 +1208,18 @@ Demo: `WidgetsDemo`, `TurntableDemo`, `GestureManagerDemo`, `InspectorXYRow`, `I
 ## 57: Hand-rolled label/value rows instead of LabeledContent
 
 +++
-status: open
+status: closed
 priority: low
 kind: task
 labels: effort:xs, area:swiftui
 created: 2026-11-08T16:30:56Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-08T16:41:22Z
+closed: 2026-11-08T16:41:22Z
 +++
 
 `FlightControlsPanelView` (`FPV/FPVFlightSimModifier.swift`) builds three rows as `HStack { Text(label); Spacer(); Text(value) }` (Movement Speed, Mouse Sensitivity, Controller Turn Speed). `ConnectedDevicesDemo` may have the same pattern. House rules call for `LabeledContent` here.
+
+- `2026-11-08T16:41:22Z`: FlightControlsPanelView's three label/value rows now use LabeledContent. ConnectedDevicesDemo's row is an icon + title + kind header with extra lines, not a label/value pair, so it stays as is. No test: pure view refactor.
 
 ---
 
