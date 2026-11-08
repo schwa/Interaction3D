@@ -1090,11 +1090,13 @@ The uppercase-character cause is inferred from the code, not confirmed with a ke
 ## 51: FPV view needs a click before keyboard movement works
 
 +++
-status: new
+status: closed
 priority: medium
 kind: bug
 labels: fpv
 created: 2026-11-08T06:49:21Z
+updated: 2026-11-08T06:50:54Z
+closed: 2026-11-08T06:50:54Z
 +++
 
 `FPVMovementModifier` makes its content focusable and gates keyboard input on its private `@FocusState` (#41), but nothing gives the view focus when it appears. After launch, WASD/QE do nothing until the user clicks the view.

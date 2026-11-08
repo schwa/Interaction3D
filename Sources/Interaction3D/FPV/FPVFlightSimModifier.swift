@@ -42,6 +42,10 @@ public struct FPVFlightSimModifier: ViewModifier {
         content
             .focusable()
             .focused($isFocused)
+            .task {
+                // Claim focus on appear so WASD works without a click.
+                isFocused = true
+            }
             .onChange(of: isFocused, initial: true) {
                 wasdController.isKeyboardEnabled = isFocused
             }
