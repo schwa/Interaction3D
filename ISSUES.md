@@ -1236,6 +1236,8 @@ updated: 2026-11-08T16:36:22Z
 
 13 uses of `.font(.system(size:))` bypass Dynamic Type: `SpeedometerView`, `SpeedometerDialView`, `ArtificialHorizonView`, `MapView`, `CompassView`. Canvas-drawn labels in fixed-size instruments may justify fixed sizes, but `CompassView.swift:162` and `SpeedometerDialView.swift:83,104,109` are regular view text.
 
+- `2026-11-08T16:43:12Z`: Autonomous run: punting. Checked all 13 sites: every one, including CompassView:162 and SpeedometerDialView:83/104/109, is text drawn inside a Canvas at fixed point positions (the issue's 'regular view text' note was wrong). Scaling these fonts with Dynamic Type would overlap the dial geometry unless the instruments also scale their layout. Each instrument already exposes its reading via accessibilityValue. Unblocker: decide whether to (a) close as by-design, (b) scale fonts with @ScaledMetric clamped to a small range, or (c) scale the whole instrument layout with Dynamic Type.
+
 ---
 
 ## 59: AppKit usage and os() conditionals where SwiftUI or canImport fit
