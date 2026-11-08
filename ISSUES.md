@@ -915,3 +915,118 @@ Keyboard FPV input supports only WASD for planar movement. Missing compared with
 SceneSprockets #313 needed all three.
 
 ---
+
+## 43: fpvMovement has no way to set movement speed
+
++++
+status: new
+priority: medium
+kind: enhancement
+labels: fpv
+created: 2026-11-08T06:33:02Z
++++
+
+`View.fpvMovement(cameraMatrix:)` (`FPVMovementModifier`) owns its `FPVMovementController` as private state, so callers cannot change `speed` (fixed at 10 units/s), `fastSpeedMultiplier` (4), `mouseSensitivity`, or the turn speeds.
+
+This makes the modifier impractical for large scenes. In CBTerrain (a 16 km terrain in meters), crossing the world at the maximum 40 m/s takes about 7 minutes.
+
+`FPVFlightSimModifier` exposes a speed slider in its controls popover, but only in the range 1...50, and only through its UI.
+
+Seen with 0.1.16; main (cc8f4e5) has the same API.
+
+---
+
+## 44: FPV mouse look is off by default and needs a ⌘T toolbar toggle
+
++++
+status: new
+priority: medium
+kind: enhancement
+labels: fpv
+created: 2026-11-08T06:35:34Z
++++
+
+Mouse look in `fpvMovement` and `FPVFlightSimModifier` does nothing until the user presses ⌘T or the toolbar's "Enable Mouse" button (`FPVMovementController.mouseTrackingEnabled` defaults to false). Capture is a second step (⌘M), and ⌘0 resets.
+
+These window-level shortcuts and toolbar items are added to the host app, can collide with its own shortcuts (⌘T and ⌘M are common system/app shortcuts), and are not discoverable. Hosts have no API to turn mouse look on.
+
+Seen in CBTerrain with 0.1.16; main (cc8f4e5) still defaults to off. On main the toolbar is opt-in via `showsControls`, which leaves no way at all to enable mouse look in the plain modifier.
+
+## Proposed fix (per Jonathan)
+Enable mouse look by default and remove the ⌘T toggle and related shortcuts.
+
+---
+
+## 45: FPV mouse look reacts to mouse movement outside the view
+
++++
+status: new
+priority: medium
+kind: bug
+labels: fpv
+created: 2026-11-08T06:35:34Z
++++
+
+`WASDController` reads mouse deltas from `GCMouse.mouseInput.mouseMovedHandler`, which reports all mouse movement system-wide. Once mouse look is enabled, the camera turns whenever the mouse moves, even when the cursor is outside the FPV view, the window is not key, or another app is frontmost. Keyboard input is gated on view focus (#41); mouse input is not.
+
+Steps:
+1. Use `fpvMovement` in a window, enable mouse look (⌘T).
+2. Move the cursor out of the window, or switch to another app, and move the mouse.
+
+Expected: the camera ignores the mouse unless the view is focused (or the mouse is captured).
+Actual: the camera keeps turning.
+
+Found by code reading (WASDController.registerMouse); not yet confirmed at runtime.
+
+---
+
+## 46: FPV mouse look axes may be inverted on the GCMouse path
+
++++
+status: new
+priority: low
+kind: bug
+labels: fpv
+created: 2026-11-08T06:35:34Z
++++
+
+`FPVMovementController.process(event:)` applies mouse deltas as `yaw += deltaX * mouseSensitivity` and `pitch -= deltaY * mouseSensitivity`. The transform is built from a +Y-axis yaw rotation, where positive yaw turns left, so moving the mouse right appears to turn the camera left. `GCMouse` reports +Y for upward movement, so the pitch sign may also be reversed; the `NSEvent` fallback path reports +Y downward, so the two paths may disagree with each other.
+
+Found by code reading; not yet confirmed at runtime. Reported as "mouse tracking is borked" in CBTerrain.
+
+---
+
+## 47: WASDController prints debug messages to the console
+
++++
+status: new
+priority: low
+kind: bug
+labels: fpv
+created: 2026-11-08T06:35:35Z
++++
+
+`WASDController` calls `print` for routine mouse setup: "Mouse connected via notification", "No mouse/trackpad found - setting up NSEvent monitor", "Registering mouse handlers", "Mouse input available", "Mouse input is ready", "No mouse input available on this mouse device". These appear in every host app's console.
+
+---
+
+## 48: FPV fixes on main are not in a release
+
++++
+status: new
+priority: medium
+kind: task
+labels: fpv
+created: 2026-11-08T06:35:35Z
++++
+
+The latest tag, 0.1.16, lacks these merged changes, so packages depending on `upToNextMinor(from: "0.1.16")` don't get them:
+
+- #39 / a1d6d37: FPV starts from the bound camera pose. In 0.1.16 the camera always starts at the origin with zero yaw and pitch, overwriting the host's initial camera.
+- #40 / cc8f4e5: `FPVMovementModifier` is macOS-only in 0.1.16 and always adds toolbar items.
+- #41: keyboard input gated on view focus.
+- #42: Q/E altitude, arrow-key look, Shift fast-move.
+
+Seen in CBTerrain.
+
+---
