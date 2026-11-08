@@ -964,11 +964,13 @@ Enable mouse look by default and remove the ⌘T toggle and related shortcuts.
 ## 45: FPV mouse look reacts to mouse movement outside the view
 
 +++
-status: new
+status: closed
 priority: medium
 kind: bug
 labels: fpv
 created: 2026-11-08T06:35:34Z
+updated: 2026-11-08T06:46:18Z
+closed: 2026-11-08T06:46:18Z
 +++
 
 `WASDController` reads mouse deltas from `GCMouse.mouseInput.mouseMovedHandler`, which reports all mouse movement system-wide. Once mouse look is enabled, the camera turns whenever the mouse moves, even when the cursor is outside the FPV view, the window is not key, or another app is frontmost. Keyboard input is gated on view focus (#41); mouse input is not.
@@ -981,6 +983,8 @@ Expected: the camera ignores the mouse unless the view is focused (or the mouse 
 Actual: the camera keeps turning.
 
 Found by code reading (WASDController.registerMouse); not yet confirmed at runtime.
+
+- `2026-11-08T06:46:18Z`: Won't fix: mouse look is intentionally global.
 
 ---
 
@@ -1042,11 +1046,13 @@ Seen in CBTerrain.
 ## 49: FPV W/S movement stays on the horizontal plane with no free-flight option
 
 +++
-status: new
+status: closed
 priority: medium
 kind: enhancement
 labels: fpv
 created: 2026-11-08T06:44:51Z
+updated: 2026-11-08T06:46:57Z
+closed: 2026-11-08T06:46:57Z
 +++
 
 `FPVMovementController.applyContinuousInputs` builds the movement basis from yaw only (`forward = (-sin yaw, 0, -cos yaw)`), so W/S never change altitude even when looking up or down; only Q/E move vertically. This walking-style movement is a good default, but there is no way to choose free flight, where W/S move along the full view direction (including pitch). CBTerrain's original fly camera moved along the view direction, and losing it makes descending toward terrain awkward.
@@ -1059,11 +1065,13 @@ Actual: movement is always horizontal.
 ## 50: Holding Shift with WASD/QE in the FPV view makes the system beep
 
 +++
-status: new
+status: closed
 priority: medium
 kind: bug
 labels: fpv
 created: 2026-11-08T06:44:51Z
+updated: 2026-11-08T06:46:57Z
+closed: 2026-11-08T06:46:57Z
 +++
 
 `disableWASDKeys()` swallows key presses with `onKeyPress(keys:)` for the lowercase `KeyEquivalent`s w, a, s, d, q, e plus the arrows. With Shift held (fast movement), the presses arrive as uppercase characters (W, A, ...), don't match, fall through unhandled, and AppKit beeps on every repeat.

@@ -9,6 +9,7 @@ public struct FPVMovementSettings: Equatable, Sendable {
     public var controllerTurnSpeed: Float
     public var keyboardTurnSpeed: Float
     public var isMouseLookEnabled: Bool
+    public var isFreeFlightEnabled: Bool
 
     public init(
         speed: Float = 10,
@@ -16,8 +17,10 @@ public struct FPVMovementSettings: Equatable, Sendable {
         mouseSensitivity: Float = 0.01,
         controllerTurnSpeed: Float = .pi,
         keyboardTurnSpeed: Float = .pi / 2,
-        isMouseLookEnabled: Bool = true
+        isMouseLookEnabled: Bool = true,
+        isFreeFlightEnabled: Bool = false
     ) {
+        self.isFreeFlightEnabled = isFreeFlightEnabled
         self.isMouseLookEnabled = isMouseLookEnabled
         self.speed = speed
         self.fastSpeedMultiplier = fastSpeedMultiplier
@@ -73,6 +76,7 @@ public struct FPVMovementModifier: ViewModifier {
                 fpvController.controllerTurnSpeed = settings.controllerTurnSpeed
                 fpvController.keyboardTurnSpeed = settings.keyboardTurnSpeed
                 fpvController.mouseTrackingEnabled = settings.isMouseLookEnabled
+                fpvController.isFreeFlightEnabled = settings.isFreeFlightEnabled
                 if !settings.isMouseLookEnabled {
                     wasdController.releaseMouse()
                 }

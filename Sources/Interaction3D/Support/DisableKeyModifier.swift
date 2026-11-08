@@ -20,6 +20,8 @@ extension View {
     func disableWASDKeys() -> some View {
         disableKeys([
             .init("w"), .init("a"), .init("s"), .init("d"), .init("q"), .init("e"),
+            // Shift (fast move) delivers uppercase characters.
+            .init("W"), .init("A"), .init("S"), .init("D"), .init("Q"), .init("E"),
             .upArrow, .downArrow, .leftArrow, .rightArrow
         ])
     }

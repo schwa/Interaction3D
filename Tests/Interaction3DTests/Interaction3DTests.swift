@@ -184,6 +184,20 @@ import Testing
 }
 
 @MainActor
+@Test func fpvFreeFlightMovesAlongViewDirection() {
+    var controller = FPVMovementController()
+    controller.process(event: .keyboardState(move: .zero, look: [0, 1], altitude: 0, isFast: false))
+    controller.update(deltaTime: 0.5)
+    controller.process(event: .keyboardState(move: [0, 1], look: .zero, altitude: 0, isFast: false))
+    controller.update(deltaTime: 1)
+    #expect(controller.movementController.transform.columns.3.y == 0)
+
+    controller.isFreeFlightEnabled = true
+    controller.update(deltaTime: 1)
+    #expect(controller.movementController.transform.columns.3.y > 0)
+}
+
+@MainActor
 @Test func fpvMovementStartsFromExistingPose() {
     let yaw = simd_float4x4(simd_quatf(angle: 0.7, axis: [0, 1, 0]))
     let pitch = simd_float4x4(simd_quatf(angle: -0.3, axis: [1, 0, 0]))

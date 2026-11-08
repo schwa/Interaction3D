@@ -28,6 +28,8 @@ public struct FPVMovementController {
     public var controllerTurnSpeed: Float = .pi
     public var keyboardTurnSpeed: Float = .pi / 2
     public var fastSpeedMultiplier: Float = 4
+    // Free flight moves along the full view direction, including pitch.
+    public var isFreeFlightEnabled = false
 
     public init() {
         updateTransform()
@@ -129,7 +131,9 @@ public struct FPVMovementController {
         let sinYaw = sin(yaw)
         let cosYaw = cos(yaw)
         let right = SIMD3<Float>(cosYaw, 0, -sinYaw)
-        let forward = SIMD3<Float>(-sinYaw, 0, -cosYaw)
+        let forward = isFreeFlightEnabled
+            ? SIMD3<Float>(-sinYaw * cos(pitch), sin(pitch), -cosYaw * cos(pitch))
+            : SIMD3<Float>(-sinYaw, 0, -cosYaw)
         let currentSpeed = isFast ? speed * fastSpeedMultiplier : speed
         let deltaPosition = (right * movementInput.x + forward * movementInput.y) * currentSpeed * deltaTime
         let altitudeInput = max(-1, min(1, controllerAltitudeAxis + keyboardAltitudeAxis))
@@ -137,9 +141,9 @@ public struct FPVMovementController {
         position += deltaPosition
         position.y += altitudeInput * currentSpeed * deltaTime
 
-        let planarVelocity = deltaPosition / deltaTime
-        let altitudeVelocity = altitudeInput * currentSpeed
-        movementController.linearVelocity = SIMD3<Float>(planarVelocity.x, altitudeVelocity, planarVelocity.z)
+        var velocity = deltaPosition / deltaTime
+        velocity.y += altitudeInput * currentSpeed
+        movementController.linearVelocity = velocity
         movementController.angularVelocity = .zero
     }
 
