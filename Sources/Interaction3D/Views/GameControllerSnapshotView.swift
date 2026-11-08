@@ -11,7 +11,7 @@ public struct GameControllerSnapshotView: View {
     public var body: some View {
         TimelineView(.animation) { context in
             let date = context.date
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading) {
                 switch display.kind {
                 case .none:
                     Text("No controller connected")
@@ -25,7 +25,7 @@ public struct GameControllerSnapshotView: View {
                     }
                 }
             }
-            .padding(12)
+            .padding()
             .onAppear { display = SnapshotDisplay.capture() }
             .onChange(of: date) { _, _ in display = SnapshotDisplay.capture() }
         }

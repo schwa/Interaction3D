@@ -1263,12 +1263,13 @@ closed: 2026-11-08T16:44:03Z
 ## 60: SwiftUI house-rule cleanups: spacing literals, easeInOut, previews, dead code
 
 +++
-status: open
+status: closed
 priority: low
 kind: task
 labels: effort:m, area:swiftui
 created: 2026-11-08T16:31:03Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-08T16:46:31Z
+closed: 2026-11-08T16:46:31Z
 +++
 
 - Numeric padding/spacing literals in library views: `GameControllerSnapshotView` (`.padding(12)`, `spacing: 4`), `CompassView` (`.padding(2)`), `TransformerParameterEditor` (`spacing: 12`), `FPVFlightSimModifier` (`.padding(20)`, `spacing: 16/8/4`). Demos have ~25 more.
@@ -1276,6 +1277,8 @@ updated: 2026-11-08T16:36:22Z
 - Only 21 of 39 view files have a `#Preview`; leaf views such as `HorizonCue`, `ScrubbableValueField`, and the camera pose editors have none.
 - `PitchYawDemoView` uses `GeometryReader` and a computed `cubePanel: some View`.
 - Commented-out code at `CompassView.swift:138`.
+
+- `2026-11-08T16:46:31Z`: Library spacing: section/panel literals replaced with defaults (GameControllerSnapshotView, TransformerParameterEditorView, flight controls popover and panel). Kept as house-rule idioms: label+slider row spacing 8, icon-pair HStack spacing 4, CompassView .padding(2) stroke inset. RotationWidget uses .smooth. Removed the commented-out tick-drawing block in CompassView and PitchYawDemoView's unused GeometryReader and cubePanel property. The listed leaf views already had previews. Demo HUD padding literals left as capsule/panel idioms. No test: view-styling cleanups.
 
 ---
 

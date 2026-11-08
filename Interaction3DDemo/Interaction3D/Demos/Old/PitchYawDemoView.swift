@@ -25,12 +25,10 @@ struct PitchYawDemoView: View {
     private var cubeScale: Float = 1.0
 
     var body: some View {
-        GeometryReader { geometry in
-            Canvas { context, size in
-                renderColoredCube(context: context, size: size, rotation: rotation, distance: distance, modelMatrix: float4x4(scale: [cubeScale, cubeScale, cubeScale]))
-            }
-            .background(Color.black)
+        Canvas { context, size in
+            renderColoredCube(context: context, size: size, rotation: rotation, distance: distance, modelMatrix: float4x4(scale: [cubeScale, cubeScale, cubeScale]))
         }
+        .background(Color.black)
         .interactiveCamera(
             rotation: $rotation,
             distance: $distance,
@@ -59,24 +57,20 @@ struct PitchYawDemoView: View {
             .padding()
         }
         .overlay(alignment: .topLeading) {
-            cubePanel
-        }
-    }
-
-    private var cubePanel: some View {
-        Form {
-            LabeledContent("Cube Scale") {
-                HStack {
-                    Slider(value: $cubeScale, in: 0.1...5.0)
-                    Text(Double(cubeScale), format: .number.precision(.fractionLength(2)))
-                        .frame(width: 50, alignment: .trailing)
+            Form {
+                LabeledContent("Cube Scale") {
+                    HStack {
+                        Slider(value: $cubeScale, in: 0.1...5.0)
+                        Text(Double(cubeScale), format: .number.precision(.fractionLength(2)))
+                            .frame(width: 50, alignment: .trailing)
+                    }
                 }
             }
+            .frame(width: 300)
+            .padding()
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+            .padding()
         }
-        .frame(width: 300)
-        .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
-        .padding()
     }
 }
 

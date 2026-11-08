@@ -10,7 +10,7 @@ public struct TransformerParameterEditor<Transformer>: View where Transformer: P
     }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading) {
             ForEach(Transformer.parameters.enumerated(), id: \.element.name) { _, parameter in
                 ParameterControl(transformer: $transformer, parameter: parameter)
             }

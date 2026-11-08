@@ -95,53 +95,6 @@ public struct CompassView: View {
                     }
                 }
 
-                //                for i in 0..<360 {
-                //                    let angle = Angle(degrees: Double(i))
-                //                    let radians = angle.radians - .pi/2
-                //
-                //                    let majorDeg = Int(majorTickStep.degrees)
-                //                    let minorDeg = Int(minorTickStep.degrees)
-                //
-                //                    if i % majorDeg == 0 {
-                //                        let inner = radius - 15
-                //                        let outer = radius - 5
-                //                        let path = Path { p in
-                //                            p.move(to: CGPoint(x: cos(radians) * inner, y: sin(radians) * inner))
-                //                            p.addLine(to: CGPoint(x: cos(radians) * outer, y: sin(radians) * outer))
-                //                        }
-                //                        ctx.stroke(path, with: .color(.white), lineWidth: 2)
-                //                    } else if i % minorDeg == 0 && (i % majorDeg != 0) {
-                //                        let inner = radius - 10
-                //                        let outer = radius - 5
-                //                        let path = Path { p in
-                //                            p.move(to: CGPoint(x: cos(radians) * inner, y: sin(radians) * inner))
-                //                            p.addLine(to: CGPoint(x: cos(radians) * outer, y: sin(radians) * outer))
-                //                        }
-                //                        ctx.stroke(path, with: .color(.white.opacity(0.6)), lineWidth: 1)
-                //                    } else if i % 5 == 0 {
-                //                        let inner = radius - 7
-                //                        let outer = radius - 5
-                //                        let path = Path { p in
-                //                            p.move(to: CGPoint(x: cos(radians) * inner, y: sin(radians) * inner))
-                //                            p.addLine(to: CGPoint(x: cos(radians) * outer, y: sin(radians) * outer))
-                //                        }
-                //                        ctx.stroke(path, with: .color(.white.opacity(0.3)), lineWidth: 0.5)
-                //                    }
-                //
-                //
-                //                    if let label = labels[angle] {
-                //                        let textRadius = radius - 30
-                //                        let textPoint = CGPoint(x: cos(radians) * textRadius, y: sin(radians) * textRadius)
-                //                        ctx.drawLayer { textCtx in
-                //                            textCtx.translateBy(x: textPoint.x, y: textPoint.y)
-                //                            textCtx.rotate(by: heading)
-                //                            let text = Text(label).font(.system(size: 16, weight: .bold)).foregroundStyle(angle == .zero ? .red : .white)
-                //                            textCtx.draw(text, at: .zero, anchor: .center)
-                //                        }
-                //
-                //                    }
-                //                }
-
                 let circle = Path(ellipseIn: CGRect(x: -radius, y: -radius, width: radius * 2, height: radius * 2))
                 ctx.stroke(circle, with: .color(.white), lineWidth: 2)
             }

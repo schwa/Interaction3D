@@ -153,7 +153,7 @@ public struct FPVFlightSimModifier: ViewModifier {
             }
             .popover(isPresented: $isShowingControlsPopover) {
                 FlightControlsPanelView(fpvController: $fpvController, isMouseLookEnabled: isMouseLookEnabled, breadcrumbs: $breadcrumbs)
-                    .padding(20)
+                    .padding()
                     .frame(minWidth: 320)
             }
         }
@@ -182,7 +182,7 @@ struct FlightControlsPanelView: View {
     var breadcrumbs: [SIMD2<Float>]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading) {
             Text("Flight Controls")
                 .font(.headline)
 

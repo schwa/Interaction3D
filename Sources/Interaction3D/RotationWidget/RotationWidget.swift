@@ -75,7 +75,7 @@ public struct RotationWidget: View {
         slerpFrom = rotation
         slerpTo = target
         slerpProgress = 0
-        withAnimation(.easeInOut(duration: 0.5)) {
+        withAnimation(.smooth(duration: 0.5)) {
             slerpProgress = 1.0
         }
     }
