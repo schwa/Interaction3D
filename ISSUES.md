@@ -1371,12 +1371,13 @@ closed: 2026-11-08T16:42:02Z
 ## 66: C-style String(format:) number formatting
 
 +++
-status: open
+status: closed
 priority: low
 kind: task
 labels: effort:xs, area:swiftui
 created: 2026-11-08T16:34:16Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-08T16:42:21Z
+closed: 2026-11-08T16:42:21Z
 +++
 
 - `Views/SpeedometerView.swift:56`
@@ -1384,6 +1385,8 @@ updated: 2026-11-08T16:36:22Z
 - `Interaction3DDemo/Interaction3D/Demos/SpaceMouseDemo.swift:88,174`
 
 These format numbers with `String(format:)` instead of `FormatStyle`, so output is not localized.
+
+- `2026-11-08T16:42:21Z`: All four String(format:) uses now use FormatStyle (.number.precision(.fractionLength(n))). No test: display formatting only.
 
 ---
 

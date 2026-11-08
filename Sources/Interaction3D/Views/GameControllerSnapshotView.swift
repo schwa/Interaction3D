@@ -93,7 +93,7 @@ private struct SnapshotDisplay {
     }
 
     private static func format(_ value: Float) -> String {
-        String(format: "%.2f", value)
+        value.formatted(.number.precision(.fractionLength(2)))
     }
 }
 

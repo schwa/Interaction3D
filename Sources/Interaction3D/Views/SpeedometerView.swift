@@ -53,7 +53,7 @@ public struct SpeedometerView: View {
                 }
                 context.stroke(centerLine, with: .color(.white.opacity(0.3)), lineWidth: 1)
 
-                let valueText = Text(String(format: "%.2f", value)).font(.system(size: 10, weight: .regular, design: .monospaced)).foregroundStyle(.white.opacity(0.8))
+                let valueText = Text(value, format: .number.precision(.fractionLength(2))).font(.system(size: 10, weight: .regular, design: .monospaced)).foregroundStyle(.white.opacity(0.8))
                 context.draw(valueText, at: CGPoint(x: size.width - padding - 20, y: y), anchor: .trailing)
             }
 

@@ -85,7 +85,7 @@ struct SpaceMouseDemo: View {
                             .accessibilityLabel(pivotVisible ? "Visible" : "Hidden")
                     }
                     LabeledContent("FOV") {
-                        Text(String(format: "%.1f°", fieldOfView * 180.0 / .pi))
+                        Text("\(fieldOfView * 180.0 / .pi, format: .number.precision(.fractionLength(1)))°")
                             .monospaced()
                     }
                     if let lastCommand {
@@ -171,7 +171,7 @@ struct SpaceMouseDemo: View {
     }
 
     private func formatVec3(_ v: SIMD3<Double>) -> String {
-        String(format: "%.2f, %.2f, %.2f", v.x, v.y, v.z)
+        [v.x, v.y, v.z].map { $0.formatted(.number.precision(.fractionLength(2))) }.joined(separator: ", ")
     }
 
     // MARK: - Scene Setup
