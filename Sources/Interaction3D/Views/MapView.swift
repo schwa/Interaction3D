@@ -2,6 +2,9 @@ import simd
 import SwiftUI
 
 public struct MapView: View {
+    @ScaledMetric(relativeTo: .caption2)
+    private var textScale: CGFloat = 1
+
     public let transform: float4x4
     public let breadcrumbs: [SIMD2<Float>]
     public let scale: CGFloat
@@ -29,10 +32,10 @@ public struct MapView: View {
 
             // Add axis labels
             let labelOffset: CGFloat = 15
-            context.draw(Text("-Z").font(.system(size: 10, weight: .bold)).foregroundStyle(.blue), at: CGPoint(x: centerX, y: labelOffset), anchor: .center)
-            context.draw(Text("+Z").font(.system(size: 10, weight: .bold)).foregroundStyle(.blue), at: CGPoint(x: centerX, y: size.height - labelOffset), anchor: .center)
-            context.draw(Text("+X").font(.system(size: 10, weight: .bold)).foregroundStyle(.red), at: CGPoint(x: size.width - labelOffset, y: centerY), anchor: .center)
-            context.draw(Text("-X").font(.system(size: 10, weight: .bold)).foregroundStyle(.red), at: CGPoint(x: labelOffset, y: centerY), anchor: .center)
+            context.draw(Text("-Z").font(.instrument(scale: textScale, size: 10, weight: .bold)).foregroundStyle(.blue), at: CGPoint(x: centerX, y: labelOffset), anchor: .center)
+            context.draw(Text("+Z").font(.instrument(scale: textScale, size: 10, weight: .bold)).foregroundStyle(.blue), at: CGPoint(x: centerX, y: size.height - labelOffset), anchor: .center)
+            context.draw(Text("+X").font(.instrument(scale: textScale, size: 10, weight: .bold)).foregroundStyle(.red), at: CGPoint(x: size.width - labelOffset, y: centerY), anchor: .center)
+            context.draw(Text("-X").font(.instrument(scale: textScale, size: 10, weight: .bold)).foregroundStyle(.red), at: CGPoint(x: labelOffset, y: centerY), anchor: .center)
 
             let position = transform.columns.3
             let markerX = centerX + CGFloat(position.x) * scale

@@ -2,6 +2,9 @@ import simd
 import SwiftUI
 
 public struct SpeedometerView: View {
+    @ScaledMetric(relativeTo: .caption2)
+    private var textScale: CGFloat = 1
+
     public var linearVelocity: SIMD3<Float>
     public var angularVelocity: SIMD3<Float>
 
@@ -31,7 +34,7 @@ public struct SpeedometerView: View {
             for (index, (label, value, color)) in velocities.enumerated() {
                 let y = padding + CGFloat(index) * (lineHeight + 5)
 
-                let labelText = Text(label).font(.system(size: 12, weight: .medium)).foregroundStyle(.white)
+                let labelText = Text(label).font(.instrument(scale: textScale, size: 12, weight: .medium)).foregroundStyle(.white)
                 context.draw(labelText, at: CGPoint(x: padding + 35, y: y), anchor: .leading)
 
                 let centerX = size.width / 2
@@ -53,7 +56,7 @@ public struct SpeedometerView: View {
                 }
                 context.stroke(centerLine, with: .color(.white.opacity(0.3)), lineWidth: 1)
 
-                let valueText = Text(value, format: .number.precision(.fractionLength(2))).font(.system(size: 10, weight: .regular, design: .monospaced)).foregroundStyle(.white.opacity(0.8))
+                let valueText = Text(value, format: .number.precision(.fractionLength(2))).font(.instrument(scale: textScale, size: 10, weight: .regular, design: .monospaced)).foregroundStyle(.white.opacity(0.8))
                 context.draw(valueText, at: CGPoint(x: size.width - padding - 20, y: y), anchor: .trailing)
             }
 

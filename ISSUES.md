@@ -1226,17 +1226,19 @@ closed: 2026-11-08T16:41:22Z
 ## 58: Fixed font sizes in instrument views
 
 +++
-status: open
+status: closed
 priority: low
 kind: task
 labels: effort:s, area:swiftui, area:accessibility
 created: 2026-11-08T16:30:56Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-08T16:49:47Z
+closed: 2026-11-08T16:49:47Z
 +++
 
 13 uses of `.font(.system(size:))` bypass Dynamic Type: `SpeedometerView`, `SpeedometerDialView`, `ArtificialHorizonView`, `MapView`, `CompassView`. Canvas-drawn labels in fixed-size instruments may justify fixed sizes, but `CompassView.swift:162` and `SpeedometerDialView.swift:83,104,109` are regular view text.
 
 - `2026-11-08T16:43:12Z`: Autonomous run: punting. Checked all 13 sites: every one, including CompassView:162 and SpeedometerDialView:83/104/109, is text drawn inside a Canvas at fixed point positions (the issue's 'regular view text' note was wrong). Scaling these fonts with Dynamic Type would overlap the dial geometry unless the instruments also scale their layout. Each instrument already exposes its reading via accessibilityValue. Unblocker: decide whether to (a) close as by-design, (b) scale fonts with @ScaledMetric clamped to a small range, or (c) scale the whole instrument layout with Dynamic Type.
+- `2026-11-08T16:49:47Z`: Option (b): instrument text now follows Dynamic Type via @ScaledMetric, clamped to 1.4x (Font.instrument) so it cannot overlap the dial graphics; never shrinks below the design size. Applied to Speedometer, MeasurementDial, ArtificialHorizon, Map, and Compass views. Not checked visually at large text sizes. No unit test: Font is not inspectable.
 
 ---
 

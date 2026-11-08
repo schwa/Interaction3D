@@ -1,6 +1,9 @@
 import SwiftUI
 
 public struct CompassView: View {
+    @ScaledMetric(relativeTo: .caption2)
+    private var textScale: CGFloat = 1
+
     public enum LabelStyle {
         case cardinal
         case axis
@@ -90,7 +93,7 @@ public struct CompassView: View {
                     ctx.drawLayer { textCtx in
                         textCtx.translateBy(x: textPoint.x, y: textPoint.y)
                         let textColor: Color = angle == .zero ? .red : palette.text
-                        let text = Text(label).font(.system(size: 16, weight: .bold)).foregroundStyle(textColor)
+                        let text = Text(label).font(.instrument(scale: textScale, size: 16, weight: .bold)).foregroundStyle(textColor)
                         textCtx.draw(text, at: .zero, anchor: .center)
                     }
                 }
@@ -112,7 +115,7 @@ public struct CompassView: View {
 
             let formattedHeading = heading.degrees.formatted(.number.precision(.fractionLength(0)))
             let headingText = Text("\(formattedHeading)°")
-                .font(.system(size: 14, weight: .medium))
+                .font(.instrument(scale: textScale, size: 14, weight: .medium))
                 .foregroundStyle(.white)
             context.draw(headingText, at: CGPoint(x: center.x, y: center.y + 20), anchor: .center)
         }

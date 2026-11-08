@@ -5,6 +5,9 @@ public typealias SpeedometerDialView = MeasurementDial<UnitSpeed>
 
 // TODO: Make ignorant of UnitSpeed and rename to measurement dial.
 public struct MeasurementDial <U>: View where U: Dimension {
+    @ScaledMetric(relativeTo: .caption2)
+    private var textScale: CGFloat = 1
+
     var measurement: Measurement<U>
     var maxMeasurement: Measurement<U>
     var displayUnit: U
@@ -80,7 +83,7 @@ public struct MeasurementDial <U>: View where U: Dimension {
                 let convertedLabel = label.converted(to: displayUnit)
 
                 let text = Text("\(convertedLabel.value, format: format)")
-                    .font(.system(size: 10))
+                    .font(.instrument(scale: textScale, size: 10))
                     .foregroundStyle(.white.opacity(0.7))
                 context.draw(text, at: labelPoint, anchor: .center)
             }
@@ -101,12 +104,12 @@ public struct MeasurementDial <U>: View where U: Dimension {
 
             let convertedSpeed = measurement.converted(to: displayUnit)
             let speedText = Text("\(convertedSpeed.value, format: format)")
-                .font(.system(size: 24, weight: .bold, design: .monospaced))
+                .font(.instrument(scale: textScale, size: 24, weight: .bold, design: .monospaced))
                 .foregroundStyle(.white)
             context.draw(speedText, at: CGPoint(x: 0, y: 30), anchor: .center)
 
             let unitsText = Text("\(convertedSpeed.unit.symbol)")
-                .font(.system(size: 10, weight: .medium))
+                .font(.instrument(scale: textScale, size: 10, weight: .medium))
                 .foregroundStyle(.white.opacity(0.7))
             context.draw(unitsText, at: CGPoint(x: 0, y: 45), anchor: .center)
         }

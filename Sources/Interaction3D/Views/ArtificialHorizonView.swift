@@ -2,6 +2,9 @@ import simd
 import SwiftUI
 
 public struct ArtificialHorizonView: View {
+    @ScaledMetric(relativeTo: .caption2)
+    private var textScale: CGFloat = 1
+
     public let transform: float4x4
 
     public init(transform: float4x4) {
@@ -56,7 +59,7 @@ public struct ArtificialHorizonView: View {
                         ctx.stroke(path, with: .color(.white.opacity(0.8)), lineWidth: i.isMultiple(of: 30) ? 2 : 1)
 
                         if i.isMultiple(of: 30) {
-                            let text = Text("\(abs(i))°").font(.system(size: 10, weight: .medium)).foregroundStyle(.white)
+                            let text = Text("\(abs(i))°").font(.instrument(scale: textScale, size: 10, weight: .medium)).foregroundStyle(.white)
                             ctx.draw(text, at: CGPoint(x: lineLength / 2 + 15, y: y))
                             ctx.draw(text, at: CGPoint(x: -lineLength / 2 - 15, y: y))
                         }
