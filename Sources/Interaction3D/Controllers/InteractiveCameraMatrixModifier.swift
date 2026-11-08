@@ -13,6 +13,7 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
     var transforms: InteractionAxisTransforms
     var target: SIMD3<Float>
 
+    // Seeded from cameraMatrix on appear, not in init, because init runs on every parent update.
     @State
     private var interactionState = InteractionState()
 
@@ -26,8 +27,6 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
         self.mode = mode
         self.transforms = transforms ?? mode.defaultTransforms
         self.target = target
-        let synchronizer = CameraMatrixSynchronizer(target: target)
-        self._interactionState = State(initialValue: synchronizer.interactionState(from: cameraMatrix.wrappedValue) ?? InteractionState(target: target))
     }
 
     public func body(content: Content) -> some View {
@@ -48,7 +47,7 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
                 }
                 cameraMatrix = newMatrix
             }
-            .onChange(of: cameraMatrix) { _, newValue in
+            .onChange(of: cameraMatrix, initial: true) { _, newValue in
                 let expectedMatrix = synchronizer.cameraMatrix(from: interactionState)
                 guard !matricesMatch(newValue, expectedMatrix), let newState = synchronizer.interactionState(from: newValue) else {
                     return

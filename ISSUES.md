@@ -1435,15 +1435,18 @@ SwiftUI cannot compare closures, so these modifier inputs are treated as changed
 ## 69: InteractiveCameraMatrixModifier decomposes the camera matrix in init
 
 +++
-status: open
+status: closed
 priority: low
 kind: task
 labels: effort:xs, area:camera
 created: 2026-11-08T16:35:40Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-08T16:42:43Z
+closed: 2026-11-08T16:42:43Z
 +++
 
 `InteractiveCameraMatrixModifier.init` (`Controllers/InteractiveCameraMatrixModifier.swift`) builds a `CameraMatrixSynchronizer` and decomposes `cameraMatrix` to seed `State(initialValue:)`. The initializer runs every time the parent body is evaluated, which during interaction is every frame, but the result is only used the first time.
+
+- `2026-11-08T16:42:43Z`: Removed the decompose from init; interactionState is seeded by onChange(of: cameraMatrix, initial: true), which runs once on appear instead of on every parent update. Not runtime-verified in the demo; the first frame before onAppear uses the default state, and the reverse onChange does not write back because the seeded state reproduces the matrix. No unit test: modifier state lifecycle is not hostable in the unit test target.
 
 ---
 
