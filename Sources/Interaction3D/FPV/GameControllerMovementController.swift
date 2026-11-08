@@ -123,7 +123,7 @@ public final class GameControllerMovementController {
     private func configureExtendedGamepad(_ gamepad: GCExtendedGamepad) {
         gamepad.valueChangedHandler = { [weak self] _, _ in
             MainActor.assumeIsolated {
-                self?.lastInputTimestamp = Date()
+                self?.lastInputTimestamp = .now
             }
         }
     }
@@ -131,7 +131,7 @@ public final class GameControllerMovementController {
     private func configureMicroGamepad(_ gamepad: GCMicroGamepad) {
         gamepad.valueChangedHandler = { [weak self] _, _ in
             MainActor.assumeIsolated {
-                self?.lastInputTimestamp = Date()
+                self?.lastInputTimestamp = .now
             }
         }
         gamepad.allowsRotation = true
@@ -225,7 +225,7 @@ public final class GameControllerMovementController {
         }
 
         if let snapshot = controller.extendedGamepad?.capture() {
-            lastInputTimestamp = Date()
+            lastInputTimestamp = .now
             let move = SIMD2(Float(snapshot.leftThumbstick.xAxis.value), Float(snapshot.leftThumbstick.yAxis.value))
             let look = SIMD2(Float(snapshot.rightThumbstick.xAxis.value), Float(snapshot.rightThumbstick.yAxis.value))
             let altitude = Float(snapshot.rightShoulder.value) - Float(snapshot.leftShoulder.value)
@@ -233,7 +233,7 @@ public final class GameControllerMovementController {
         }
 
         if let snapshot = controller.microGamepad?.capture() {
-            lastInputTimestamp = Date()
+            lastInputTimestamp = .now
             let move = SIMD2(Float(snapshot.dpad.xAxis.value), Float(snapshot.dpad.yAxis.value))
             return (move, .zero, 0, true)
         }

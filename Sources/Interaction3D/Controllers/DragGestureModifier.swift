@@ -38,7 +38,7 @@ public struct DragGestureModifier: ViewModifier {
     private var dominantAxis: DraggableValueAxis?
 
     @State
-    private var lastEventTime: TimeInterval?
+    private var lastEventTime: ContinuousClock.Instant?
 
     var minimumDistance: Double = 10
     var predictedThreshold: Double = 10
@@ -121,7 +121,7 @@ public struct DragGestureModifier: ViewModifier {
                     dominantAxis = nil
                 }
 
-                lastEventTime = Date().timeIntervalSinceReferenceDate
+                lastEventTime = .now
             }
             .onEnded { gesture in
                 #if os(macOS)
@@ -137,7 +137,7 @@ public struct DragGestureModifier: ViewModifier {
                 }
 
                 // Check if enough time has passed since last event
-                if let lastEventTime, Date.timeIntervalSinceReferenceDate - lastEventTime > animationMaxDelay {
+                if let lastEventTime, lastEventTime.duration(to: .now) > .seconds(animationMaxDelay) {
                     // Reset without animation
                     state.startLocation = .zero
                     state.currentLocation = .zero

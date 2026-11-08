@@ -1295,12 +1295,13 @@ closed: 2026-11-08T16:38:09Z
 ## 62: Elapsed-time measurements use wall-clock Date()
 
 +++
-status: open
+status: closed
 priority: low
 kind: bug
 labels: effort:s, area:swiftui
 created: 2026-11-08T16:34:16Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-08T16:41:00Z
+closed: 2026-11-08T16:41:00Z
 +++
 
 Velocity and inactivity timing use `Date()` / `Date().timeIntervalSinceReferenceDate`, which jumps when the system clock changes:
@@ -1309,6 +1310,8 @@ Velocity and inactivity timing use `Date()` / `Date().timeIntervalSinceReference
 - `Support/DraggableValueViewModifier.swift:80,108`
 - `Support/NewDraggableValueViewModifier.swift:59,86`
 - `FPV/GameControllerMovementController.swift:126,134,228,236`
+
+- `2026-11-08T16:41:00Z`: Drag inactivity timing now uses ContinuousClock.Instant (monotonic) in DragGestureModifier and both DraggableValue modifiers. GameControllerMovementController.lastInputTimestamp stays a Date (it is a public 'when' timestamp, not used for elapsed time) and now uses Date.now. No unit test: the timing lives inside gesture callbacks and a wall-clock jump is not reproducible in the unit test target.
 
 ---
 

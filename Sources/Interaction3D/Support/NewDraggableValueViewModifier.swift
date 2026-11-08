@@ -28,7 +28,7 @@ struct NewDraggableValueViewModifier: ViewModifier {
     private var initialValue: Double?
 
     @State
-    private var lastEventTime: TimeInterval?
+    private var lastEventTime: ContinuousClock.Instant?
 
     init(value: Binding<Double>, axis: DraggableValueAxis, minimimDragDistance: Double = 10, predictedThreshold: Double = 10, animationMaxDelay: TimeInterval = 0.2, gestureKind: GestureKind = .drag) {
         self._value = value
@@ -56,7 +56,7 @@ struct NewDraggableValueViewModifier: ViewModifier {
                     initialValue = value
                 }
                 value = newValue(for: gesture.translation)
-                lastEventTime = Date().timeIntervalSinceReferenceDate
+                lastEventTime = .now
             }
             .onEnded { gesture in
                 defer {
@@ -64,7 +64,7 @@ struct NewDraggableValueViewModifier: ViewModifier {
                     lastEventTime = nil
                 }
                 let newValue = newValue(for: gesture.predictedEndTranslation)
-                if let lastEventTime, Date.timeIntervalSinceReferenceDate - lastEventTime > animationMaxDelay {
+                if let lastEventTime, lastEventTime.duration(to: .now) > .seconds(animationMaxDelay) {
                     return
                 }
                 guard abs(newValue - value) >= predictedThreshold else {
@@ -83,7 +83,7 @@ struct NewDraggableValueViewModifier: ViewModifier {
                     initialValue = value
                 }
                 value = newValue(for: gesture.magnification)
-                lastEventTime = Date().timeIntervalSinceReferenceDate
+                lastEventTime = .now
             }
             .onEnded { gesture in
                 defer {
@@ -92,7 +92,7 @@ struct NewDraggableValueViewModifier: ViewModifier {
                 }
 
                 let newValue = newValue(for: gesture.magnification)
-                if let lastEventTime, Date.timeIntervalSinceReferenceDate - lastEventTime > animationMaxDelay {
+                if let lastEventTime, lastEventTime.duration(to: .now) > .seconds(animationMaxDelay) {
                     return
                 }
                 guard abs(newValue - value) >= predictedThreshold else {
