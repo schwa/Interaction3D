@@ -198,6 +198,41 @@ import Testing
 }
 
 @MainActor
+@Test func fpvExtraControls() {
+    var controller = FPVMovementController()
+    controller.process(event: .adjustSpeed(steps: 1))
+    #expect(abs(controller.speed - 12.5) < 0.0001)
+
+    controller.speed = 10
+    controller.process(event: .extraKeyboardState(roll: 0, isSlow: true, isLookHeld: true))
+    controller.process(event: .keyboardState(move: [0, 1], look: .zero, altitude: 0, isFast: false))
+    controller.update(deltaTime: 1)
+    #expect(abs(simd_length(controller.movementController.transform.columns.3.xyz) - 2.5) < 0.0001)
+
+    controller.reset()
+    controller.process(event: .extraKeyboardState(roll: 0, isSlow: false, isLookHeld: false))
+    controller.process(event: .keyboardState(move: [0, 1], look: .zero, altitude: 1, isFast: false))
+    controller.process(event: .look(deltaX: 10, deltaY: 10))
+    controller.update(deltaTime: 1)
+    #expect(controller.movementController.transform == matrix_identity_float4x4)
+
+    controller.reset()
+    controller.process(event: .extraKeyboardState(roll: 1, isSlow: false, isLookHeld: true))
+    controller.update(deltaTime: 1)
+    #expect(controller.roll == 0)
+    controller.isRollEnabled = true
+    controller.process(event: .extraKeyboardState(roll: 1, isSlow: false, isLookHeld: true))
+    controller.update(deltaTime: 0.5)
+    // Rolling right tilts the camera's right vector down.
+    #expect(controller.movementController.transform.columns.0.y < 0)
+
+    var copy = FPVMovementController()
+    copy.isRollEnabled = true
+    copy.setPose(controller.movementController.transform)
+    #expect(abs(copy.roll - controller.roll) < 0.0001)
+}
+
+@MainActor
 @Test func fpvMovementStartsFromExistingPose() {
     let yaw = simd_float4x4(simd_quatf(angle: 0.7, axis: [0, 1, 0]))
     let pitch = simd_float4x4(simd_quatf(angle: -0.3, axis: [1, 0, 0]))

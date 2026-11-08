@@ -1115,11 +1115,13 @@ Actual: nothing happens until the view is clicked.
 ## 52: FPV is missing common 3D navigation controls
 
 +++
-status: new
+status: closed
 priority: low
 kind: enhancement
 labels: fpv
 created: 2026-11-08T06:50:23Z
+updated: 2026-11-08T07:02:27Z
+closed: 2026-11-08T07:02:27Z
 +++
 
 FPV keyboard/mouse navigation (`fpvMovement`) supports WASD, Q/E down/up, arrow-key look and Shift for fast movement. Several controls common in 3D editors and games are missing:
@@ -1132,5 +1134,25 @@ FPV keyboard/mouse navigation (`fpvMovement`) supports WASD, Q/E down/up, arrow-
 - **Hold-to-look:** look and move only while the right mouse button is held (Unity/Unreal scene views), which avoids permanent mouse capture.
 
 Some of these overlap or conflict (Ctrl for slow vs down, Q/E for altitude vs roll), so not all can be on at once.
+
+---
+
+## 53: Clients have no two-way way to toggle FPV mouse look
+
++++
+status: new
+priority: low
+kind: enhancement
+labels: fpv
+created: 2026-11-08T06:54:36Z
+updated: 2026-11-08T06:54:41Z
++++
+
+The library no longer adds a ⌘T shortcut for mouse look (removed in #44), but clients that want such a toggle have no convenient way to build one. `FPVMovementSettings.isMouseLookEnabled` is a one-way value: the client cannot observe the current state, and the toolbar capture/release state lives in private `WASDController` state.
+
+The demos (e.g. WorldView via `showsControls`) relied on the library-provided toggle and now have no ⌘T toggle.
+
+## Proposed fix (per Jonathan)
+Expose mouse look state as a `@Binding` (or similar) so clients can wire their own shortcut, and have the demos add their own ⌘T shortcut.
 
 ---

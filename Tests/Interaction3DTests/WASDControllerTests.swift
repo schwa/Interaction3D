@@ -27,4 +27,38 @@ import Testing
     #expect(!state.isFast)
 }
 
+@MainActor
+@Test func wasdControllerIgnoresExtraKeysUnlessOptedIn() {
+    let controller = WASDController()
+    controller.isKeyPressed = { _ in true }
+    controller.isRightMouseButtonPressed = { false }
+    #expect(controller.keyboardState().altitude == 0)
+    let extra = controller.extraKeyboardState()
+    #expect(extra.roll == 0)
+    #expect(!extra.isSlow)
+    #expect(extra.isLookHeld)
+    #expect(controller.speedKeySteps() == 0)
+    #expect(!controller.isResetTriggered())
+}
+
+@MainActor
+@Test func wasdControllerReadsExtraKeysWhenOptedIn() {
+    let controller = WASDController()
+    controller.extraControls = .all
+    var pressed: Set<GCKeyCode> = [.keyC, .leftAlt, .spacebar, .equalSign, .home]
+    controller.isKeyPressed = { pressed.contains($0) }
+    controller.isRightMouseButtonPressed = { false }
+    #expect(controller.keyboardState().altitude == 1)
+    let extra = controller.extraKeyboardState()
+    #expect(extra.roll == 1)
+    #expect(extra.isSlow)
+    #expect(!extra.isLookHeld)
+    #expect(controller.speedKeySteps() == 1)
+    #expect(controller.speedKeySteps() == 0)
+    #expect(controller.isResetTriggered())
+    #expect(!controller.isResetTriggered())
+    pressed = [.leftControl]
+    #expect(controller.keyboardState().altitude == -1)
+}
+
 #endif

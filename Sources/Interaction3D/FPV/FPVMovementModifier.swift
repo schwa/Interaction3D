@@ -10,6 +10,10 @@ public struct FPVMovementSettings: Equatable, Sendable {
     public var keyboardTurnSpeed: Float
     public var isMouseLookEnabled: Bool
     public var isFreeFlightEnabled: Bool
+    public var extraControls: FPVExtraControls
+    public var slowSpeedMultiplier: Float
+    public var speedAdjustmentFactor: Float
+    public var rollSpeed: Float
 
     public init(
         speed: Float = 10,
@@ -18,8 +22,16 @@ public struct FPVMovementSettings: Equatable, Sendable {
         controllerTurnSpeed: Float = .pi,
         keyboardTurnSpeed: Float = .pi / 2,
         isMouseLookEnabled: Bool = true,
-        isFreeFlightEnabled: Bool = false
+        isFreeFlightEnabled: Bool = false,
+        extraControls: FPVExtraControls = [],
+        slowSpeedMultiplier: Float = 0.25,
+        speedAdjustmentFactor: Float = 1.25,
+        rollSpeed: Float = .pi / 2
     ) {
+        self.extraControls = extraControls
+        self.slowSpeedMultiplier = slowSpeedMultiplier
+        self.speedAdjustmentFactor = speedAdjustmentFactor
+        self.rollSpeed = rollSpeed
         self.isFreeFlightEnabled = isFreeFlightEnabled
         self.isMouseLookEnabled = isMouseLookEnabled
         self.speed = speed
@@ -67,7 +79,7 @@ public struct FPVMovementModifier: ViewModifier {
             .onChange(of: isFocused, initial: true) {
                 wasdController.isKeyboardEnabled = isFocused
             }
-            .disableWASDKeys()
+            .disableWASDKeys(extraControls: settings.extraControls)
             .toolbar {
                 if showsControls {
                     toolbarContent
@@ -81,6 +93,11 @@ public struct FPVMovementModifier: ViewModifier {
                 fpvController.keyboardTurnSpeed = settings.keyboardTurnSpeed
                 fpvController.mouseTrackingEnabled = settings.isMouseLookEnabled
                 fpvController.isFreeFlightEnabled = settings.isFreeFlightEnabled
+                fpvController.slowSpeedMultiplier = settings.slowSpeedMultiplier
+                fpvController.speedAdjustmentFactor = settings.speedAdjustmentFactor
+                fpvController.rollSpeed = settings.rollSpeed
+                fpvController.isRollEnabled = settings.extraControls.contains(.roll)
+                wasdController.extraControls = settings.extraControls
                 if !settings.isMouseLookEnabled {
                     wasdController.releaseMouse()
                 }

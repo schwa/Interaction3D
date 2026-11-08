@@ -14,9 +14,13 @@ public struct FPVMovementController {
     private var keyboardPitchAxis: Float = 0
     private var keyboardAltitudeAxis: Float = 0
     private var isFast = false
+    private var keyboardRollAxis: Float = 0
+    private var isSlow = false
+    private var isLookHeld = true
 
     private var yaw: Float = 0
     public private(set) var pitch: Float = 0
+    public private(set) var roll: Float = 0
     private var position: SIMD3<Float> = .zero
 
     private let minPitch: Float = -.pi / 2 + 0.01
@@ -30,6 +34,20 @@ public struct FPVMovementController {
     public var fastSpeedMultiplier: Float = 4
     // Free flight moves along the full view direction, including pitch.
     public var isFreeFlightEnabled = false
+    public var slowSpeedMultiplier: Float = 0.25
+    public var speedAdjustmentFactor: Float = 1.25
+    public var speedRange: ClosedRange<Float> = 0.01...100_000
+    public var rollSpeed: Float = .pi / 2
+    // When false, roll is forced to zero and dropped from incoming poses.
+    public var isRollEnabled = false {
+        didSet {
+            if !isRollEnabled {
+                roll = 0
+                keyboardRollAxis = 0
+                updateTransform()
+            }
+        }
+    }
 
     public init() {
         updateTransform()
@@ -39,13 +57,19 @@ public struct FPVMovementController {
         setPose(transform)
     }
 
-    // Roll and scale are dropped; FPV keeps the camera upright.
+    // Scale is dropped. Roll is dropped unless isRollEnabled.
     public mutating func setPose(_ transform: simd_float4x4) {
         let forward = -SIMD3<Float>(transform.columns.2.x, transform.columns.2.y, transform.columns.2.z)
         let direction = length(forward) > 0 ? normalize(forward) : SIMD3<Float>(0, 0, -1)
         yaw = atan2(-direction.x, -direction.z)
         pitch = asin(max(-1, min(1, direction.y)))
         clampPitch()
+        roll = 0
+        if isRollEnabled {
+            let uprightBasis = simd_float3x3(simd_quatf(angle: yaw, axis: [0, 1, 0]) * simd_quatf(angle: pitch, axis: [1, 0, 0]))
+            let right = SIMD3<Float>(transform.columns.0.x, transform.columns.0.y, transform.columns.0.z)
+            roll = atan2(dot(right, uprightBasis.columns.1), dot(right, uprightBasis.columns.0))
+        }
         position = SIMD3<Float>(transform.columns.3.x, transform.columns.3.y, transform.columns.3.z)
         updateTransform()
     }
@@ -63,7 +87,7 @@ public struct FPVMovementController {
         case .look(let deltaX, let deltaY, let source):
             switch source {
             case .mouse:
-                guard mouseTrackingEnabled else { break }
+                guard mouseTrackingEnabled, isLookHeld else { break }
                 // Deltas use GCMouse convention: +X right, +Y up.
                 yaw -= deltaX * mouseSensitivity
                 pitch += deltaY * mouseSensitivity
@@ -85,6 +109,15 @@ public struct FPVMovementController {
             keyboardPitchAxis = look.y
             keyboardAltitudeAxis = altitude
             self.isFast = isFast
+        case .extraKeyboardState(let roll, let isSlow, let isLookHeld):
+            keyboardRollAxis = isRollEnabled ? roll : 0
+            self.isSlow = isSlow
+            self.isLookHeld = isLookHeld
+        case .adjustSpeed(let steps):
+            speed = min(max(speed * pow(speedAdjustmentFactor, steps), speedRange.lowerBound), speedRange.upperBound)
+        case .reset:
+            reset()
+            return
         }
 
         updateTransform()
@@ -105,8 +138,11 @@ public struct FPVMovementController {
         keyboardPitchAxis = 0
         keyboardAltitudeAxis = 0
         isFast = false
+        keyboardRollAxis = 0
+        isSlow = false
         yaw = 0
         pitch = 0
+        roll = 0
         position = .zero
         movementController.linearVelocity = .zero
         movementController.angularVelocity = .zero
@@ -121,22 +157,36 @@ public struct FPVMovementController {
         yaw += (controllerYawAxis * controllerTurnSpeed + keyboardYawAxis * keyboardTurnSpeed) * deltaTime
         pitch += (controllerPitchAxis * controllerTurnSpeed + keyboardPitchAxis * keyboardTurnSpeed) * deltaTime
         clampPitch()
+        // Positive roll axis rolls right, which is a negative rotation about +Z.
+        roll -= keyboardRollAxis * rollSpeed * deltaTime
 
-        var movementInput = keyboardAxes + controllerAxes
+        let keyboardMove = isLookHeld ? keyboardAxes : .zero
+        let keyboardAltitude = isLookHeld ? keyboardAltitudeAxis : 0
+        var movementInput = keyboardMove + controllerAxes
         let magnitude = length(movementInput)
         if magnitude > 1 {
             movementInput /= magnitude
         }
 
-        let sinYaw = sin(yaw)
-        let cosYaw = cos(yaw)
-        let right = SIMD3<Float>(cosYaw, 0, -sinYaw)
-        let forward = isFreeFlightEnabled
-            ? SIMD3<Float>(-sinYaw * cos(pitch), sin(pitch), -cosYaw * cos(pitch))
-            : SIMD3<Float>(-sinYaw, 0, -cosYaw)
-        let currentSpeed = isFast ? speed * fastSpeedMultiplier : speed
+        let right: SIMD3<Float>
+        let forward: SIMD3<Float>
+        if isFreeFlightEnabled {
+            let basis = simd_float3x3(orientation)
+            right = basis.columns.0
+            forward = -basis.columns.2
+        } else {
+            right = SIMD3<Float>(cos(yaw), 0, -sin(yaw))
+            forward = SIMD3<Float>(-sin(yaw), 0, -cos(yaw))
+        }
+        var currentSpeed = speed
+        if isFast {
+            currentSpeed *= fastSpeedMultiplier
+        }
+        if isSlow {
+            currentSpeed *= slowSpeedMultiplier
+        }
         let deltaPosition = (right * movementInput.x + forward * movementInput.y) * currentSpeed * deltaTime
-        let altitudeInput = max(-1, min(1, controllerAltitudeAxis + keyboardAltitudeAxis))
+        let altitudeInput = max(-1, min(1, controllerAltitudeAxis + keyboardAltitude))
 
         position += deltaPosition
         position.y += altitudeInput * currentSpeed * deltaTime
@@ -156,10 +206,12 @@ public struct FPVMovementController {
         }
     }
 
+    private var orientation: simd_quatf {
+        simd_quatf(angle: yaw, axis: [0, 1, 0]) * simd_quatf(angle: pitch, axis: [1, 0, 0]) * simd_quatf(angle: roll, axis: [0, 0, 1])
+    }
+
     private mutating func updateTransform() {
-        let yawRotation = simd_float4x4(simd_quatf(angle: yaw, axis: SIMD3<Float>(0, 1, 0)))
-        let pitchRotation = simd_float4x4(simd_quatf(angle: pitch, axis: SIMD3<Float>(1, 0, 0)))
-        var transform = yawRotation * pitchRotation
+        var transform = simd_float4x4(orientation)
         transform.columns.3 = SIMD4<Float>(position.x, position.y, position.z, 1)
         movementController.transform = transform
     }
