@@ -35,7 +35,7 @@ import Testing
     #expect(controller.edgePan() == .zero)
     controller.pointerLocation = CGPoint(x: 0.5, y: 0.5)
     #expect(controller.edgePan() == .zero)
-    controller.pointerLocation = CGPoint(x: 0, y: 0)
+    controller.pointerLocation = .zero
     #expect(controller.edgePan() == [-1, 1])
     controller.pointerLocation = CGPoint(x: 1, y: 1)
     #expect(controller.edgePan() == [1, -1])
