@@ -1501,3 +1501,28 @@ closed: 2026-11-08T16:43:02Z
 - `2026-11-08T16:43:02Z`: AnimatedSizeModifier now uses @Animatable with @AnimatableIgnored on the callback. No test: equivalent synthesized conformance; momentum animation not unit-testable.
 
 ---
+
+## 72: FPV movement has no walk mode with gravity, jumping, and Minecraft-style flying
+
++++
+status: new
+priority: low
+kind: feature
+created: 2026-11-09T03:16:10Z
+updated: 2026-11-09T03:16:33Z
++++
+
+FPV movement only supports flying (or flat movement when free flight is off). There is no walk mode: the camera does not fall, has no ground contact, and cannot jump.
+
+Missing, each one opt-in (for example as FPVExtraControls options or settings), so existing FPV behavior does not change:
+- Gravity pulling the camera down when not on the ground.
+- Ground contact so the camera stops at a floor height, supplied by the client (for example a fixed height or a height-at-position callback).
+- Eye height above the ground.
+- Jumping (for example Space while on the ground).
+- Minecraft-style flying: double-tap jump to toggle flight on and off. While flying, gravity is off, jump rises and a down key descends, and movement stays level (looking up or down does not change altitude). Landing on the ground ends flight.
+
+Jumping and Minecraft-style flying only make sense with gravity on. This should be part of the existing FPV movement (FPVMovementSettings / FPVMovementController), not a separate controller.
+
+Space is already used for up by FPVExtraControls.alternativeVertical, so the key bindings conflict.
+
+---
