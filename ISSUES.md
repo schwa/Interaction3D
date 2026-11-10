@@ -1753,12 +1753,13 @@ Controls built on one feel different from controls built on the other, and featu
 ## 83: RTS camera has no app-facing handle like FPVNavigator
 
 +++
-status: open
+status: closed
 priority: medium
 kind: enhancement
 labels: effort:m, area:camera
 created: 2026-11-10T04:50:19Z
-updated: 2026-11-10T04:53:23Z
+updated: 2026-11-10T05:00:00Z
+closed: 2026-11-10T05:00:00Z
 +++
 
 FPV movement has `FPVNavigator` (#80): the app can feed outside input, pause movement for an autopilot and hand the camera back, and drive updates from its own frame loop.

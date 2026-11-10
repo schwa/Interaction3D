@@ -90,19 +90,8 @@ public struct RTSMovementSettings: Equatable, Sendable {
 }
 
 public struct RTSMovementModifier: ViewModifier {
-    @Binding
-    var pose: RTSCameraPose
-
-    let settings: RTSMovementSettings
-
-    @State
-    private var rtsController = RTSController()
-
-    @State
-    private var initialPose: RTSCameraPose?
-
-    @State
-    private var input = Input()
+    let navigator: RTSNavigator
+    let updatesAutomatically: Bool
 
     @FocusState
     private var isFocused: Bool
@@ -121,17 +110,10 @@ public struct RTSMovementModifier: ViewModifier {
         var rotation: Angle = .zero
     }
 
-    private struct Input {
-        var pan: SIMD2<Float> = .zero
-        var edgePan: SIMD2<Float> = .zero
-        var rotate: Float = 0
-        var zoom: Float = 0
-        var isFast = false
-    }
-
-    public init(pose: Binding<RTSCameraPose>, settings: RTSMovementSettings = .init()) {
-        self._pose = pose
-        self.settings = settings
+    // updatesAutomatically: false means the app calls navigator.update(deltaTime:) from its own frame loop.
+    public init(navigator: RTSNavigator, updatesAutomatically: Bool = true) {
+        self.navigator = navigator
+        self.updatesAutomatically = updatesAutomatically
     }
 
     public func body(content: Content) -> some View {
@@ -141,10 +123,10 @@ public struct RTSMovementModifier: ViewModifier {
                 .onContinuousHover { phase in
                     switch phase {
                     case .active(let location):
-                        rtsController.pointerLocation = CGPoint(x: location.x / proxy.size.width, y: location.y / proxy.size.height)
-                        rtsController.isScrollAllowed = scrollFilter?.accepts(location) ?? true
+                        navigator.pointerLocation = CGPoint(x: location.x / proxy.size.width, y: location.y / proxy.size.height)
+                        navigator.isScrollAllowed = scrollFilter?.accepts(location) ?? true
                     case .ended:
-                        rtsController.pointerLocation = nil
+                        navigator.pointerLocation = nil
                     }
                 }
                 .contentShape(Rectangle())
@@ -158,17 +140,15 @@ public struct RTSMovementModifier: ViewModifier {
             isFocused = true
         }
         .onChange(of: isFocused, initial: true) {
-            rtsController.isKeyboardEnabled = isFocused
-        }
-        .onChange(of: settings.edgePanMargin, initial: true) {
-            rtsController.edgePanMargin = settings.edgePanMargin
+            navigator.isKeyboardEnabled = isFocused
         }
         .disableKeys(Self.handledKeys)
-        .task {
-            initialPose = initialPose ?? pose
+        .task { await navigator.runInput() }
+        .task(id: updatesAutomatically) {
+            if updatesAutomatically {
+                await navigator.runUpdates()
+            }
         }
-        .task { await handleEvents() }
-        .task { await updateMovement() }
     }
 
     private static let handledKeys: Set<KeyEquivalent> = [
@@ -178,86 +158,45 @@ public struct RTSMovementModifier: ViewModifier {
         .upArrow, .downArrow, .leftArrow, .rightArrow, .home
     ]
 
-    private func handleEvents() async {
-        for await event in rtsController.events {
-            switch event {
-            case let .keyboardState(pan, rotate, zoom, isFast):
-                input.pan = pan
-                input.rotate = rotate
-                input.zoom = zoom
-                input.isFast = isFast
-                input.edgePan = .zero
-            case .edgePan(let value):
-                input.edgePan = value
-            case .zoom(let steps):
-                pose.distance = clampedDistance(pose.distance * pow(settings.zoomStepFactor, -steps))
-            case .reset:
-                if let initialPose {
-                    pose = initialPose
-                }
-            }
-        }
-    }
-
-    private func updateMovement() async {
-        let clock = ContinuousClock()
-        var previousUpdate = clock.now
-        for await _ in AsyncTimerSequence(interval: .milliseconds(8), clock: clock) {
-            let updateTime = clock.now
-            let components = previousUpdate.duration(to: updateTime).components
-            previousUpdate = updateTime
-            update(deltaTime: Float(components.seconds) + Float(components.attoseconds) / 1e18)
-        }
-    }
-
-    private func update(deltaTime: Float) {
-        let speedMultiplier = input.isFast ? settings.fastSpeedMultiplier : 1
-        var pan = input.pan + input.edgePan
-        pan = simd_clamp(pan, SIMD2<Float>(repeating: -1), SIMD2<Float>(repeating: 1))
-        guard pan != .zero || input.rotate != 0 || input.zoom != 0 else {
-            return
-        }
-        var newPose = pose
-        newPose.yaw -= input.rotate * settings.rotateSpeed * speedMultiplier * deltaTime
-        if pan != .zero {
-            newPose = newPose.panned(by: pan * settings.panSpeed * speedMultiplier * deltaTime)
-        }
-        if input.zoom != 0 {
-            newPose.distance = clampedDistance(newPose.distance * pow(settings.zoomSpeed, -input.zoom * deltaTime))
-        }
-        pose = newPose
-    }
-
     // Drag pans; Option-drag (macOS) or two-finger drag (iOS) orbits; pinch zooms; twist rotates. All coast on release.
     private func gestureModifiers(viewHeight: CGFloat) -> some ViewModifier {
         RTSGestures(
             onPan: { translation in
-                let delta = Self.viewFraction(translation, since: gestures.panTranslation, viewHeight: viewHeight)
+                navigator.setGesture(.pan, isActive: true)
+                navigator.grab(Self.viewFraction(translation, since: gestures.panTranslation, viewHeight: viewHeight))
                 gestures.panTranslation = translation
-                pose = pose.grabbed(translation: delta)
             },
-            onPanEnded: { gestures.panTranslation = .zero },
+            onPanEnded: {
+                gestures.panTranslation = .zero
+                navigator.setGesture(.pan, isActive: false)
+            },
             onOrbit: { translation in
-                let delta = Self.viewFraction(translation, since: gestures.orbitTranslation, viewHeight: viewHeight)
+                navigator.setGesture(.orbit, isActive: true)
+                navigator.orbit(Self.viewFraction(translation, since: gestures.orbitTranslation, viewHeight: viewHeight))
                 gestures.orbitTranslation = translation
-                pose = pose.orbited(translation: delta, speed: settings.orbitSpeed, pitchRange: settings.pitchRange)
             },
-            onOrbitEnded: { gestures.orbitTranslation = .zero },
+            onOrbitEnded: {
+                gestures.orbitTranslation = .zero
+                navigator.setGesture(.orbit, isActive: false)
+            },
             onMagnify: { magnification in
-                let ratio = magnification / gestures.magnification
+                navigator.setGesture(.magnify, isActive: true)
+                navigator.magnify(by: magnification / gestures.magnification)
                 gestures.magnification = magnification
-                guard ratio > 0 else {
-                    return
-                }
-                pose.distance = clampedDistance(pose.distance / Float(ratio))
             },
-            onMagnifyEnded: { gestures.magnification = 1 },
+            onMagnifyEnded: {
+                gestures.magnification = 1
+                navigator.setGesture(.magnify, isActive: false)
+            },
             onRotate: { rotation in
-                let delta = rotation - gestures.rotation
+                navigator.setGesture(.rotate, isActive: true)
+                navigator.rotate(by: Float((rotation - gestures.rotation).radians))
                 gestures.rotation = rotation
-                pose.yaw += Float(delta.radians)
             },
-            onRotateEnded: { gestures.rotation = .zero }
+            onRotateEnded: {
+                gestures.rotation = .zero
+                navigator.setGesture(.rotate, isActive: false)
+            }
         )
     }
 
@@ -267,9 +206,44 @@ public struct RTSMovementModifier: ViewModifier {
         }
         return CGSize(width: (translation.width - previous.width) / viewHeight, height: (translation.height - previous.height) / viewHeight)
     }
+}
 
-    private func clampedDistance(_ distance: Float) -> Float {
-        min(max(distance, settings.distanceRange.lowerBound), settings.distanceRange.upperBound)
+// RTS movement for a pose binding, with a navigator it owns.
+public struct RTSPoseModifier: ViewModifier {
+    @Binding
+    var pose: RTSCameraPose
+
+    let settings: RTSMovementSettings
+
+    @State
+    private var navigator = RTSNavigator()
+
+    @State
+    private var hasSeededHome = false
+
+    public init(pose: Binding<RTSCameraPose>, settings: RTSMovementSettings = .init()) {
+        self._pose = pose
+        self.settings = settings
+    }
+
+    public func body(content: Content) -> some View {
+        content
+            .modifier(RTSMovementModifier(navigator: navigator))
+            .onChange(of: settings, initial: true) {
+                navigator.settings = settings
+            }
+            .onChange(of: pose, initial: true) {
+                if !hasSeededHome {
+                    navigator.homePose = pose
+                    hasSeededHome = true
+                }
+                if pose != navigator.pose {
+                    navigator.pose = pose
+                }
+            }
+            .onChange(of: navigator.pose) {
+                pose = navigator.pose
+            }
     }
 }
 
@@ -293,7 +267,12 @@ private struct RTSGestures: ViewModifier {
 }
 
 public extension View {
+    // Settings, input and pose live on the navigator.
+    func rtsMovement(_ navigator: RTSNavigator, updatesAutomatically: Bool = true) -> some View {
+        modifier(RTSMovementModifier(navigator: navigator, updatesAutomatically: updatesAutomatically))
+    }
+
     func rtsMovement(pose: Binding<RTSCameraPose>, settings: RTSMovementSettings = .init()) -> some View {
-        modifier(RTSMovementModifier(pose: pose, settings: settings))
+        modifier(RTSPoseModifier(pose: pose, settings: settings))
     }
 }
