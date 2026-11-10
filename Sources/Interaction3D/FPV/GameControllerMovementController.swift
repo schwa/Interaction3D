@@ -6,12 +6,12 @@ import simd
 
 @Observable
 @MainActor
-final class GameControllerMovementController {
+public final class GameControllerMovementController {
     @ObservationIgnored
     private let eventContinuation: AsyncStream<NavigationEvent>.Continuation
 
     @ObservationIgnored
-    let events: AsyncStream<NavigationEvent>
+    public let events: AsyncStream<NavigationEvent>
 
     @ObservationIgnored
     private var timerTask: Task<Void, Never>?
@@ -32,9 +32,9 @@ final class GameControllerMovementController {
         }
     }
 
-    private(set) var controllerDisplayName: String = "No Controller"
-    private(set) var isControllerConnected: Bool = false
-    private(set) var lastInputTimestamp: Date?
+    public private(set) var controllerDisplayName: String = "No Controller"
+    public private(set) var isControllerConnected: Bool = false
+    public private(set) var lastInputTimestamp: Date?
 
     private let movementTransformer: MovementTransformer
     private let lookTransformer: RotationTransformer
@@ -45,7 +45,7 @@ final class GameControllerMovementController {
         return AnyTransformer(pipeline)
     }
 
-    init(
+    public init(
         movementTransformer: MovementTransformer = MovementTransformer(deadzone: 0.05, scale: 1, curve: .quadratic, reverseY: false),
         lookTransformer: RotationTransformer = RotationTransformer(deadzone: 0.05, scale: 1, curve: .quadratic, reverseX: false, reverseY: false),
         altitudeTransformer: AnyTransformer<Float, Float>? = nil

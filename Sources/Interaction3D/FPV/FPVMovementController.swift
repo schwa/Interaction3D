@@ -2,8 +2,8 @@ import Observation
 import simd
 
 @MainActor
-struct FPVMovementController {
-    var movementController = MovementController()
+public struct FPVMovementController {
+    public var movementController = MovementController()
 
     private var keyboardAxes: SIMD2<Float> = .zero
     private var controllerAxes: SIMD2<Float> = .zero
@@ -18,12 +18,12 @@ struct FPVMovementController {
     private var isSlow = false
     private var isLookHeld = true
     // Movement from outside the controller, for example an on-screen joystick. x is right, y is forward.
-    var externalAxes: SIMD2<Float> = .zero
+    public var externalAxes: SIMD2<Float> = .zero
     private var isJumpPressed = false
     private var lastJumpPressTime: Float?
     private var elapsedTime: Float = 0
 
-    var walkSettings: FPVWalkSettings? {
+    public var walkSettings: FPVWalkSettings? {
         didSet {
             if walkSettings == nil {
                 motionState = FPVMotionState()
@@ -31,31 +31,31 @@ struct FPVMovementController {
         }
     }
 
-    var hooks = FPVMovementHooks()
-    private(set) var motionState = FPVMotionState()
+    public var hooks = FPVMovementHooks()
+    public private(set) var motionState = FPVMotionState()
 
     private var yaw: Float = 0
-    private(set) var pitch: Float = 0
-    private(set) var roll: Float = 0
+    public private(set) var pitch: Float = 0
+    public private(set) var roll: Float = 0
     private var position: SIMD3<Float> = .zero
 
     private let minPitch: Float = -.pi / 2 + 0.01
     private let maxPitch: Float = .pi / 2 - 0.01
 
-    var speed: Float = 10.0
-    var mouseSensitivity: Float = 0.01
-    var mouseTrackingEnabled: Bool = true
-    var controllerTurnSpeed: Float = .pi
-    var keyboardTurnSpeed: Float = .pi / 2
-    var fastSpeedMultiplier: Float = 4
+    public var speed: Float = 10.0
+    public var mouseSensitivity: Float = 0.01
+    public var mouseTrackingEnabled: Bool = true
+    public var controllerTurnSpeed: Float = .pi
+    public var keyboardTurnSpeed: Float = .pi / 2
+    public var fastSpeedMultiplier: Float = 4
     // Free flight moves along the full view direction, including pitch.
-    var isFreeFlightEnabled = false
-    var slowSpeedMultiplier: Float = 0.25
-    var speedAdjustmentFactor: Float = 1.25
-    var speedRange: ClosedRange<Float> = 0.01...100_000
-    var rollSpeed: Float = .pi / 2
+    public var isFreeFlightEnabled = false
+    public var slowSpeedMultiplier: Float = 0.25
+    public var speedAdjustmentFactor: Float = 1.25
+    public var speedRange: ClosedRange<Float> = 0.01...100_000
+    public var rollSpeed: Float = .pi / 2
     // When false, roll is forced to zero and dropped from incoming poses.
-    var isRollEnabled = false {
+    public var isRollEnabled = false {
         didSet {
             if !isRollEnabled {
                 roll = 0
@@ -65,16 +65,16 @@ struct FPVMovementController {
         }
     }
 
-    init() {
+    public init() {
         updateTransform()
     }
 
-    init(transform: simd_float4x4) {
+    public init(transform: simd_float4x4) {
         setPose(transform)
     }
 
     // Scale is dropped. Roll is dropped unless isRollEnabled.
-    mutating func setPose(_ transform: simd_float4x4) {
+    public mutating func setPose(_ transform: simd_float4x4) {
         let forward = -SIMD3<Float>(transform.columns.2.x, transform.columns.2.y, transform.columns.2.z)
         let direction = length(forward) > 0 ? normalize(forward) : SIMD3<Float>(0, 0, -1)
         yaw = atan2(-direction.x, -direction.z)
@@ -90,7 +90,7 @@ struct FPVMovementController {
         updateTransform()
     }
 
-    mutating func process(event: NavigationEvent) {
+    public mutating func process(event: NavigationEvent) {
         switch event {
         case .axes(let forward, let sideways, let source):
             processAxes(SIMD2<Float>(sideways, forward), source: source)
@@ -126,12 +126,12 @@ struct FPVMovementController {
         updateTransform()
     }
 
-    var hasMovementInput: Bool {
+    public var hasMovementInput: Bool {
         length(keyboardAxes + controllerAxes + externalAxes) > 0.1 || keyboardAltitudeAxis != 0 || controllerAltitudeAxis != 0 || isJumpPressed
     }
 
     // Turns by angles in radians. Positive yaw turns right, positive pitch looks up.
-    mutating func look(yaw yawDelta: Float, pitch pitchDelta: Float) {
+    public mutating func look(yaw yawDelta: Float, pitch pitchDelta: Float) {
         yaw -= yawDelta
         pitch += pitchDelta
         clampPitch()
@@ -169,7 +169,7 @@ struct FPVMovementController {
         }
     }
 
-    mutating func update(deltaTime: Float) {
+    public mutating func update(deltaTime: Float) {
         elapsedTime += max(deltaTime, 0)
         applyContinuousInputs(deltaTime: max(deltaTime, 0))
         updateTransform()
@@ -193,7 +193,7 @@ struct FPVMovementController {
         }
     }
 
-    mutating func reset() {
+    public mutating func reset() {
         keyboardAxes = .zero
         controllerAxes = .zero
         externalAxes = .zero

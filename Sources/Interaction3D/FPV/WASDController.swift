@@ -6,12 +6,12 @@ import SwiftUI
 
 @Observable
 @MainActor
-final class WASDController {
+public final class WASDController {
     @ObservationIgnored
     private let eventContinuation: AsyncStream<NavigationEvent>.Continuation
 
     @ObservationIgnored
-    let events: AsyncStream<NavigationEvent>
+    public let events: AsyncStream<NavigationEvent>
 
     @ObservationIgnored
     private var mouseConnectTask: Task<Void, Never>?
@@ -25,14 +25,14 @@ final class WASDController {
     @ObservationIgnored
     private var mouseMonitor: Any?
 
-    var isMouseCaptured = false
+    public var isMouseCaptured = false
 
     // GCKeyboard is global, so the owning view must clear this when it loses focus.
     @ObservationIgnored
-    var isKeyboardEnabled = true
+    public var isKeyboardEnabled = true
 
     @ObservationIgnored
-    var extraControls: FPVExtraControls = []
+    public var extraControls: FPVExtraControls = []
 
     @ObservationIgnored
     var isKeyPressed: (GCKeyCode) -> Bool = { keyCode in
@@ -56,7 +56,7 @@ final class WASDController {
     @ObservationIgnored
     private var wasResetPressed = false
 
-    init() {
+    public init() {
         (events, eventContinuation) = AsyncStream.makeStream(of: NavigationEvent.self, bufferingPolicy: .bufferingNewest(32))
         setupMouseHandling()
         startTimerLoop()
@@ -219,7 +219,7 @@ final class WASDController {
     }
     #endif
 
-    func toggleMouseCapture() {
+    public func toggleMouseCapture() {
         if isMouseCaptured {
             releaseMouse()
         } else {
@@ -228,7 +228,7 @@ final class WASDController {
     }
 
     // Cursor capture is macOS-only; elsewhere these do nothing.
-    func captureMouse() {
+    public func captureMouse() {
         #if canImport(AppKit)
         guard !isMouseCaptured else {
             return
@@ -239,7 +239,7 @@ final class WASDController {
         #endif
     }
 
-    func releaseMouse() {
+    public func releaseMouse() {
         #if canImport(AppKit)
         guard isMouseCaptured else {
             return

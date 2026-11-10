@@ -1834,12 +1834,13 @@ Focus claiming and key claiming are repeated in the FPV, RTS and flight sim modi
 ## 87: FPV input building blocks are no longer public
 
 +++
-status: open
+status: closed
 priority: high
 kind: enhancement
 labels: effort:s, area:api
 created: 2026-11-10T04:50:19Z
-updated: 2026-11-10T04:53:23Z
+updated: 2026-11-10T04:55:21Z
+closed: 2026-11-10T04:55:21Z
 +++
 
 #80 made `WASDController`, `GameControllerMovementController`, `FPVMovementController`, `MovementController` and `NavigationEvent` internal so `FPVNavigator` is the only FPV entry point.

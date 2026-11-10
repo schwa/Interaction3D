@@ -1,10 +1,10 @@
-enum NavigationEvent: Sendable {
-    enum AxisSource: Sendable {
+public enum NavigationEvent: Sendable {
+    public enum AxisSource: Sendable {
         case keyboard
         case controller
     }
 
-    enum LookSource: Sendable {
+    public enum LookSource: Sendable {
         case mouse
         case controller
     }
