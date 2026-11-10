@@ -1526,3 +1526,23 @@ Jumping and Minecraft-style flying only make sense with gravity on. This should 
 Space is already used for up by FPVExtraControls.alternativeVertical, so the key bindings conflict.
 
 ---
+
+## 73: RTS controls have no touch input on iOS
+
++++
+status: new
+priority: medium
+kind: enhancement
+created: 2026-11-10T04:12:55Z
++++
+
+`RTSMovementModifier` / `RTSController` take input only from the keyboard (W A S D / arrows pan, Q/E rotate, R/F zoom, Shift hurries, Home resets) and from the cursor at the view edge (edge panning).
+
+On iOS without a hardware keyboard, the RTS camera has no input, so it can't be moved. Apps such as TinyTorii fall back to SceneView's orbit camera (drag to orbit, pinch to zoom) for their build camera on iPhone. That camera behaves differently from the RTS camera on macOS.
+
+Expected: the RTS camera can be panned, rotated and zoomed by touch on iOS.
+Actual: touch does nothing to the RTS pose.
+
+Unverified: whether the keys and edge panning work on iPad with a hardware keyboard and trackpad.
+
+---
