@@ -65,7 +65,7 @@ public struct WorldView<Content: View>: View {
                 }
                 .tool("Rotation Widget", group: .interaction, id: "rotation-widget", enabled: tools.contains(.rotationWidget)) { RotationWidgetToolModifier(cameraMatrix: $cameraMatrix) }
                 .tool("FPV", group: .interaction, id: "fpv-flight", enabled: tools.contains(.fpvFlight)) {
-                    FPVCameraMatrixModifier(cameraMatrix: $cameraMatrix, isMouseLookEnabled: $isMouseLookEnabled, showsControls: true)
+                    FPVCameraMatrixModifier(cameraMatrix: $cameraMatrix, isMouseLookEnabled: $isMouseLookEnabled, style: .movement(showsControls: true))
                 }
                 #if os(macOS)
                 .tool(
@@ -74,7 +74,7 @@ public struct WorldView<Content: View>: View {
                     id: "fpv-flight-sim",
                     enabled: tools.contains(.fpvFlightSim) && verticalFOV != nil
                 ) {
-                    FPVFlightSimModifier(cameraMatrix: $cameraMatrix, isMouseLookEnabled: $isMouseLookEnabled, verticalFOV: requiredVerticalFOV)
+                    FPVCameraMatrixModifier(cameraMatrix: $cameraMatrix, isMouseLookEnabled: $isMouseLookEnabled, style: .flightSim(verticalFOV: requiredVerticalFOV))
                 }
                 #endif
                 .tool("Off", group: .debug, id: "debug-off", enabled: tools.contains(.debugOverlay)) { EmptyModifier() }

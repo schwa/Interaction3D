@@ -1778,12 +1778,13 @@ FPV movement has `FPVNavigator` (#80): the app can feed outside input, pause mov
 ## 84: FPVFlightSimModifier does not use FPVNavigator
 
 +++
-status: open
+status: closed
 priority: low
 kind: enhancement
 labels: effort:m, area:camera
 created: 2026-11-10T04:50:19Z
-updated: 2026-11-10T04:53:23Z
+updated: 2026-11-10T05:07:24Z
+closed: 2026-11-10T05:07:24Z
 +++
 
 `FPVFlightSimModifier` connects `FPVMovementController`, `WASDController` and `GameControllerMovementController` itself, the way `FPVMovementModifier` did before #80.

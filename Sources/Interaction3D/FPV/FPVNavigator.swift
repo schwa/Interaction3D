@@ -79,6 +79,10 @@ public final class FPVNavigator {
         controller.movementController.linearVelocity
     }
 
+    public var angularVelocity: SIMD3<Float> {
+        controller.movementController.angularVelocity
+    }
+
     public var motionState: FPVMotionState {
         controller.motionState
     }

@@ -40,6 +40,24 @@ import Testing
     #expect(forward.x > 0.9)
 }
 
+#if os(macOS)
+import SwiftUI
+
+// #84: the flight sim takes a navigator, or settings and hooks like fpvMovement.
+@MainActor
+@Test func flightSimAcceptsNavigatorSettingsAndHooks() {
+    let navigator = FPVNavigator()
+    var hooks = FPVMovementHooks()
+    hooks.groundHeight = { _ in 0 }
+    _ = Color.clear.fpvFlightSim(navigator, verticalFOV: 45)
+    _ = Color.clear.fpvFlightSim(
+        cameraMatrix: .constant(matrix_identity_float4x4),
+        settings: FPVMovementSettings(walk: FPVWalkSettings()),
+        hooks: hooks
+    )
+}
+#endif
+
 @MainActor
 @Test func fpvNavigatorAppliesSettingsAndHooks() {
     let navigator = FPVNavigator()

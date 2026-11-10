@@ -109,42 +109,52 @@ struct FPVMovementModifier: ViewModifier {
 
 // FPV movement for a camera matrix binding, with a navigator it owns.
 struct FPVCameraMatrixModifier: ViewModifier {
+    enum Style {
+        case movement(showsControls: Bool)
+        #if os(macOS)
+        case flightSim(verticalFOV: CGFloat)
+        #endif
+    }
+
     @Binding
     var cameraMatrix: matrix_float4x4
 
-    @Binding
-    var isMouseLookEnabled: Bool
-
+    // nil leaves mouse look to the navigator (the flight sim panel toggles it).
+    let isMouseLookEnabled: Binding<Bool>?
     let settings: FPVMovementSettings
     let hooks: FPVMovementHooks
-    let showsControls: Bool
+    let style: Style
 
     @State
     private var navigator = FPVNavigator()
 
     init(
         cameraMatrix: Binding<matrix_float4x4>,
-        isMouseLookEnabled: Binding<Bool> = .constant(true),
+        isMouseLookEnabled: Binding<Bool>? = nil,
         settings: FPVMovementSettings = .init(),
         hooks: FPVMovementHooks = .init(),
-        showsControls: Bool = false
+        style: Style = .movement(showsControls: false)
     ) {
         self._cameraMatrix = cameraMatrix
-        self._isMouseLookEnabled = isMouseLookEnabled
+        self.isMouseLookEnabled = isMouseLookEnabled
         self.settings = settings
         self.hooks = hooks
-        self.showsControls = showsControls
+        self.style = style
     }
 
     func body(content: Content) -> some View {
         navigator.hooks = hooks
-        return content
-            .modifier(FPVMovementModifier(navigator: navigator, showsControls: showsControls))
+        return styled(content)
             .onChange(of: settings, initial: true) {
                 navigator.settings = settings
             }
-            .onChange(of: isMouseLookEnabled, initial: true) {
-                navigator.isMouseLookEnabled = isMouseLookEnabled
+            .onChange(of: isMouseLookEnabled?.wrappedValue, initial: true) {
+                if let isMouseLookEnabled {
+                    navigator.isMouseLookEnabled = isMouseLookEnabled.wrappedValue
+                }
+            }
+            .onChange(of: navigator.isMouseLookEnabled) {
+                isMouseLookEnabled?.wrappedValue = navigator.isMouseLookEnabled
             }
             .onChange(of: cameraMatrix, initial: true) {
                 if cameraMatrix != navigator.transform {
@@ -154,6 +164,18 @@ struct FPVCameraMatrixModifier: ViewModifier {
             .onChange(of: navigator.transform) {
                 cameraMatrix = navigator.transform
             }
+    }
+
+    @ViewBuilder
+    private func styled(_ content: Content) -> some View {
+        switch style {
+        case .movement(let showsControls):
+            content.modifier(FPVMovementModifier(navigator: navigator, showsControls: showsControls))
+        #if os(macOS)
+        case .flightSim(let verticalFOV):
+            content.modifier(FPVFlightSimModifier(navigator: navigator, verticalFOV: verticalFOV))
+        #endif
+        }
     }
 }
 
@@ -170,6 +192,14 @@ public extension View {
         hooks: FPVMovementHooks = .init(),
         showsControls: Bool = false
     ) -> some View {
-        modifier(FPVCameraMatrixModifier(cameraMatrix: cameraMatrix, isMouseLookEnabled: isMouseLookEnabled, settings: settings, hooks: hooks, showsControls: showsControls))
+        modifier(
+            FPVCameraMatrixModifier(
+                cameraMatrix: cameraMatrix,
+                isMouseLookEnabled: isMouseLookEnabled,
+                settings: settings,
+                hooks: hooks,
+                style: .movement(showsControls: showsControls)
+            )
+        )
     }
 }
