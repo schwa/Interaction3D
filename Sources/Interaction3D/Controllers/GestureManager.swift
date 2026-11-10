@@ -20,10 +20,25 @@ struct AnimatedSizeModifier: ViewModifier {
 
 // MARK: - Core Drag Modifier
 
-struct CoreDragValue: Equatable {
-    var translation: CGSize
-    var startLocation: CGPoint
-    var currentLocation: CGPoint
+public struct CoreDragValue: Equatable, Sendable {
+    public var translation: CGSize
+    public var startLocation: CGPoint
+    public var currentLocation: CGPoint
+}
+
+// Keeps only the larger axis of a translation.
+func axisLocked(_ translation: CGSize) -> CGSize {
+    abs(translation.width) >= abs(translation.height)
+        ? CGSize(width: translation.width, height: 0)
+        : CGSize(width: 0, height: translation.height)
+}
+
+// Coasts when the predicted end is far enough away and the pointer moved recently. maxDelay nil means no time limit.
+func shouldCoast(translation: CGSize, predicted: CGSize, idle: Duration, maxDelay: Duration?, threshold: CGFloat = 10) -> Bool {
+    if let maxDelay, idle > maxDelay {
+        return false
+    }
+    return abs(predicted.width - translation.width) > threshold || abs(predicted.height - translation.height) > threshold
 }
 
 // One step of a drag, from either DragGesture or a touch-counting pan.
@@ -50,11 +65,15 @@ struct DragSample {
 /// calling `onChanged` each frame during the animation.
 /// `modifiers`: nil = don't care, [] = no modifiers, [.command] = exactly command, etc.
 /// `touchCount` (iOS only): when set, only drags with exactly that many fingers are handled, and `modifiers` is ignored.
+/// `axisLock` (macOS): holding Shift locks the drag to its larger axis; Shift is then ignored when matching `modifiers`.
+/// `momentumMaxDelay`: no momentum if the pointer was still this long before release. nil always allows momentum.
 public struct CoreDragModifier: ViewModifier {
     let modifiers: EventModifiers?
     let minimumDistance: CGFloat
     let momentum: Bool
     let touchCount: Int?
+    let axisLock: Bool
+    let momentumMaxDelay: Duration?
     let onValueChanged: (CoreDragValue) -> Void
     let onEnded: () -> Void
 
@@ -65,28 +84,39 @@ public struct CoreDragModifier: ViewModifier {
     @State private var startLocation: CGPoint = .zero
     @State private var animatingToTranslation: CGSize = .zero
     @State private var isAnimating = false
+    @State private var lastChangeTime: ContinuousClock.Instant?
+    @State private var isAxisLocked = false
 
     public init(
         modifiers: EventModifiers? = nil,
         minimumDistance: CGFloat = 10,
         momentum: Bool = true,
         touchCount: Int? = nil,
+        axisLock: Bool = false,
+        momentumMaxDelay: Duration? = .milliseconds(200),
         onChanged: @escaping (CGSize) -> Void,
         onEnded: @escaping () -> Void
     ) {
-        self.modifiers = modifiers
-        self.minimumDistance = minimumDistance
-        self.momentum = momentum
-        self.touchCount = touchCount
-        self.onValueChanged = { onChanged($0.translation) }
-        self.onEnded = onEnded
+        self.init(
+            modifiers: modifiers,
+            minimumDistance: minimumDistance,
+            momentum: momentum,
+            touchCount: touchCount,
+            axisLock: axisLock,
+            momentumMaxDelay: momentumMaxDelay,
+            onValueChanged: { onChanged($0.translation) },
+            onEnded: onEnded
+        )
     }
 
-    init(
+    // Reports start and current locations as well as the translation.
+    public init(
         modifiers: EventModifiers? = nil,
         minimumDistance: CGFloat = 10,
         momentum: Bool = true,
         touchCount: Int? = nil,
+        axisLock: Bool = false,
+        momentumMaxDelay: Duration? = .milliseconds(200),
         onValueChanged: @escaping (CoreDragValue) -> Void,
         onEnded: @escaping () -> Void
     ) {
@@ -94,6 +124,8 @@ public struct CoreDragModifier: ViewModifier {
         self.minimumDistance = minimumDistance
         self.momentum = momentum
         self.touchCount = touchCount
+        self.axisLock = axisLock
+        self.momentumMaxDelay = momentumMaxDelay
         self.onValueChanged = onValueChanged
         self.onEnded = onEnded
     }
@@ -101,10 +133,14 @@ public struct CoreDragModifier: ViewModifier {
     // NSEvent samples modifier state synchronously at drag start; SwiftUI's onModifierKeysChanged only reports changes.
     #if canImport(AppKit)
     private func modifiersMatchNow() -> Bool {
-        guard let required = modifiers else {
+        guard var required = modifiers else {
             return true
         }
-        let current = NSEvent.modifierFlags
+        var current = NSEvent.modifierFlags
+        if axisLock {
+            required.remove(.shift)
+            current.remove(.shift)
+        }
         if required.isEmpty {
             return !current.contains(.command) && !current.contains(.option) && !current.contains(.shift) && !current.contains(.control)
         }
@@ -199,14 +235,30 @@ public struct CoreDragModifier: ViewModifier {
         guard wasClaimed else {
             return
         }
-        handleEnded(value.translation, predicted: value.predictedEndTranslation)
+        let idle = lastChangeTime.map { $0.duration(to: .now) } ?? .zero
+        handleEnded(locked(value.translation), predicted: locked(value.predictedEndTranslation), idle: idle)
     }
 
     private func handleChanged(_ value: DragSample) {
         isAnimating = false
+        lastChangeTime = .now
+        isAxisLocked = axisLock && isShiftHeld
         startLocation = value.startLocation
-        animatingToTranslation = value.translation
-        notifyChanged(translation: value.translation, currentLocation: value.location)
+        let translation = locked(value.translation)
+        animatingToTranslation = translation
+        notifyChanged(translation: translation, currentLocation: value.location)
+    }
+
+    private func locked(_ translation: CGSize) -> CGSize {
+        isAxisLocked ? axisLocked(translation) : translation
+    }
+
+    private var isShiftHeld: Bool {
+        #if canImport(AppKit)
+        NSEvent.modifierFlags.contains(.shift)
+        #else
+        false
+        #endif
     }
 
     private func notifyChanged(translation: CGSize, currentLocation: CGPoint? = nil) {
@@ -222,11 +274,9 @@ public struct CoreDragModifier: ViewModifier {
         )
     }
 
-    private func handleEnded(_ translation: CGSize, predicted: CGSize) {
+    private func handleEnded(_ translation: CGSize, predicted: CGSize, idle: Duration) {
         if momentum {
-            let dx = abs(predicted.width - translation.width)
-            let dy = abs(predicted.height - translation.height)
-            if dx > 10 || dy > 10 {
+            if shouldCoast(translation: translation, predicted: predicted, idle: idle, maxDelay: momentumMaxDelay) {
                 isAnimating = true
                 withAnimation(.easeOut(duration: 0.3)) {
                     animatingToTranslation = predicted
@@ -241,6 +291,8 @@ public struct CoreDragModifier: ViewModifier {
 
     private func finish() {
         isAnimating = false
+        lastChangeTime = nil
+        isAxisLocked = false
         startLocation = .zero
         animatingToTranslation = .zero
         onEnded()

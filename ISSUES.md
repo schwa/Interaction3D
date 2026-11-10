@@ -1734,12 +1734,13 @@ Clients keep their camera as an `InteractionState` (68 uses across MetalSprocket
 ## 82: Two different drag-with-momentum building blocks behave differently
 
 +++
-status: open
+status: closed
 priority: low
 kind: enhancement
 labels: effort:m, area:swiftui
 created: 2026-11-10T04:50:19Z
-updated: 2026-11-10T04:53:23Z
+updated: 2026-11-10T05:05:57Z
+closed: 2026-11-10T05:05:57Z
 +++
 
 `CoreDragModifier` and `DragGestureModifier` both wrap `DragGesture` with momentum, but behave differently:

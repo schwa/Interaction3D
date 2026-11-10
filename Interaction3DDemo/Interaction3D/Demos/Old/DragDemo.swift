@@ -5,8 +5,18 @@ import SwiftUI
 
 struct DragDemo: View {
 
+    // Translation accumulates across drags; locations are zero between drags.
+    private struct DragState {
+        var translation: CGSize = .zero
+        var startLocation: CGPoint = .zero
+        var currentLocation: CGPoint = .zero
+    }
+
     @State
-    private var dragState: DragGestureModifier.DragState = .zero
+    private var dragState = DragState()
+
+    @State
+    private var translationAtDragStart: CGSize?
 
     @State
     private var translation: CGSize = .zero
@@ -102,9 +112,17 @@ struct DragDemo: View {
         }
         .background(Color.black)
         .onGeometryChange(for: CGSize.self, of: \.size) { viewSize = $0 }
-        .modifier(DragGestureModifier(
-            state: $dragState
-        ))
+        .modifier(CoreDragModifier(axisLock: true) { value in
+            let base = translationAtDragStart ?? dragState.translation
+            translationAtDragStart = base
+            dragState.translation = CGSize(width: base.width + value.translation.width, height: base.height + value.translation.height)
+            dragState.startLocation = value.startLocation
+            dragState.currentLocation = value.currentLocation
+        } onEnded: {
+            translationAtDragStart = nil
+            dragState.startLocation = .zero
+            dragState.currentLocation = .zero
+        })
         .onChange(of: dragState.translation) { oldValue, newValue in
             // Apply scaling transforms
             translation = CGSize(
