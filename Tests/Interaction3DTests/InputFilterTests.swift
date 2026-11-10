@@ -29,11 +29,13 @@ import Testing
 
 @MainActor
 @Test func wasdMouseLookHonorsLookGateUnlessCaptured() {
-    let controller = WASDController()
+    let capture = MouseCapture()
+    capture.apply = { _ in /* don't touch the real cursor */ }
+    let controller = WASDController(mouseCapture: capture)
     #expect(controller.shouldForwardMouseLook())
     controller.isLookAllowed = false
     #expect(!controller.shouldForwardMouseLook())
-    controller.isMouseCaptured = true
+    capture.capture()
     #expect(controller.shouldForwardMouseLook())
 }
 

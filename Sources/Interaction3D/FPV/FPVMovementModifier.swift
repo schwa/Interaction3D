@@ -48,9 +48,6 @@ public struct FPVMovementModifier: ViewModifier {
     let updatesAutomatically: Bool
     let showsControls: Bool
 
-    @FocusState
-    private var isFocused: Bool
-
     @Environment(\.interactionDragFilter)
     private var dragFilter
 
@@ -67,13 +64,7 @@ public struct FPVMovementModifier: ViewModifier {
 
     public func body(content: Content) -> some View {
         content
-            .focusable()
-            .focused($isFocused)
-            .task {
-                // Claim focus on appear so WASD works without a click.
-                isFocused = true
-            }
-            .onChange(of: isFocused, initial: true) {
+            .movementInputFocus(claiming: .fpvMovementKeys(extraControls: navigator.settings.extraControls)) { isFocused in
                 navigator.isKeyboardEnabled = isFocused
             }
             .onContinuousHover { phase in
@@ -86,7 +77,6 @@ public struct FPVMovementModifier: ViewModifier {
                     navigator.isScrollAllowed = false
                 }
             }
-            .disableWASDKeys(extraControls: navigator.settings.extraControls)
             .toolbar {
                 if showsControls {
                     toolbarContent

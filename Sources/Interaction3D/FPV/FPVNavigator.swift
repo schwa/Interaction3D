@@ -29,7 +29,12 @@ public final class FPVNavigator {
         didSet { controller.externalAxes = moveInput }
     }
 
-    public private(set) var isMouseCaptured = false
+    @ObservationIgnored
+    public let mouseCapture = MouseCapture()
+
+    public var isMouseCaptured: Bool {
+        mouseCapture.isCaptured
+    }
 
     public var settings = FPVMovementSettings() {
         didSet { applySettings() }
@@ -115,26 +120,20 @@ public final class FPVNavigator {
 
     // Cursor capture is macOS-only; elsewhere these do nothing.
     public func captureMouse() {
-        keyboard?.captureMouse()
-        isMouseCaptured = keyboard?.isMouseCaptured ?? false
+        mouseCapture.capture()
     }
 
     public func releaseMouse() {
-        keyboard?.releaseMouse()
-        isMouseCaptured = keyboard?.isMouseCaptured ?? false
+        mouseCapture.release()
     }
 
     public func toggleMouseCapture() {
-        if isMouseCaptured {
-            releaseMouse()
-        } else {
-            captureMouse()
-        }
+        mouseCapture.toggle()
     }
 
     // Reads keyboard, mouse and game controller input until cancelled.
     func runInput() async {
-        let keyboard = WASDController()
+        let keyboard = WASDController(mouseCapture: mouseCapture)
         keyboard.isKeyboardEnabled = isKeyboardEnabled
         keyboard.isLookAllowed = isLookAllowed
         keyboard.isScrollAllowed = isScrollAllowed

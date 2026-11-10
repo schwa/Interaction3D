@@ -21,9 +21,6 @@ public struct FPVFlightSimModifier: ViewModifier {
     @State
     private var gameController = GameControllerMovementController()
 
-    @FocusState
-    private var isFocused: Bool
-
     @State
     private var breadcrumbs: [SIMD2<Float>] = []
 
@@ -51,11 +48,8 @@ public struct FPVFlightSimModifier: ViewModifier {
 
     public func body(content: Content) -> some View {
         content
-            .focusable()
-            .focused($isFocused)
-            .task {
-                // Claim focus on appear so WASD works without a click.
-                isFocused = true
+            .movementInputFocus(claiming: .fpvMovementKeys()) { isFocused in
+                wasdController.isKeyboardEnabled = isFocused
             }
             .onChange(of: isMouseLookEnabled.wrappedValue, initial: true) {
                 fpvController.mouseTrackingEnabled = isMouseLookEnabled.wrappedValue
@@ -63,10 +57,6 @@ public struct FPVFlightSimModifier: ViewModifier {
                     wasdController.releaseMouse()
                 }
             }
-            .onChange(of: isFocused, initial: true) {
-                wasdController.isKeyboardEnabled = isFocused
-            }
-            .disableWASDKeys()
             .overlay {
                 FlightSimControlsView(
                     transform: fpvController.movementController.transform,

@@ -1818,12 +1818,13 @@ Expected: each camera control honors the filters for the input it uses.
 ## 86: Key claiming and mouse capture are not available as building blocks
 
 +++
-status: open
+status: closed
 priority: medium
 kind: enhancement
 labels: effort:m, area:swiftui
 created: 2026-11-10T04:50:19Z
-updated: 2026-11-10T04:53:23Z
+updated: 2026-11-10T05:01:51Z
+closed: 2026-11-10T05:01:51Z
 +++
 
 `disableKeys` and `disableWASDKeys` are internal. Apps that build their own controls from the input building blocks cannot claim movement keys, so AppKit beeps on W A S D, arrows and other keys (the problem behind #80).

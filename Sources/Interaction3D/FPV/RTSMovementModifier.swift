@@ -93,9 +93,6 @@ public struct RTSMovementModifier: ViewModifier {
     let navigator: RTSNavigator
     let updatesAutomatically: Bool
 
-    @FocusState
-    private var isFocused: Bool
-
     @Environment(\.interactionScrollFilter)
     private var scrollFilter
 
@@ -132,17 +129,9 @@ public struct RTSMovementModifier: ViewModifier {
                 .contentShape(Rectangle())
                 .modifier(gestureModifiers(viewHeight: proxy.size.height))
         }
-        .focusable()
-        .focused($isFocused)
-        .focusEffectDisabled()
-        .task {
-            // Claim focus on appear so keys work without a click.
-            isFocused = true
-        }
-        .onChange(of: isFocused, initial: true) {
+        .movementInputFocus(claiming: .rtsMovementKeys) { isFocused in
             navigator.isKeyboardEnabled = isFocused
         }
-        .disableKeys(Self.handledKeys)
         .task { await navigator.runInput() }
         .task(id: updatesAutomatically) {
             if updatesAutomatically {
@@ -150,13 +139,6 @@ public struct RTSMovementModifier: ViewModifier {
             }
         }
     }
-
-    private static let handledKeys: Set<KeyEquivalent> = [
-        "w", "a", "s", "d", "q", "e", "r", "f",
-        // Shift (fast move) delivers uppercase characters.
-        "W", "A", "S", "D", "Q", "E", "R", "F",
-        .upArrow, .downArrow, .leftArrow, .rightArrow, .home
-    ]
 
     // Drag pans; Option-drag (macOS) or two-finger drag (iOS) orbits; pinch zooms; twist rotates. All coast on release.
     private func gestureModifiers(viewHeight: CGFloat) -> some ViewModifier {

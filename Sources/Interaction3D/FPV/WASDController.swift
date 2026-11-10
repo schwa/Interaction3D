@@ -25,7 +25,13 @@ public final class WASDController {
     @ObservationIgnored
     private var mouseMonitor: Any?
 
-    public var isMouseCaptured = false
+    // Shared with the owner (for example FPVNavigator) so capture state has one source.
+    @ObservationIgnored
+    public let mouseCapture: MouseCapture
+
+    public var isMouseCaptured: Bool {
+        mouseCapture.isCaptured
+    }
 
     // GCKeyboard is global, so the owning view must clear this when it loses focus.
     @ObservationIgnored
@@ -73,7 +79,8 @@ public final class WASDController {
     @ObservationIgnored
     private var wasResetPressed = false
 
-    public init() {
+    public init(mouseCapture: MouseCapture = MouseCapture()) {
+        self.mouseCapture = mouseCapture
         (events, eventContinuation) = AsyncStream.makeStream(of: NavigationEvent.self, bufferingPolicy: .bufferingNewest(32))
         setupMouseHandling()
         startTimerLoop()
@@ -87,10 +94,6 @@ public final class WASDController {
         #if canImport(AppKit)
         if let monitor = mouseMonitor {
             NSEvent.removeMonitor(monitor)
-        }
-        if isMouseCaptured {
-            CGDisplayShowCursor(CGMainDisplayID())
-            CGAssociateMouseAndMouseCursorPosition(1)
         }
         #endif
     }
@@ -258,36 +261,16 @@ public final class WASDController {
     #endif
 
     public func toggleMouseCapture() {
-        if isMouseCaptured {
-            releaseMouse()
-        } else {
-            captureMouse()
-        }
+        mouseCapture.toggle()
     }
 
     // Cursor capture is macOS-only; elsewhere these do nothing.
     public func captureMouse() {
-        #if canImport(AppKit)
-        guard !isMouseCaptured else {
-            return
-        }
-        CGDisplayHideCursor(CGMainDisplayID())
-        CGAssociateMouseAndMouseCursorPosition(0)
-        isMouseCaptured = true
-        #endif
+        mouseCapture.capture()
     }
 
     public func releaseMouse() {
-        #if canImport(AppKit)
-        guard isMouseCaptured else {
-            return
-        }
-
-        CGDisplayShowCursor(CGMainDisplayID())
-        CGAssociateMouseAndMouseCursorPosition(1)
-
-        isMouseCaptured = false
-        #endif
+        mouseCapture.release()
     }
 
     private func registerMouse(_ mouse: GCMouse) {
