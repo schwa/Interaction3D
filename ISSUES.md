@@ -1548,3 +1548,24 @@ Actual: touch does nothing to the RTS pose.
 Unverified: whether the keys and edge panning work on iPad with a hardware keyboard and trackpad.
 
 ---
+
+## 74: RTS camera can't orbit (no pitch control)
+
++++
+status: new
+priority: medium
+kind: enhancement
+created: 2026-11-10T04:25:22Z
++++
+
+`RTSCameraPose` has a target, yaw, pitch and distance, so it can describe an orbit camera. But `RTSMovementModifier` gives no way to change pitch:
+
+- Keyboard: Q/E rotate (yaw), R/F zoom, W A S D / arrows pan.
+- iOS touch (#73): one-finger drag pans, pinch zooms, two-finger twist changes yaw.
+- macOS mouse: no drag-to-orbit.
+
+Apps that want an RTS camera and orbiting (for example TinyTorii's build mode) must add a second camera control, such as SceneSprockets' orbit camera, and keep the two in sync. On iOS the second control's gestures also take touches away from the RTS gestures.
+
+Expected: the RTS camera can tilt and orbit around its target with touch on iOS and with the mouse on macOS.
+
+---
