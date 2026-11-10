@@ -15,6 +15,9 @@ struct RTSDemo: View {
         .rtsMovement(pose: $pose)
         .overlay(alignment: .bottom) {
             VStack(spacing: 4) {
+                #if os(iOS)
+                Text("Drag to pan, pinch to zoom, twist to rotate")
+                #endif
                 Text("WASD or arrows to pan, Q/E to rotate, R/F or scroll to zoom")
                 Text("Move the cursor to the edge to pan, Shift for faster, Home to reset")
             }

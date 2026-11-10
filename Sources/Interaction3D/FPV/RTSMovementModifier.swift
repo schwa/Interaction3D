@@ -26,6 +26,20 @@ public struct RTSCameraPose: Equatable, Sendable {
         pullBack.columns.3 = [0, 0, distance, 1]
         return translation * simd_float4x4(yawRotation * pitchRotation) * pullBack
     }
+
+    // Moves the target along the ground. pan.x is right, pan.y is forward, in multiples of distance.
+    public func panned(by pan: SIMD2<Float>) -> Self {
+        var pose = self
+        let forward = SIMD3<Float>(-sin(yaw), 0, -cos(yaw))
+        let right = SIMD3<Float>(cos(yaw), 0, -sin(yaw))
+        pose.target += (right * pan.x + forward * pan.y) * distance
+        return pose
+    }
+
+    // Drags the ground with a touch. translation is in fractions of the view height, +Y down.
+    public func grabbed(translation: CGSize) -> Self {
+        panned(by: SIMD2<Float>(-Float(translation.width), Float(translation.height)))
+    }
 }
 
 public struct RTSMovementSettings: Equatable, Sendable {
@@ -77,6 +91,15 @@ public struct RTSMovementModifier: ViewModifier {
     @FocusState
     private var isFocused: Bool
 
+    @State
+    private var touch = TouchState()
+
+    private struct TouchState {
+        var dragTranslation: CGSize = .zero
+        var magnification: CGFloat = 1
+        var rotation: Angle = .zero
+    }
+
     private struct Input {
         var pan: SIMD2<Float> = .zero
         var edgePan: SIMD2<Float> = .zero
@@ -102,6 +125,10 @@ public struct RTSMovementModifier: ViewModifier {
                         rtsController.pointerLocation = nil
                     }
                 }
+                #if os(iOS)
+                .contentShape(Rectangle())
+                .gesture(touchGesture(viewHeight: proxy.size.height))
+                #endif
         }
         .focusable()
         .focused($isFocused)
@@ -173,16 +200,56 @@ public struct RTSMovementModifier: ViewModifier {
         var newPose = pose
         newPose.yaw -= input.rotate * settings.rotateSpeed * speedMultiplier * deltaTime
         if pan != .zero {
-            let forward = SIMD3<Float>(-sin(newPose.yaw), 0, -cos(newPose.yaw))
-            let right = SIMD3<Float>(cos(newPose.yaw), 0, -sin(newPose.yaw))
-            let speed = settings.panSpeed * newPose.distance * speedMultiplier * deltaTime
-            newPose.target += (right * pan.x + forward * pan.y) * speed
+            newPose = newPose.panned(by: pan * settings.panSpeed * speedMultiplier * deltaTime)
         }
         if input.zoom != 0 {
             newPose.distance = clampedDistance(newPose.distance * pow(settings.zoomSpeed, -input.zoom * deltaTime))
         }
         pose = newPose
     }
+
+    #if os(iOS)
+    // One-finger drag pans, pinch zooms, two-finger twist rotates.
+    private func touchGesture(viewHeight: CGFloat) -> some Gesture {
+        let drag = DragGesture(minimumDistance: 0)
+            .onChanged { value in
+                guard viewHeight > 0 else {
+                    return
+                }
+                let delta = CGSize(
+                    width: (value.translation.width - touch.dragTranslation.width) / viewHeight,
+                    height: (value.translation.height - touch.dragTranslation.height) / viewHeight
+                )
+                touch.dragTranslation = value.translation
+                pose = pose.grabbed(translation: delta)
+            }
+            .onEnded { _ in
+                touch.dragTranslation = .zero
+            }
+        let magnify = MagnifyGesture()
+            .onChanged { value in
+                let delta = value.magnification / touch.magnification
+                touch.magnification = value.magnification
+                guard delta > 0 else {
+                    return
+                }
+                pose.distance = clampedDistance(pose.distance / Float(delta))
+            }
+            .onEnded { _ in
+                touch.magnification = 1
+            }
+        let rotate = RotateGesture()
+            .onChanged { value in
+                let delta = value.rotation - touch.rotation
+                touch.rotation = value.rotation
+                pose.yaw += Float(delta.radians)
+            }
+            .onEnded { _ in
+                touch.rotation = .zero
+            }
+        return drag.simultaneously(with: magnify.simultaneously(with: rotate))
+    }
+    #endif
 
     private func clampedDistance(_ distance: Float) -> Float {
         min(max(distance, settings.distanceRange.lowerBound), settings.distanceRange.upperBound)

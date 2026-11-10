@@ -1530,10 +1530,12 @@ Space is already used for up by FPVExtraControls.alternativeVertical, so the key
 ## 73: RTS controls have no touch input on iOS
 
 +++
-status: new
+status: closed
 priority: medium
 kind: enhancement
 created: 2026-11-10T04:12:55Z
+updated: 2026-11-10T04:15:01Z
+closed: 2026-11-10T04:15:01Z
 +++
 
 `RTSMovementModifier` / `RTSController` take input only from the keyboard (W A S D / arrows pan, Q/E rotate, R/F zoom, Shift hurries, Home resets) and from the cursor at the view edge (edge panning).
