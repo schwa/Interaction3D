@@ -503,11 +503,25 @@ private struct TestProjection: ProjectionProtocol {
     let doubleDistance = Binding.constant(1e8)
     let doubleTarget = Binding.constant(SIMD3<Double>(1e9, 0, 0))
 
-    _ = Color.clear.interactiveCamera(rotation: rotation, distance: floatDistance, target: nil, zoom: .multiplicative())
+    _ = Color.clear.interactiveCamera(rotation: rotation, distance: floatDistance, target: .constant(.zero), zoom: .multiplicative(), panEnabled: false)
     _ = Color.clear.interactiveCamera(rotation: rotation, distance: doubleDistance, target: doubleTarget, mode: .turntable(TurntableTransformer(upAxis: [0, 0, 1])))
     _ = Color.clear.modifier(InteractiveCameraModifier(rotation: rotation, distance: floatDistance, target: .constant(.zero), zoom: .multiplicative(), distanceRange: 1...100, panEnabled: false))
     _ = Color.clear.interactiveCamera(yaw: yaw, pitch: pitch, distance: doubleDistance, zoom: .multiplicative(), distanceRange: 1.01...1e6)
     _ = Color.clear.interactiveLook(yaw: yaw, pitch: pitch, pitchRange: SwiftUI.Angle.degrees(-89)...SwiftUI.Angle.degrees(89))
+}
+
+// #81: every orbit form takes the same zoom, distance range and pan options.
+@MainActor
+@Test func orbitCameraFormsShareOptions() {
+    let state = Binding.constant(InteractionState())
+    let matrix = Binding.constant(matrix_identity_float4x4)
+    let yaw = Binding.constant(SwiftUI.Angle.radians(0))
+    let pitch = Binding.constant(SwiftUI.Angle.radians(0))
+    let distance = Binding.constant(Float(5))
+
+    _ = Color.clear.interactiveCamera(state, mode: .arcball(), zoom: .multiplicative(), distanceRange: 1...100, panEnabled: false)
+    _ = Color.clear.interactiveCamera(cameraMatrix: matrix, zoom: .multiplicative(), distanceRange: 1...100, panEnabled: false)
+    _ = Color.clear.interactiveCamera(yaw: yaw, pitch: pitch, distance: distance, target: .constant(.zero), zoom: .multiplicative(), distanceRange: 1...100, panEnabled: false)
 }
 
 private extension SIMD4<Float> {

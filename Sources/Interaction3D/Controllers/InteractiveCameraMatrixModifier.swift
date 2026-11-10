@@ -12,6 +12,9 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
     var mode: InteractiveCameraModifier.Mode
     var transforms: InteractionAxisTransforms
     var target: SIMD3<Float>
+    var zoom: CameraZoomModel
+    var distanceRange: ClosedRange<Float>
+    var panEnabled: Bool
 
     // Seeded from cameraMatrix on appear, not in init, because init runs on every parent update.
     @State
@@ -31,12 +34,18 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
         cameraMatrix: Binding<simd_float4x4>,
         mode: InteractiveCameraModifier.Mode,
         transforms: InteractionAxisTransforms? = nil,
-        target: SIMD3<Float> = .zero
+        target: SIMD3<Float> = .zero,
+        zoom: CameraZoomModel = .additive,
+        distanceRange: ClosedRange<Float> = 0.01...Float.greatestFiniteMagnitude,
+        panEnabled: Bool = true
     ) {
         self._cameraMatrix = cameraMatrix
         self.mode = mode
         self.transforms = transforms ?? mode.defaultTransforms
         self.target = target
+        self.zoom = zoom
+        self.distanceRange = distanceRange
+        self.panEnabled = panEnabled
     }
 
     public func body(content: Content) -> some View {
@@ -47,7 +56,10 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
                     distance: $interactionState.distance,
                     target: $interactionState.target,
                     mode: mode,
-                    transforms: transforms
+                    transforms: transforms,
+                    zoom: zoom,
+                    distanceRange: distanceRange,
+                    panEnabled: panEnabled
                 )
             )
             .onChange(of: interactionState) { _, newValue in
@@ -95,12 +107,26 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
 // MARK: - View Extension
 
 public extension View {
+    /// Orbit camera controls for a camera matrix. `target` is the point the camera orbits.
     func interactiveCamera(
         cameraMatrix: Binding<simd_float4x4>,
         mode: InteractiveCameraModifier.Mode = .turntable(),
         transforms: InteractionAxisTransforms? = nil,
-        target: SIMD3<Float> = .zero
+        target: SIMD3<Float> = .zero,
+        zoom: CameraZoomModel = .additive,
+        distanceRange: ClosedRange<Float> = 0.01...Float.greatestFiniteMagnitude,
+        panEnabled: Bool = true
     ) -> some View {
-        modifier(InteractiveCameraMatrixModifier(cameraMatrix: cameraMatrix, mode: mode, transforms: transforms, target: target))
+        modifier(
+            InteractiveCameraMatrixModifier(
+                cameraMatrix: cameraMatrix,
+                mode: mode,
+                transforms: transforms,
+                target: target,
+                zoom: zoom,
+                distanceRange: distanceRange,
+                panEnabled: panEnabled
+            )
+        )
     }
 }

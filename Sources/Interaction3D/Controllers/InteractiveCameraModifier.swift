@@ -225,27 +225,51 @@ private struct CameraRotationModifier: ViewModifier {
 public extension View {
     /// Orbit camera controls: drag rotates, scroll and magnify zoom, Command-drag pans the target.
     ///
-    /// `distance` and `target` can be `Float` or `Double`; use `Double` for large-scale scenes. Pass `nil` for
-    /// `target` to disable pan, for example when orbiting a fixed object.
+    /// `distance` and `target` can be `Float` or `Double`; use `Double` for large-scale scenes. Set `panEnabled`
+    /// to false to keep the target fixed, for example when orbiting a single object.
     func interactiveCamera<Scalar: BinaryFloatingPoint & SIMDScalar>(
         rotation: Binding<simd_quatf>,
         distance: Binding<Scalar>,
-        target: Binding<SIMD3<Scalar>>?,
+        target: Binding<SIMD3<Scalar>>,
         mode: InteractiveCameraModifier.Mode = .turntable(),
         transforms: InteractionAxisTransforms? = nil,
         zoom: CameraZoomModel = .additive,
-        distanceRange: ClosedRange<Scalar> = 0.01...Scalar.greatestFiniteMagnitude
+        distanceRange: ClosedRange<Scalar> = 0.01...Scalar.greatestFiniteMagnitude,
+        panEnabled: Bool = true
     ) -> some View {
         modifier(
             CameraControlsModifier(
                 rotation: rotation,
                 distance: distance,
-                target: target,
+                target: panEnabled ? target : nil,
                 mode: mode,
                 transforms: transforms ?? mode.defaultTransforms,
                 zoom: zoom,
                 distanceRange: distanceRange
             )
+        )
+    }
+}
+
+public extension View {
+    /// Orbit camera controls for an `InteractionState`. Same options as `interactiveCamera(rotation:distance:target:)`.
+    func interactiveCamera(
+        _ state: Binding<InteractionState>,
+        mode: InteractiveCameraModifier.Mode = .turntable(),
+        transforms: InteractionAxisTransforms? = nil,
+        zoom: CameraZoomModel = .additive,
+        distanceRange: ClosedRange<Float> = 0.01...Float.greatestFiniteMagnitude,
+        panEnabled: Bool = true
+    ) -> some View {
+        interactiveCamera(
+            rotation: state.rotation,
+            distance: state.distance,
+            target: state.target,
+            mode: mode,
+            transforms: transforms,
+            zoom: zoom,
+            distanceRange: distanceRange,
+            panEnabled: panEnabled
         )
     }
 }

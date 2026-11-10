@@ -28,5 +28,6 @@ graph LR
 
 - **Up axis:** `TurntableTransformer(upAxis:)` orbits around any up axis (default +Y). `TurntableTransformer.yawPitch(of:upAxis:)` and `rotation(yaw:pitch:upAxis:)` convert between a rotation and angles.
 - **Precision:** `interactiveCamera(rotation:distance:target:)` accepts `Float` or `Double` distance and target.
-- **Pan:** pass `nil` for `target` (or `panEnabled: false` on `InteractiveCameraModifier`) to disable Command-drag pan.
+- **Pan:** pass `panEnabled: false` to any `interactiveCamera` form to disable Command-drag pan.
+- **State:** `interactiveCamera(_:)` takes a `Binding<InteractionState>` directly. The `cameraMatrix:`, `rotation:distance:target:` and `yaw:pitch:distance:` forms take the same `zoom`, `distanceRange` and `panEnabled` options.
 - **Look-around:** `interactiveLook(yaw:pitch:pitchRange:)` for a camera at a fixed position; dragging moves the scene with the pointer.

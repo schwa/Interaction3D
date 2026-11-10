@@ -1712,12 +1712,13 @@ Actual: apps must choose between the modifier (missing features) and the raw con
 ## 81: Orbit camera forms have inconsistent options and no InteractionState binding
 
 +++
-status: open
+status: closed
 priority: medium
 kind: enhancement
 labels: effort:m, area:camera
 created: 2026-11-10T04:50:19Z
-updated: 2026-11-10T04:53:23Z
+updated: 2026-11-10T04:58:31Z
+closed: 2026-11-10T04:58:31Z
 +++
 
 The orbit camera has three `.interactiveCamera` forms for different state shapes: `rotation:distance:target:`, `cameraMatrix:`, and `yaw:pitch:distance:`. Their options differ in ways that don't follow from the state shape:

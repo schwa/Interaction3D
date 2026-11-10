@@ -5,8 +5,8 @@ public extension View {
     ///
     /// Yaw and pitch are the camera's forward direction, as in ``TurntableTransformer/yawPitch(of:upAxis:)``: positive
     /// yaw turns the camera to its left, positive pitch tilts it up. Dragging orbits the camera around its target;
-    /// pitch is clamped to `pitchRange`. Scroll and magnify zoom `distance`, and Command-drag pans `target` unless
-    /// it is `nil`.
+    /// pitch is clamped to `pitchRange`. Scroll and magnify zoom `distance`, and Command-drag pans `target` when
+    /// `panEnabled` is true and a target is given.
     ///
     /// Use ``TurntableTransformer/rotation(yaw:pitch:upAxis:)`` to turn the angles into a rotation.
     func interactiveCamera<Scalar: BinaryFloatingPoint & SIMDScalar>(
@@ -17,7 +17,8 @@ public extension View {
         pitchRange: ClosedRange<Angle> = .degrees(-89)...(.degrees(89)),
         transforms: InteractionAxisTransforms = .turntableDefault,
         zoom: CameraZoomModel = .additive,
-        distanceRange: ClosedRange<Scalar> = 0.01...Scalar.greatestFiniteMagnitude
+        distanceRange: ClosedRange<Scalar> = 0.01...Scalar.greatestFiniteMagnitude,
+        panEnabled: Bool = true
     ) -> some View {
         modifier(
             YawPitchDragModifier(
@@ -29,7 +30,7 @@ public extension View {
             )
         )
         #if os(macOS)
-        .modifier(OptionalCameraPanModifier(target: target, transforms: transforms))
+        .modifier(OptionalCameraPanModifier(target: panEnabled ? target : nil, transforms: transforms))
         #endif
         .modifier(CameraZoomModifier(distance: distance, transforms: transforms, zoom: zoom, distanceRange: distanceRange))
     }
