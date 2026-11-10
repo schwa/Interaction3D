@@ -27,7 +27,7 @@ extension View {
         if extraControls.contains(.roll) {
             keys.formUnion(["z", "c", "Z", "C"])
         }
-        if extraControls.contains(.alternativeVertical) {
+        if !extraControls.isDisjoint(with: [.alternativeVertical, .jump]) {
             keys.insert(.space)
         }
         if extraControls.contains(.speedAdjustment) {

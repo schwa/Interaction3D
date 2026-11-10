@@ -90,7 +90,7 @@ public final class WASDController {
         let look = SIMD2<Float>(axis(.rightArrow, .leftArrow), axis(.upArrow, .downArrow))
         var altitude = axis(.keyE, .keyQ)
         if extraControls.contains(.alternativeVertical) {
-            let up = isKeyPressed(.spacebar)
+            let up = !extraControls.contains(.jump) && isKeyPressed(.spacebar)
             let down = isKeyPressed(.leftControl) || isKeyPressed(.rightControl)
             altitude = max(-1, min(1, altitude + (up ? 1 : 0) - (down ? 1 : 0)))
         }
@@ -124,6 +124,10 @@ public final class WASDController {
         return current != previousSpeedKeys ? current : 0
     }
 
+    func isJumpPressed() -> Bool {
+        isKeyboardEnabled && extraControls.contains(.jump) && isKeyPressed(.spacebar)
+    }
+
     func isResetTriggered() -> Bool {
         let pressed = isKeyboardEnabled && extraControls.contains(.resetKey) && isKeyPressed(.home)
         defer { wasResetPressed = pressed }
@@ -148,6 +152,9 @@ public final class WASDController {
                     }
                     if isResetTriggered() {
                         eventContinuation.yield(.reset)
+                    }
+                    if extraControls.contains(.jump) {
+                        eventContinuation.yield(.jumpState(isPressed: isJumpPressed()))
                     }
                 }
             }

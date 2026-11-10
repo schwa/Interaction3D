@@ -1505,11 +1505,12 @@ closed: 2026-11-08T16:43:02Z
 ## 72: FPV movement has no walk mode with gravity, jumping, and Minecraft-style flying
 
 +++
-status: new
+status: closed
 priority: low
 kind: feature
 created: 2026-11-09T03:16:10Z
-updated: 2026-11-09T03:16:33Z
+updated: 2026-11-10T04:39:38Z
+closed: 2026-11-10T04:39:38Z
 +++
 
 FPV movement only supports flying (or flat movement when free flight is off). There is no walk mode: the camera does not fall, has no ground contact, and cannot jump.
@@ -1621,10 +1622,12 @@ Build the RTS touch and mouse input on the shared gesture tools and approaches.
 ## 77: FPVMovementController has no collision
 
 +++
-status: new
+status: closed
 priority: medium
 kind: enhancement
 created: 2026-11-10T04:34:49Z
+updated: 2026-11-10T04:39:38Z
+closed: 2026-11-10T04:39:38Z
 +++
 
 `FPVMovementController` (and `FPVMovementModifier`) move the camera freely. Nothing lets the app reject or change a step, so the camera walks through walls, buildings, trees and water.
@@ -1639,10 +1642,12 @@ Actual: no collision; the app must replace the controller.
 ## 78: FPVMovementController can't follow the ground
 
 +++
-status: new
+status: closed
 priority: medium
 kind: enhancement
 created: 2026-11-10T04:34:49Z
+updated: 2026-11-10T04:39:38Z
+closed: 2026-11-10T04:39:38Z
 +++
 
 `FPVMovementController` keeps its own height; in walk mode (free flight off) it moves on a flat plane. Nothing lets the app set the camera's height from the terrain under it.
@@ -1653,5 +1658,25 @@ Expected: an app can use `FPVMovementController` / `FPVMovementModifier` and giv
 Actual: the camera stays at its own height.
 
 Related: collision (the step-up limit is both).
+
+---
+
+## 79: FPV walk mode assumes +Y is up (gravity is a scalar)
+
++++
+status: new
+priority: low
+kind: enhancement
+created: 2026-11-10T04:38:19Z
++++
+
+FPVWalkSettings.gravity is a scalar that always pulls along -Y, and the rest of FPV movement is fixed to +Y up:
+- yaw turns about +Y and walking moves on the XZ plane
+- FPVMovementHooks.groundHeight returns a height along Y
+- eyeHeight, jumping, step-up and flying up/down are along Y
+
+Scenes with another up axis (for example Z-up) or other gravity directions cannot use walk mode. TurntableTransformer already supports an up axis (`upAxis:`); FPV movement does not.
+
+Expected: gravity can be a 3D vector, and FPV movement (walk plane, yaw, ground height, eye height, jump) follows the up axis it implies.
 
 ---

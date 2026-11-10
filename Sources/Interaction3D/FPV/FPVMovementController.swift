@@ -17,6 +17,20 @@ public struct FPVMovementController {
     private var keyboardRollAxis: Float = 0
     private var isSlow = false
     private var isLookHeld = true
+    private var isJumpPressed = false
+    private var lastJumpPressTime: Float?
+    private var elapsedTime: Float = 0
+
+    public var walkSettings: FPVWalkSettings? {
+        didSet {
+            if walkSettings == nil {
+                motionState = FPVMotionState()
+            }
+        }
+    }
+
+    public var hooks = FPVMovementHooks()
+    public private(set) var motionState = FPVMotionState()
 
     private var yaw: Float = 0
     public private(set) var pitch: Float = 0
@@ -77,12 +91,7 @@ public struct FPVMovementController {
     public mutating func process(event: NavigationEvent) {
         switch event {
         case .axes(let forward, let sideways, let source):
-            let vector = SIMD2<Float>(sideways, forward)
-            if source == .keyboard {
-                keyboardAxes = vector
-            } else {
-                controllerAxes = vector
-            }
+            processAxes(SIMD2<Float>(sideways, forward), source: source)
         case .look(let deltaX, let deltaY, let source):
             processLook(deltaX: deltaX, deltaY: deltaY, source: source)
         case .altitude(let value, _):
@@ -102,6 +111,9 @@ public struct FPVMovementController {
             keyboardRollAxis = isRollEnabled ? roll : 0
             self.isSlow = isSlow
             self.isLookHeld = isLookHeld
+        case .jumpState(let isPressed):
+            processJump(isPressed: isPressed)
+            return
         case .adjustSpeed(let steps):
             speed = min(max(speed * pow(speedAdjustmentFactor, steps), speedRange.lowerBound), speedRange.upperBound)
         case .reset:
@@ -110,6 +122,21 @@ public struct FPVMovementController {
         }
 
         updateTransform()
+    }
+
+    private mutating func processAxes(_ vector: SIMD2<Float>, source: NavigationEvent.AxisSource) {
+        if source == .keyboard {
+            keyboardAxes = vector
+        } else {
+            controllerAxes = vector
+        }
+    }
+
+    private mutating func processJump(isPressed: Bool) {
+        if isPressed, !isJumpPressed {
+            jumpPressed()
+        }
+        isJumpPressed = isPressed
     }
 
     private mutating func processLook(deltaX: Float, deltaY: Float, source: NavigationEvent.LookSource) {
@@ -129,8 +156,27 @@ public struct FPVMovementController {
     }
 
     public mutating func update(deltaTime: Float) {
+        elapsedTime += max(deltaTime, 0)
         applyContinuousInputs(deltaTime: max(deltaTime, 0))
         updateTransform()
+    }
+
+    // First press jumps from the ground; a quick second press toggles flying.
+    private mutating func jumpPressed() {
+        guard let walk = walkSettings, walk.gravity > 0 else {
+            return
+        }
+        if walk.isFlightToggleEnabled, let last = lastJumpPressTime, elapsedTime - last <= walk.doubleTapInterval {
+            motionState.isFlying.toggle()
+            motionState.verticalVelocity = 0
+            lastJumpPressTime = nil
+            return
+        }
+        lastJumpPressTime = elapsedTime
+        if motionState.isOnGround, !motionState.isFlying {
+            motionState.verticalVelocity = walk.jumpSpeed
+            motionState.isOnGround = false
+        }
     }
 
     public mutating func reset() {
@@ -145,6 +191,9 @@ public struct FPVMovementController {
         isFast = false
         keyboardRollAxis = 0
         isSlow = false
+        isJumpPressed = false
+        lastJumpPressTime = nil
+        motionState = FPVMotionState()
         yaw = 0
         pitch = 0
         roll = 0
@@ -175,7 +224,7 @@ public struct FPVMovementController {
 
         let right: SIMD3<Float>
         let forward: SIMD3<Float>
-        if isFreeFlightEnabled {
+        if isFreeFlightEnabled, walkSettings == nil {
             let basis = simd_float3x3(orientation)
             right = basis.columns.0
             forward = -basis.columns.2
@@ -191,15 +240,98 @@ public struct FPVMovementController {
             currentSpeed *= slowSpeedMultiplier
         }
         let deltaPosition = (right * movementInput.x + forward * movementInput.y) * currentSpeed * deltaTime
-        let altitudeInput = max(-1, min(1, controllerAltitudeAxis + keyboardAltitude))
+        let jumpAltitude: Float = isJumpPressed && isLookHeld ? 1 : 0
+        let altitudeInput = max(-1, min(1, controllerAltitudeAxis + keyboardAltitude + jumpAltitude))
+        let startPosition = position
 
-        position += deltaPosition
-        position.y += altitudeInput * currentSpeed * deltaTime
+        if let walk = walkSettings {
+            applyWalk(walk, horizontal: deltaPosition, altitude: altitudeInput * currentSpeed * deltaTime, deltaTime: deltaTime)
+        } else {
+            move(by: deltaPosition + SIMD3<Float>(0, altitudeInput * currentSpeed * deltaTime, 0))
+        }
 
-        var velocity = deltaPosition / deltaTime
-        velocity.y += altitudeInput * currentSpeed
-        movementController.linearVelocity = velocity
+        movementController.linearVelocity = (position - startPosition) / deltaTime
         movementController.angularVelocity = .zero
+    }
+
+    // Moves through hooks.canMove, sliding when the full step is blocked. Returns false if nothing moved.
+    @discardableResult
+    private mutating func move(by delta: SIMD3<Float>, extraCheck: ((SIMD3<Float>, SIMD3<Float>) -> Bool)? = nil) -> Bool {
+        guard delta != .zero else {
+            return true
+        }
+        guard hooks.canMove != nil || extraCheck != nil else {
+            position += delta
+            return true
+        }
+        for candidate in slideCandidates(for: delta) {
+            let target = position + candidate
+            if extraCheck?(position, target) ?? true, hooks.canMove?(position, target) ?? true {
+                position = target
+                return true
+            }
+        }
+        return false
+    }
+
+    private mutating func applyWalk(_ walk: FPVWalkSettings, horizontal: SIMD3<Float>, altitude: Float, deltaTime: Float) {
+        let groundHeight = hooks.groundHeight
+        let eyeHeight = walk.eyeHeight
+        var stepCheck: ((SIMD3<Float>, SIMD3<Float>) -> Bool)?
+        if let maxStepUp = walk.maxStepUp, let groundHeight, motionState.isOnGround {
+            stepCheck = { from, to in
+                guard let next = groundHeight(to) else {
+                    return true
+                }
+                let current = groundHeight(from) ?? (from.y - eyeHeight)
+                return next - current <= maxStepUp
+            }
+        }
+        let before = position
+        move(by: horizontal, extraCheck: stepCheck)
+        if motionState.isOnGround {
+            let moved = position - before
+            motionState.distanceWalked += length(SIMD2<Float>(moved.x, moved.z))
+        }
+        applyVertical(walk, restingHeight: groundHeight?(position).map { $0 + eyeHeight }, altitude: altitude, deltaTime: deltaTime)
+    }
+
+    // Flying, falling, landing and following the ground. restingHeight is the eye height on the ground here.
+    private mutating func applyVertical(_ walk: FPVWalkSettings, restingHeight: Float?, altitude: Float, deltaTime: Float) {
+        if motionState.isFlying {
+            motionState.verticalVelocity = 0
+            move(by: SIMD3<Float>(0, altitude, 0))
+            if let restingHeight, position.y <= restingHeight {
+                position.y = restingHeight
+                motionState.isFlying = false
+                motionState.isOnGround = true
+            } else {
+                motionState.isOnGround = false
+            }
+        } else if walk.gravity > 0 {
+            motionState.verticalVelocity -= walk.gravity * deltaTime
+            let nextHeight = position.y + motionState.verticalVelocity * deltaTime
+            if let restingHeight, nextHeight <= restingHeight {
+                motionState.verticalVelocity = 0
+                motionState.isOnGround = true
+                if position.y < restingHeight {
+                    // Higher ground: ease up instead of popping.
+                    position.y += (restingHeight - position.y) * min(1, deltaTime * walk.groundFollowRate)
+                } else {
+                    position.y = restingHeight
+                }
+            } else if move(by: SIMD3<Float>(0, nextHeight - position.y, 0)) {
+                motionState.isOnGround = false
+            } else {
+                // Hit a ceiling or a floor the app blocks.
+                motionState.verticalVelocity = 0
+            }
+        } else if let restingHeight {
+            position.y += (restingHeight - position.y) * min(1, deltaTime * walk.groundFollowRate)
+            motionState.isOnGround = true
+        } else {
+            motionState.isOnGround = false
+        }
     }
 
     private mutating func clampPitch() {
@@ -218,6 +350,9 @@ public struct FPVMovementController {
     private mutating func updateTransform() {
         var transform = simd_float4x4(orientation)
         transform.columns.3 = SIMD4<Float>(position.x, position.y, position.z, 1)
+        if let adjustCamera = hooks.adjustCamera {
+            transform = adjustCamera(transform, motionState)
+        }
         movementController.transform = transform
     }
 }

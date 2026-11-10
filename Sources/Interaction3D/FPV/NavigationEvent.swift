@@ -18,6 +18,8 @@ public enum NavigationEvent: Sendable {
     // Opt-in controls from FPVExtraControls. roll is right minus left.
     // isLookHeld gates mouse look and keyboard movement; it is always true unless hold-to-look is on.
     case extraKeyboardState(roll: Float, isSlow: Bool, isLookHeld: Bool)
+    // Jump key state, from FPVExtraControls.jump.
+    case jumpState(isPressed: Bool)
     // Multiplies speed by speedAdjustmentFactor^steps.
     case adjustSpeed(steps: Float)
     case reset
@@ -42,6 +44,10 @@ public struct FPVExtraControls: OptionSet, Hashable, Sendable {
     public static let resetKey = Self(rawValue: 1 << 4)
     // Look and move only while the right mouse button is held.
     public static let holdToLook = Self(rawValue: 1 << 5)
+
+    // Space jumps in walk mode and rises while flying or when walk mode is off. Replaces Space in alternativeVertical.
+    // Not in `all`, because it changes what Space does.
+    public static let jump = Self(rawValue: 1 << 6)
 
     public static let all: Self = [.speedAdjustment, .slowModifier, .roll, .alternativeVertical, .resetKey, .holdToLook]
 }

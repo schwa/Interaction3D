@@ -13,6 +13,8 @@ public struct FPVMovementSettings: Equatable, Sendable {
     public var slowSpeedMultiplier: Float
     public var speedAdjustmentFactor: Float
     public var rollSpeed: Float
+    // Walk mode with ground, gravity and jumping. nil keeps the camera free.
+    public var walk: FPVWalkSettings?
 
     public init(
         speed: Float = 10,
@@ -24,8 +26,10 @@ public struct FPVMovementSettings: Equatable, Sendable {
         extraControls: FPVExtraControls = [],
         slowSpeedMultiplier: Float = 0.25,
         speedAdjustmentFactor: Float = 1.25,
-        rollSpeed: Float = .pi / 2
+        rollSpeed: Float = .pi / 2,
+        walk: FPVWalkSettings? = nil
     ) {
+        self.walk = walk
         self.extraControls = extraControls
         self.slowSpeedMultiplier = slowSpeedMultiplier
         self.speedAdjustmentFactor = speedAdjustmentFactor
@@ -60,22 +64,34 @@ public struct FPVMovementModifier: ViewModifier {
 
     let showsControls: Bool
     let settings: FPVMovementSettings
+    let hooks: FPVMovementHooks
+
+    // Holds the latest hooks so the update loop sees closures from the latest body.
+    @State
+    private var hooksBox = HooksBox()
+
+    private final class HooksBox {
+        var hooks = FPVMovementHooks()
+    }
 
     // showsControls adds Capture Mouse and Reset toolbar buttons to the host window.
     public init(
         cameraMatrix: Binding<matrix_float4x4>,
         isMouseLookEnabled: Binding<Bool> = .constant(true),
         settings: FPVMovementSettings = .init(),
+        hooks: FPVMovementHooks = .init(),
         showsControls: Bool = false
     ) {
         self._cameraMatrix = cameraMatrix
         self._isMouseLookEnabled = isMouseLookEnabled
         self.settings = settings
+        self.hooks = hooks
         self.showsControls = showsControls
     }
 
     public func body(content: Content) -> some View {
-        content
+        hooksBox.hooks = hooks
+        return content
             .focusable()
             .focused($isFocused)
             .task {
@@ -101,6 +117,7 @@ public struct FPVMovementModifier: ViewModifier {
                 fpvController.slowSpeedMultiplier = settings.slowSpeedMultiplier
                 fpvController.speedAdjustmentFactor = settings.speedAdjustmentFactor
                 fpvController.rollSpeed = settings.rollSpeed
+                fpvController.walkSettings = settings.walk
                 fpvController.isRollEnabled = settings.extraControls.contains(.roll)
                 wasdController.extraControls = settings.extraControls
             }
@@ -142,6 +159,7 @@ public struct FPVMovementModifier: ViewModifier {
             let updateTime = clock.now
             let deltaTime = previousUpdate.duration(to: updateTime).timeInterval
             previousUpdate = updateTime
+            fpvController.hooks = hooksBox.hooks
             fpvController.update(deltaTime: deltaTime)
         }
     }
@@ -168,9 +186,10 @@ public extension View {
         cameraMatrix: Binding<matrix_float4x4>,
         isMouseLookEnabled: Binding<Bool> = .constant(true),
         settings: FPVMovementSettings = .init(),
+        hooks: FPVMovementHooks = .init(),
         showsControls: Bool = false
     ) -> some View {
-        modifier(FPVMovementModifier(cameraMatrix: cameraMatrix, isMouseLookEnabled: isMouseLookEnabled, settings: settings, showsControls: showsControls))
+        modifier(FPVMovementModifier(cameraMatrix: cameraMatrix, isMouseLookEnabled: isMouseLookEnabled, settings: settings, hooks: hooks, showsControls: showsControls))
     }
 }
 
