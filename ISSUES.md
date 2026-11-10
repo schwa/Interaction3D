@@ -162,12 +162,13 @@ Two separate transformer protocols exist: Transformer (transform(_:)) and Transf
 ## 10: Inspector and overlays take up too much space on iPadOS
 
 +++
-status: open
+status: closed
 priority: medium
 kind: bug
 labels: effort:m, area:layout
 created: 2026-04-12T20:36:52Z
-updated: 2026-11-08T16:36:22Z
+updated: 2026-11-10T04:40:47Z
+closed: 2026-11-10T04:40:47Z
 +++
 
 Both .inspector() and .overlay() hint text may dominate the screen on iPadOS, especially in compact width. Inspector likely takes over the full screen instead of appearing as a sidebar. The hint overlay at the bottom could also obscure too much content. Need to test on iPad and consider adaptive layouts or popovers.
@@ -1678,5 +1679,28 @@ FPVWalkSettings.gravity is a scalar that always pulls along -Y, and the rest of 
 Scenes with another up axis (for example Z-up) or other gravity directions cannot use walk mode. TurntableTransformer already supports an up axis (`upAxis:`); FPV movement does not.
 
 Expected: gravity can be a 3D vector, and FPV movement (walk plane, yaw, ground height, eye height, jump) follows the up axis it implies.
+
+---
+
+## 80: FPV has too many public entry points; apps bypass FPVMovementModifier
+
++++
+status: new
+priority: medium
+kind: enhancement
+created: 2026-11-10T04:45:15Z
++++
+
+`WASDController`, `GameControllerMovementController` and `FPVMovementController` are public, so an app can wire them together itself instead of using `FPVMovementModifier`. Apps that do this miss what the modifier adds, for example claiming movement keys with `disableWASDKeys` (private). Without it, AppKit beeps on W A S D, arrows and other movement keys.
+
+TinyTorii's explore mode (`Explorer.swift`) does this. It can't use the modifier because the modifier does not support:
+
+- Outside input: an on-screen joystick (movement) and drag-to-look from the view. The modifier only listens to its own private keyboard and game controller.
+- App-driven mouse capture: TinyTorii captures with M and releases with Esc. The modifier's `WASDController` is private; capture is only available from its toolbar button.
+- Handing the camera to app autopilots and back: TinyTorii's stroll and fly-around move the camera, then walking by hand continues from there. With the modifier this means writing `cameraMatrix` while its own timer also writes it.
+- Driving a scene graph camera node each frame (SceneSprockets `SceneViewDelegate` / `pointOfView`) instead of a `cameraMatrix` binding.
+
+Expected: `FPVMovementModifier` is the only way to use FPV movement and covers these cases; the controller types are not public.
+Actual: apps must choose between the modifier (missing features) and the raw controllers (missing key handling and future modifier features).
 
 ---
