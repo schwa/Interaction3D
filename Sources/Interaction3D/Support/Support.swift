@@ -15,7 +15,7 @@ internal extension SIMD {
     }
 }
 
-public extension simd_quatf {
+extension simd_quatf {
     var matrix: simd_float4x4 {
         get {
             simd_float4x4(self)
@@ -46,8 +46,7 @@ internal extension SIMD3<Float> {
     }
 }
 
-// TODO: Move to GeometryLite3D
-public extension simd_float4x4 {
+extension simd_float4x4 {
     /// Computes the yaw (rotation about Y-axis) from the transformation matrix.
     /// Assumes no shear and uniform scaling.
     var yaw: Float {
@@ -68,7 +67,7 @@ public extension simd_float4x4 {
     }
 }
 
-public extension Comparable {
+extension Comparable {
     func clamped(to range: ClosedRange<Self>) -> Self {
         min(max(self, range.lowerBound), range.upperBound)
     }

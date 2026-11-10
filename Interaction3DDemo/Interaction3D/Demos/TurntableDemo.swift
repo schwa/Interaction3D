@@ -179,7 +179,7 @@ struct TurntableDemo: View {
         let perspectiveProjection = PerspectiveProjection(verticalAngleOfView: .degrees(60))
         let projectionMatrix = perspectiveProjection.projectionMatrix(width: Float(size.width), height: Float(size.height))
         let clipToScreenMatrix = float4x4.clipToScreen(width: Float(size.width), height: Float(size.height))
-        let cameraMatrix = float4x4(translation: target) * rotation.matrix * float4x4(translation: [0, 0, Float(distance)])
+        let cameraMatrix = float4x4(translation: target) * simd_float4x4(rotation) * float4x4(translation: [0, 0, Float(distance)])
         let viewMatrix = cameraMatrix.inverse
         let rendererContext = SoftwareRendererContext(viewMatrix: viewMatrix, projectionMatrix: projectionMatrix, clipToScreenMatrix: clipToScreenMatrix)
 

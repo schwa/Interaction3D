@@ -1,7 +1,7 @@
 import simd
 import SwiftUI
 
-public extension Float {
+extension Float {
     var double: Double {
         get {
             Double(self)

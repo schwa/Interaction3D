@@ -1858,12 +1858,13 @@ These are building blocks that apps compose themselves. Clients that used them n
 ## 88: Public utility extensions on simd and standard types can clash with clients
 
 +++
-status: open
+status: closed
 priority: low
 kind: enhancement
 labels: effort:s, area:api
 created: 2026-11-10T04:50:20Z
-updated: 2026-11-10T04:53:23Z
+updated: 2026-11-10T05:02:45Z
+closed: 2026-11-10T05:02:45Z
 +++
 
 Interaction3D adds public members to types it does not own:

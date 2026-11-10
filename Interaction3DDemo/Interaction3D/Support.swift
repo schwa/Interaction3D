@@ -53,7 +53,7 @@ func renderColoredCube(context: GraphicsContext, size: CGSize, rotation: simd_qu
     let clipToScreenMatrix = float4x4.clipToScreen(width: Float(size.width), height: Float(size.height))
 
     // Set up camera: translate to target, apply rotation, then pull back by distance
-    let cameraMatrix = float4x4(translation: target) * rotation.matrix * float4x4(translation: [0, 0, distance])
+    let cameraMatrix = float4x4(translation: target) * simd_float4x4(rotation) * float4x4(translation: [0, 0, distance])
     let viewMatrix = cameraMatrix.inverse
 
     let rendererContext = SoftwareRendererContext(viewMatrix: viewMatrix, projectionMatrix: projectionMatrix, clipToScreenMatrix: clipToScreenMatrix)
