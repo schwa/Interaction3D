@@ -1617,3 +1617,41 @@ The package already has gesture tools in `Sources/Interaction3D/Controllers` (`G
 Build the RTS touch and mouse input on the shared gesture tools and approaches.
 
 ---
+
+## 77: FPVMovementController has no collision
+
++++
+status: new
+priority: medium
+kind: enhancement
+created: 2026-11-10T04:34:49Z
++++
+
+`FPVMovementController` (and `FPVMovementModifier`) move the camera freely. Nothing lets the app reject or change a step, so the camera walks through walls, buildings, trees and water.
+
+Apps that need to walk through a scene must skip `FPVMovementController` and write their own movement code, using only `WASDController` and `GameControllerMovementController` for input. TinyTorii's explore mode does this (`Explorer.swift`): it blocks steps into buildings, water and tree trunks, slides along walls when the direct step is blocked, and keeps a small distance from blocked cells.
+
+Expected: an app can use `FPVMovementController` / `FPVMovementModifier` and still stop the camera at obstacles, with sliding along them.
+Actual: no collision; the app must replace the controller.
+
+---
+
+## 78: FPVMovementController can't follow the ground
+
++++
+status: new
+priority: medium
+kind: enhancement
+created: 2026-11-10T04:34:49Z
++++
+
+`FPVMovementController` keeps its own height; in walk mode (free flight off) it moves on a flat plane. Nothing lets the app set the camera's height from the terrain under it.
+
+Apps that walk over uneven ground (terraces, steps, bridges) must write their own movement code. TinyTorii's explore mode (`Explorer.swift`) keeps the eye a fixed height above the ground at the current point, eases the height when it changes, lifts the camera over bridges, and refuses steps up that are too high. Head bob is also done there.
+
+Expected: an app can use `FPVMovementController` / `FPVMovementModifier` and give it the ground height at a point, so the camera walks over terrain.
+Actual: the camera stays at its own height.
+
+Related: collision (the step-up limit is both).
+
+---
