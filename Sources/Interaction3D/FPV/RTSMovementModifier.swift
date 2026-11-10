@@ -107,6 +107,9 @@ public struct RTSMovementModifier: ViewModifier {
     @FocusState
     private var isFocused: Bool
 
+    @Environment(\.interactionScrollFilter)
+    private var scrollFilter
+
     @State
     private var gestures = GestureState()
 
@@ -139,6 +142,7 @@ public struct RTSMovementModifier: ViewModifier {
                     switch phase {
                     case .active(let location):
                         rtsController.pointerLocation = CGPoint(x: location.x / proxy.size.width, y: location.y / proxy.size.height)
+                        rtsController.isScrollAllowed = scrollFilter?.accepts(location) ?? true
                     case .ended:
                         rtsController.pointerLocation = nil
                     }

@@ -34,6 +34,23 @@ public final class WASDController {
     @ObservationIgnored
     public var extraControls: FPVExtraControls = []
 
+    // Mouse look happens only while this is true, or while the mouse is captured. With hold-to-look it is read when
+    // the button goes down. The owning view clears it while the pointer is outside the view or interactionDragFilter
+    // rejects it.
+    @ObservationIgnored
+    public var isLookAllowed = true
+
+    // Scroll speed adjustment happens only while this is true. The owning view clears it while the pointer is outside
+    // the view or interactionScrollFilter rejects it.
+    @ObservationIgnored
+    public var isScrollAllowed = true
+
+    @ObservationIgnored
+    private var wasLookButtonPressed = false
+
+    @ObservationIgnored
+    private var isLookButtonAccepted = false
+
     @ObservationIgnored
     var isKeyPressed: (GCKeyCode) -> Bool = { keyCode in
         GCKeyboard.coalesced?.keyboardInput?.button(forKeyCode: keyCode)?.isPressed ?? false
@@ -99,7 +116,7 @@ public final class WASDController {
     }
 
     func extraKeyboardState() -> (roll: Float, isSlow: Bool, isLookHeld: Bool) {
-        let isLookHeld = !extraControls.contains(.holdToLook) || isRightMouseButtonPressed()
+        let isLookHeld = !extraControls.contains(.holdToLook) || isLookButtonHeld()
         guard isKeyboardEnabled else {
             return (0, false, isLookHeld)
         }
@@ -109,6 +126,27 @@ public final class WASDController {
         }
         let isSlow = extraControls.contains(.slowModifier) && (isKeyPressed(.leftAlt) || isKeyPressed(.rightAlt))
         return (roll, isSlow, isLookHeld)
+    }
+
+    // The hold-to-look button counts only if look was allowed when it went down.
+    private func isLookButtonHeld() -> Bool {
+        let isPressed = isRightMouseButtonPressed()
+        if isPressed, !wasLookButtonPressed {
+            isLookButtonAccepted = isLookAllowed || isMouseCaptured
+        }
+        wasLookButtonPressed = isPressed
+        return isPressed && isLookButtonAccepted
+    }
+
+    func shouldForwardMouseLook() -> Bool {
+        isMouseCaptured || isLookAllowed || extraControls.contains(.holdToLook)
+    }
+
+    func speedSteps(forScroll value: Float) -> Float? {
+        guard value != 0, isKeyboardEnabled, isScrollAllowed, extraControls.contains(.speedAdjustment) else {
+            return nil
+        }
+        return value > 0 ? 1 : -1
     }
 
     // Returns +1/-1 once per +/- press.
@@ -202,13 +240,13 @@ public final class WASDController {
             case .mouseMoved:
                 let deltaX = event.deltaX
                 let deltaY = event.deltaY
-                if deltaX != 0 || deltaY != 0 {
+                if deltaX != 0 || deltaY != 0, shouldForwardMouseLook() {
                     // NSEvent +Y is down; flip to match GCMouse.
                     eventContinuation.yield(.look(deltaX: Float(deltaX), deltaY: Float(-deltaY)))
                 }
             case .scrollWheel:
-                if event.scrollingDeltaY != 0, isKeyboardEnabled, extraControls.contains(.speedAdjustment) {
-                    eventContinuation.yield(.adjustSpeed(steps: event.scrollingDeltaY > 0 ? 1 : -1))
+                if let steps = speedSteps(forScroll: Float(event.scrollingDeltaY)) {
+                    eventContinuation.yield(.adjustSpeed(steps: steps))
                 }
             default:
                 break
@@ -255,13 +293,16 @@ public final class WASDController {
     private func registerMouse(_ mouse: GCMouse) {
         if let mouseInput = mouse.mouseInput {
             mouseInput.mouseMovedHandler = { [weak self] _, deltaX, deltaY in
-                self?.eventContinuation.yield(.look(deltaX: deltaX, deltaY: deltaY))
-            }
-            mouseInput.scroll.yAxis.valueChangedHandler = { [weak self] _, value in
-                guard let self, value != 0, isKeyboardEnabled, extraControls.contains(.speedAdjustment) else {
+                guard let self, shouldForwardMouseLook() else {
                     return
                 }
-                eventContinuation.yield(.adjustSpeed(steps: value > 0 ? 1 : -1))
+                eventContinuation.yield(.look(deltaX: deltaX, deltaY: deltaY))
+            }
+            mouseInput.scroll.yAxis.valueChangedHandler = { [weak self] _, value in
+                guard let self, let steps = speedSteps(forScroll: value) else {
+                    return
+                }
+                eventContinuation.yield(.adjustSpeed(steps: steps))
             }
             _ = mouseInput.capture()
         }

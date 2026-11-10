@@ -51,6 +51,12 @@ public struct FPVMovementModifier: ViewModifier {
     @FocusState
     private var isFocused: Bool
 
+    @Environment(\.interactionDragFilter)
+    private var dragFilter
+
+    @Environment(\.interactionScrollFilter)
+    private var scrollFilter
+
     // updatesAutomatically: false means the app calls navigator.update(deltaTime:) from its own frame loop.
     // showsControls adds Capture Mouse and Reset toolbar buttons to the host window.
     public init(navigator: FPVNavigator, updatesAutomatically: Bool = true, showsControls: Bool = false) {
@@ -69,6 +75,16 @@ public struct FPVMovementModifier: ViewModifier {
             }
             .onChange(of: isFocused, initial: true) {
                 navigator.isKeyboardEnabled = isFocused
+            }
+            .onContinuousHover { phase in
+                switch phase {
+                case .active(let location):
+                    navigator.isLookAllowed = dragFilter?.accepts(location) ?? true
+                    navigator.isScrollAllowed = scrollFilter?.accepts(location) ?? true
+                case .ended:
+                    navigator.isLookAllowed = false
+                    navigator.isScrollAllowed = false
+                }
             }
             .disableWASDKeys(extraControls: navigator.settings.extraControls)
             .toolbar {

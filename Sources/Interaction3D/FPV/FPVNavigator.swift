@@ -50,6 +50,17 @@ public final class FPVNavigator {
         didSet { keyboard?.isKeyboardEnabled = isKeyboardEnabled }
     }
 
+    // Set from hover position and the interaction filters by FPVMovementModifier.
+    @ObservationIgnored
+    var isLookAllowed = true {
+        didSet { keyboard?.isLookAllowed = isLookAllowed }
+    }
+
+    @ObservationIgnored
+    var isScrollAllowed = true {
+        didSet { keyboard?.isScrollAllowed = isScrollAllowed }
+    }
+
     public init(pose: simd_float4x4 = matrix_identity_float4x4) {
         controller.setPose(pose)
         applySettings()
@@ -125,6 +136,8 @@ public final class FPVNavigator {
     func runInput() async {
         let keyboard = WASDController()
         keyboard.isKeyboardEnabled = isKeyboardEnabled
+        keyboard.isLookAllowed = isLookAllowed
+        keyboard.isScrollAllowed = isScrollAllowed
         keyboard.extraControls = settings.extraControls
         let gamepad = GameControllerMovementController()
         self.keyboard = keyboard

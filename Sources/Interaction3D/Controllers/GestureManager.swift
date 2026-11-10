@@ -382,6 +382,14 @@ public extension EnvironmentValues {
     /// Decides once per magnify gesture, at its first change, whether Interaction3D magnify controls may handle it.
     /// Receives the gesture start location in the view's local coordinate space.
     @Entry var interactionMagnifyFilter: (any InteractionLocationFilter)?
+
+    /// Decides once per two-finger rotate gesture, at its first change, whether Interaction3D rotate controls may handle it.
+    /// When unset, rotate gestures use `interactionMagnifyFilter`.
+    @Entry var interactionRotateFilter: (any InteractionLocationFilter)?
+}
+
+func resolvedRotateFilter(rotate: (any InteractionLocationFilter)?, magnify: (any InteractionLocationFilter)?) -> (any InteractionLocationFilter)? {
+    rotate ?? magnify
 }
 
 public extension View {
@@ -398,6 +406,11 @@ public extension View {
     /// Rejects Interaction3D magnify gestures whose start location fails `filter`.
     func interactionMagnifyFilter(_ filter: some InteractionLocationFilter) -> some View {
         environment(\.interactionMagnifyFilter, filter)
+    }
+
+    /// Rejects Interaction3D rotate gestures whose start location fails `filter`.
+    func interactionRotateFilter(_ filter: some InteractionLocationFilter) -> some View {
+        environment(\.interactionRotateFilter, filter)
     }
 }
 
@@ -538,13 +551,14 @@ public struct CoreMagnifyModifier: ViewModifier {
 }
 
 /// Low-level two-finger rotate gesture with momentum. Reports the total rotation since the gesture began.
-/// Honors `interactionMagnifyFilter`, because rotate and magnify share the same two-finger input.
+/// Honors `interactionRotateFilter`, or `interactionMagnifyFilter` when that is unset.
 public struct CoreRotateModifier: ViewModifier {
     let momentum: Bool
     let onChanged: (Angle) -> Void
     let onEnded: () -> Void
 
     @Environment(\.interactionMagnifyFilter) private var magnifyFilter
+    @Environment(\.interactionRotateFilter) private var rotateFilter
     @State private var claimState: CoreDragModifier.ClaimState = .unclaimed
     @State private var animatedRadians: Double = 0
     @State private var isAnimating = false
@@ -566,7 +580,8 @@ public struct CoreRotateModifier: ViewModifier {
                 RotateGesture()
                     .onChanged { gestureValue in
                         if claimState == .unclaimed {
-                            let accepted = magnifyFilter?.accepts(gestureValue.startLocation) ?? true
+                            let filter = resolvedRotateFilter(rotate: rotateFilter, magnify: magnifyFilter)
+                            let accepted = filter?.accepts(gestureValue.startLocation) ?? true
                             claimState = accepted ? .claimed : .rejected
                         }
                         guard claimState == .claimed else {

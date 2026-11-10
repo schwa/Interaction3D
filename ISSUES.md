@@ -1794,12 +1794,13 @@ As a result it does not get `FPVMovementSettings`, `FPVMovementHooks` (collision
 ## 85: Camera controls apply input filters inconsistently
 
 +++
-status: open
+status: closed
 priority: medium
 kind: bug
 labels: effort:m, area:camera
 created: 2026-11-10T04:50:19Z
-updated: 2026-11-10T04:53:23Z
+updated: 2026-11-10T04:57:11Z
+closed: 2026-11-10T04:57:11Z
 +++
 
 `interactionDragFilter`, `interactionScrollFilter` and `interactionMagnifyFilter` let an app keep camera input off things like gizmos. Support differs per control:

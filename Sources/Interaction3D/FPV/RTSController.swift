@@ -44,6 +44,10 @@ public final class RTSController {
     @ObservationIgnored
     public var pointerLocation: CGPoint?
 
+    // Scroll zoom happens only while this is true. The owning view clears it where interactionScrollFilter rejects the pointer.
+    @ObservationIgnored
+    public var isScrollAllowed = true
+
     // Fraction of the view size, from each edge, that triggers edge panning. Zero turns it off.
     @ObservationIgnored
     public var edgePanMargin: CGFloat = 0.02
@@ -109,6 +113,14 @@ public final class RTSController {
         return SIMD2<Float>(axis(location.x), -axis(location.y))
     }
 
+    // Zooms only while the cursor is over the view and scrolling is allowed there.
+    func zoomSteps(forScroll value: Float) -> Float? {
+        guard value != 0, pointerLocation != nil, isScrollAllowed else {
+            return nil
+        }
+        return value > 0 ? 1 : -1
+    }
+
     func isResetTriggered() -> Bool {
         let pressed = isKeyboardEnabled && isKeyPressed(.home)
         defer { wasResetPressed = pressed }
@@ -162,8 +174,8 @@ public final class RTSController {
     #if canImport(AppKit)
     private func setupNSEventMonitor() {
         mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel]) { [weak self] event in
-            if let self, event.scrollingDeltaY != 0, pointerLocation != nil {
-                eventContinuation.yield(.zoom(steps: event.scrollingDeltaY > 0 ? 1 : -1))
+            if let self, let steps = zoomSteps(forScroll: Float(event.scrollingDeltaY)) {
+                eventContinuation.yield(.zoom(steps: steps))
             }
             return event
         }
@@ -172,11 +184,10 @@ public final class RTSController {
 
     private func registerMouse(_ mouse: GCMouse) {
         mouse.mouseInput?.scroll.yAxis.valueChangedHandler = { [weak self] _, value in
-            // Only zoom while the cursor is over the view.
-            guard let self, value != 0, pointerLocation != nil else {
+            guard let self, let steps = zoomSteps(forScroll: value) else {
                 return
             }
-            eventContinuation.yield(.zoom(steps: value > 0 ? 1 : -1))
+            eventContinuation.yield(.zoom(steps: steps))
         }
     }
 }
