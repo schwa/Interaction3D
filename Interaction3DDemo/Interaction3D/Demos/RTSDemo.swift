@@ -16,7 +16,9 @@ struct RTSDemo: View {
         .overlay(alignment: .bottom) {
             VStack(spacing: 4) {
                 #if os(iOS)
-                Text("Drag to pan, pinch to zoom, twist to rotate")
+                Text("Drag to pan, two-finger drag to orbit, pinch to zoom, twist to rotate")
+                #else
+                Text("Drag to pan, Option-drag to orbit, pinch to zoom, twist to rotate")
                 #endif
                 Text("WASD or arrows to pan, Q/E to rotate, R/F or scroll to zoom")
                 Text("Move the cursor to the edge to pan, Shift for faster, Home to reset")

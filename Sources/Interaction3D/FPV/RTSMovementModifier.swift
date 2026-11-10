@@ -40,6 +40,15 @@ public struct RTSCameraPose: Equatable, Sendable {
     public func grabbed(translation: CGSize) -> Self {
         panned(by: SIMD2<Float>(-Float(translation.width), Float(translation.height)))
     }
+
+    // Orbits around the target. translation is in fractions of the view height, +Y down.
+    // Dragging down raises the camera.
+    public func orbited(translation: CGSize, speed: Float, pitchRange: ClosedRange<Float>) -> Self {
+        var pose = self
+        pose.yaw -= Float(translation.width) * speed
+        pose.pitch = min(max(pitch + Float(translation.height) * speed, pitchRange.lowerBound), pitchRange.upperBound)
+        return pose
+    }
 }
 
 public struct RTSMovementSettings: Equatable, Sendable {
@@ -53,6 +62,9 @@ public struct RTSMovementSettings: Equatable, Sendable {
     public var zoomStepFactor: Float
     public var distanceRange: ClosedRange<Float>
     public var edgePanMargin: CGFloat
+    // Radians per view height of drag.
+    public var orbitSpeed: Float
+    public var pitchRange: ClosedRange<Float>
 
     public init(
         panSpeed: Float = 1,
@@ -61,8 +73,12 @@ public struct RTSMovementSettings: Equatable, Sendable {
         zoomSpeed: Float = 2,
         zoomStepFactor: Float = 1.1,
         distanceRange: ClosedRange<Float> = 2...100,
-        edgePanMargin: CGFloat = 0.02
+        edgePanMargin: CGFloat = 0.02,
+        orbitSpeed: Float = .pi,
+        pitchRange: ClosedRange<Float> = 0.1...(.pi / 2 - 0.01)
     ) {
+        self.orbitSpeed = orbitSpeed
+        self.pitchRange = pitchRange
         self.panSpeed = panSpeed
         self.fastSpeedMultiplier = fastSpeedMultiplier
         self.rotateSpeed = rotateSpeed
@@ -92,11 +108,13 @@ public struct RTSMovementModifier: ViewModifier {
     private var isFocused: Bool
 
     @State
-    private var touch = TouchState()
+    private var gestures = GestureState()
 
-    private struct TouchState {
-        var dragTranslation: CGSize = .zero
-        var magnification: CGFloat = 1
+    // Last cumulative values reported by the shared gestures, to turn them into deltas.
+    private struct GestureState {
+        var panTranslation: CGSize = .zero
+        var orbitTranslation: CGSize = .zero
+        var magnification: Double = 1
         var rotation: Angle = .zero
     }
 
@@ -125,10 +143,8 @@ public struct RTSMovementModifier: ViewModifier {
                         rtsController.pointerLocation = nil
                     }
                 }
-                #if os(iOS)
                 .contentShape(Rectangle())
-                .gesture(touchGesture(viewHeight: proxy.size.height))
-                #endif
+                .modifier(gestureModifiers(viewHeight: proxy.size.height))
         }
         .focusable()
         .focused($isFocused)
@@ -208,51 +224,67 @@ public struct RTSMovementModifier: ViewModifier {
         pose = newPose
     }
 
-    #if os(iOS)
-    // One-finger drag pans, pinch zooms, two-finger twist rotates.
-    private func touchGesture(viewHeight: CGFloat) -> some Gesture {
-        let drag = DragGesture(minimumDistance: 0)
-            .onChanged { value in
-                guard viewHeight > 0 else {
-                    return
-                }
-                let delta = CGSize(
-                    width: (value.translation.width - touch.dragTranslation.width) / viewHeight,
-                    height: (value.translation.height - touch.dragTranslation.height) / viewHeight
-                )
-                touch.dragTranslation = value.translation
+    // Drag pans; Option-drag (macOS) or two-finger drag (iOS) orbits; pinch zooms; twist rotates. All coast on release.
+    private func gestureModifiers(viewHeight: CGFloat) -> some ViewModifier {
+        RTSGestures(
+            onPan: { translation in
+                let delta = Self.viewFraction(translation, since: gestures.panTranslation, viewHeight: viewHeight)
+                gestures.panTranslation = translation
                 pose = pose.grabbed(translation: delta)
-            }
-            .onEnded { _ in
-                touch.dragTranslation = .zero
-            }
-        let magnify = MagnifyGesture()
-            .onChanged { value in
-                let delta = value.magnification / touch.magnification
-                touch.magnification = value.magnification
-                guard delta > 0 else {
+            },
+            onPanEnded: { gestures.panTranslation = .zero },
+            onOrbit: { translation in
+                let delta = Self.viewFraction(translation, since: gestures.orbitTranslation, viewHeight: viewHeight)
+                gestures.orbitTranslation = translation
+                pose = pose.orbited(translation: delta, speed: settings.orbitSpeed, pitchRange: settings.pitchRange)
+            },
+            onOrbitEnded: { gestures.orbitTranslation = .zero },
+            onMagnify: { magnification in
+                let ratio = magnification / gestures.magnification
+                gestures.magnification = magnification
+                guard ratio > 0 else {
                     return
                 }
-                pose.distance = clampedDistance(pose.distance / Float(delta))
-            }
-            .onEnded { _ in
-                touch.magnification = 1
-            }
-        let rotate = RotateGesture()
-            .onChanged { value in
-                let delta = value.rotation - touch.rotation
-                touch.rotation = value.rotation
+                pose.distance = clampedDistance(pose.distance / Float(ratio))
+            },
+            onMagnifyEnded: { gestures.magnification = 1 },
+            onRotate: { rotation in
+                let delta = rotation - gestures.rotation
+                gestures.rotation = rotation
                 pose.yaw += Float(delta.radians)
-            }
-            .onEnded { _ in
-                touch.rotation = .zero
-            }
-        return drag.simultaneously(with: magnify.simultaneously(with: rotate))
+            },
+            onRotateEnded: { gestures.rotation = .zero }
+        )
     }
-    #endif
+
+    private static func viewFraction(_ translation: CGSize, since previous: CGSize, viewHeight: CGFloat) -> CGSize {
+        guard viewHeight > 0 else {
+            return .zero
+        }
+        return CGSize(width: (translation.width - previous.width) / viewHeight, height: (translation.height - previous.height) / viewHeight)
+    }
 
     private func clampedDistance(_ distance: Float) -> Float {
         min(max(distance, settings.distanceRange.lowerBound), settings.distanceRange.upperBound)
+    }
+}
+
+private struct RTSGestures: ViewModifier {
+    let onPan: (CGSize) -> Void
+    let onPanEnded: () -> Void
+    let onOrbit: (CGSize) -> Void
+    let onOrbitEnded: () -> Void
+    let onMagnify: (Double) -> Void
+    let onMagnifyEnded: () -> Void
+    let onRotate: (Angle) -> Void
+    let onRotateEnded: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .modifier(CoreDragModifier(modifiers: [], momentum: true, touchCount: 1, onChanged: onPan, onEnded: onPanEnded))
+            .modifier(CoreDragModifier(modifiers: .option, momentum: true, touchCount: 2, onChanged: onOrbit, onEnded: onOrbitEnded))
+            .modifier(CoreMagnifyModifier(momentum: true, onChanged: onMagnify, onEnded: onMagnifyEnded))
+            .modifier(CoreRotateModifier(momentum: true, onChanged: onRotate, onEnded: onRotateEnded))
     }
 }
 

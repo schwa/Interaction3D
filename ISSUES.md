@@ -1552,10 +1552,12 @@ Unverified: whether the keys and edge panning work on iPad with a hardware keybo
 ## 74: RTS camera can't orbit (no pitch control)
 
 +++
-status: new
+status: closed
 priority: medium
 kind: enhancement
 created: 2026-11-10T04:25:22Z
+updated: 2026-11-10T04:34:49Z
+closed: 2026-11-10T04:34:49Z
 +++
 
 `RTSCameraPose` has a target, yaw, pitch and distance, so it can describe an orbit camera. But `RTSMovementModifier` gives no way to change pitch:
@@ -1567,5 +1569,51 @@ created: 2026-11-10T04:25:22Z
 Apps that want an RTS camera and orbiting (for example TinyTorii's build mode) must add a second camera control, such as SceneSprockets' orbit camera, and keep the two in sync. On iOS the second control's gestures also take touches away from the RTS gestures.
 
 Expected: the RTS camera can tilt and orbit around its target with touch on iOS and with the mouse on macOS.
+
+---
+
+## 75: RTS camera stops dead when a drag, pinch or twist ends (no momentum)
+
++++
+status: closed
+priority: medium
+kind: enhancement
+created: 2026-11-10T04:28:39Z
+updated: 2026-11-10T04:34:49Z
+closed: 2026-11-10T04:34:49Z
++++
+
+The trackball controllers keep moving after release: `GestureManager` and `DragGestureModifier` animate from the last translation to `predictedEndTranslation` with an ease-out, and skip the coast if the pointer was still for longer than `animationMaxDelay`.
+
+`RTSMovementModifier` has no momentum. When the user lifts a finger or releases the mouse, the camera stops at once. This applies to:
+- one-finger pan (iOS)
+- two-finger orbit (iOS, #74)
+- right-drag orbit (macOS, #74)
+- pinch zoom and twist rotate (iOS)
+
+Expected: RTS pan, orbit, zoom and rotate coast after release, in the same way as the trackball.
+
+## Proposed fix (per user)
+Use the existing momentum tools and approach (`GestureManager` / `DragGestureModifier`, predicted end translation and ease-out) instead of a separate RTS-only mechanism.
+
+---
+
+## 76: RTS gestures do not use the shared gesture tools
+
++++
+status: closed
+priority: low
+kind: task
+created: 2026-11-10T04:28:39Z
+updated: 2026-11-10T04:34:49Z
+closed: 2026-11-10T04:34:49Z
++++
+
+`RTSMovementModifier` builds its own gesture handling: a custom `UIPanGestureRecognizer` representable for one- and two-finger drags, SwiftUI `MagnifyGesture` / `RotateGesture` with delta tracking, and an `NSEvent` monitor for right-drag on macOS.
+
+The package already has gesture tools in `Sources/Interaction3D/Controllers` (`GestureManager`, `DragGestureModifier`, `MagnifyGestureModifier`, transformed drag gestures). The trackball controllers use them; the RTS camera does not. Because of this, RTS behavior (momentum, thresholds, modifier handling) differs from the other cameras, and features added to the shared tools do not reach the RTS camera.
+
+## Proposed fix (per user)
+Build the RTS touch and mouse input on the shared gesture tools and approaches.
 
 ---

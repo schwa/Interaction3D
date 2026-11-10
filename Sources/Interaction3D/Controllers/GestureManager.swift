@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Bridges SwiftUI animation to a CGSize callback, interpolating frame-by-frame.
 @Animatable
-private struct AnimatedSizeModifier: ViewModifier {
+struct AnimatedSizeModifier: ViewModifier {
     var width: CGFloat
     var height: CGFloat
     @AnimatableIgnored
@@ -26,14 +26,35 @@ struct CoreDragValue: Equatable {
     var currentLocation: CGPoint
 }
 
+// One step of a drag, from either DragGesture or a touch-counting pan.
+struct DragSample {
+    var translation: CGSize
+    var startLocation: CGPoint
+    var location: CGPoint
+    var predictedEndTranslation: CGSize
+
+    init(translation: CGSize, startLocation: CGPoint, location: CGPoint, predictedEndTranslation: CGSize) {
+        self.translation = translation
+        self.startLocation = startLocation
+        self.location = location
+        self.predictedEndTranslation = predictedEndTranslation
+    }
+
+    init(_ value: DragGesture.Value) {
+        self.init(translation: value.translation, startLocation: value.startLocation, location: value.location, predictedEndTranslation: value.predictedEndTranslation)
+    }
+}
+
 /// Low-level drag gesture filtered by modifier keys.
 /// Supports momentum: on release, animates from last translation to predicted end,
 /// calling `onChanged` each frame during the animation.
 /// `modifiers`: nil = don't care, [] = no modifiers, [.command] = exactly command, etc.
+/// `touchCount` (iOS only): when set, only drags with exactly that many fingers are handled, and `modifiers` is ignored.
 public struct CoreDragModifier: ViewModifier {
     let modifiers: EventModifiers?
     let minimumDistance: CGFloat
     let momentum: Bool
+    let touchCount: Int?
     let onValueChanged: (CoreDragValue) -> Void
     let onEnded: () -> Void
 
@@ -49,12 +70,14 @@ public struct CoreDragModifier: ViewModifier {
         modifiers: EventModifiers? = nil,
         minimumDistance: CGFloat = 10,
         momentum: Bool = true,
+        touchCount: Int? = nil,
         onChanged: @escaping (CGSize) -> Void,
         onEnded: @escaping () -> Void
     ) {
         self.modifiers = modifiers
         self.minimumDistance = minimumDistance
         self.momentum = momentum
+        self.touchCount = touchCount
         self.onValueChanged = { onChanged($0.translation) }
         self.onEnded = onEnded
     }
@@ -63,12 +86,14 @@ public struct CoreDragModifier: ViewModifier {
         modifiers: EventModifiers? = nil,
         minimumDistance: CGFloat = 10,
         momentum: Bool = true,
+        touchCount: Int? = nil,
         onValueChanged: @escaping (CoreDragValue) -> Void,
         onEnded: @escaping () -> Void
     ) {
         self.modifiers = modifiers
         self.minimumDistance = minimumDistance
         self.momentum = momentum
+        self.touchCount = touchCount
         self.onValueChanged = onValueChanged
         self.onEnded = onEnded
     }
@@ -102,7 +127,12 @@ public struct CoreDragModifier: ViewModifier {
                     notifyChanged(translation: size)
                 }
             })
-            .simultaneousGesture(dragGesture)
+            .modifier(DragInputModifier(
+                touchCount: touchCount,
+                dragGesture: dragGesture,
+                onChanged: handleTouchChanged,
+                onEnded: handleEndedIfClaimed
+            ))
     }
 
     private var dragGesture: some Gesture {
@@ -113,33 +143,41 @@ public struct CoreDragModifier: ViewModifier {
                     .modifiers(modifiers)
                 #endif
                     .onChanged { value in
-                        claimIfNeeded(value, checkModifiers: false)
+                        claimIfNeeded(DragSample(value), checkModifiers: false)
                         guard claimState == .claimed else {
                             return
                         }
-                        handleChanged(value)
+                        handleChanged(DragSample(value))
                     }
                     .onEnded { value in
-                        handleEndedIfClaimed(value)
+                        handleEndedIfClaimed(DragSample(value))
                     }
             )
         }
         return AnyGesture(
             DragGesture(minimumDistance: minimumDistance)
                 .onChanged { value in
-                    claimIfNeeded(value, checkModifiers: true)
+                    claimIfNeeded(DragSample(value), checkModifiers: true)
                     guard claimState == .claimed else {
                         return
                     }
-                    handleChanged(value)
+                    handleChanged(DragSample(value))
                 }
                 .onEnded { value in
-                    handleEndedIfClaimed(value)
+                    handleEndedIfClaimed(DragSample(value))
                 }
         )
     }
 
-    private func claimIfNeeded(_ value: DragGesture.Value, checkModifiers: Bool) {
+    private func handleTouchChanged(_ sample: DragSample) {
+        claimIfNeeded(sample, checkModifiers: false)
+        guard claimState == .claimed else {
+            return
+        }
+        handleChanged(sample)
+    }
+
+    private func claimIfNeeded(_ value: DragSample, checkModifiers: Bool) {
         guard claimState == .unclaimed else {
             return
         }
@@ -155,7 +193,7 @@ public struct CoreDragModifier: ViewModifier {
         claimState = accepted ? .claimed : .rejected
     }
 
-    private func handleEndedIfClaimed(_ value: DragGesture.Value) {
+    private func handleEndedIfClaimed(_ value: DragSample) {
         let wasClaimed = claimState == .claimed
         claimState = .unclaimed
         guard wasClaimed else {
@@ -164,7 +202,7 @@ public struct CoreDragModifier: ViewModifier {
         handleEnded(value.translation, predicted: value.predictedEndTranslation)
     }
 
-    private func handleChanged(_ value: DragGesture.Value) {
+    private func handleChanged(_ value: DragSample) {
         isAnimating = false
         startLocation = value.startLocation
         animatingToTranslation = value.translation
@@ -208,6 +246,119 @@ public struct CoreDragModifier: ViewModifier {
         onEnded()
     }
 }
+
+// MARK: - Drag Input
+
+// Feeds CoreDragModifier from DragGesture, or on iOS from a pan that counts fingers.
+private struct DragInputModifier<DragInput: Gesture>: ViewModifier {
+    let touchCount: Int?
+    let dragGesture: DragInput
+    let onChanged: (DragSample) -> Void
+    let onEnded: (DragSample) -> Void
+
+    func body(content: Content) -> some View {
+        #if os(iOS)
+        if let touchCount {
+            content.gesture(TouchCountPanGesture(touchCount: touchCount, onChanged: onChanged, onEnded: onEnded))
+        } else {
+            content.simultaneousGesture(dragGesture)
+        }
+        #else
+        content.simultaneousGesture(dragGesture)
+        #endif
+    }
+}
+
+#if os(iOS)
+// Reports a drag only while exactly `touchCount` fingers are down. Adding or lifting a finger ends it.
+struct TouchCountPanGesture: UIGestureRecognizerRepresentable {
+    let touchCount: Int
+    let onChanged: (DragSample) -> Void
+    let onEnded: (DragSample) -> Void
+
+    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
+        var isActive = false
+        var isDone = false
+        var origin: CGPoint = .zero
+        var startLocation: CGPoint = .zero
+        var lastSample: DragSample?
+
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+            true
+        }
+    }
+
+    func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator {
+        Coordinator()
+    }
+
+    func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
+        let recognizer = UIPanGestureRecognizer()
+        recognizer.minimumNumberOfTouches = 1
+        recognizer.maximumNumberOfTouches = max(touchCount, 2)
+        recognizer.delegate = context.coordinator
+        return recognizer
+    }
+
+    func handleUIGestureRecognizerAction(_ recognizer: UIPanGestureRecognizer, context: Context) {
+        let coordinator = context.coordinator
+        let view = recognizer.view
+        switch recognizer.state {
+        case .began, .changed:
+            let translation = recognizer.translation(in: view)
+            let location = recognizer.location(in: view)
+            let matches = recognizer.numberOfTouches == touchCount
+            if coordinator.isActive {
+                if matches {
+                    let sample = Self.sample(coordinator: coordinator, translation: translation, location: location, velocity: recognizer.velocity(in: view))
+                    coordinator.lastSample = sample
+                    onChanged(sample)
+                } else {
+                    end(coordinator)
+                }
+            } else if matches, !coordinator.isDone {
+                coordinator.isActive = true
+                coordinator.origin = translation
+                coordinator.startLocation = location
+                let sample = Self.sample(coordinator: coordinator, translation: translation, location: location, velocity: .zero)
+                coordinator.lastSample = sample
+                onChanged(sample)
+            } else if !matches, recognizer.numberOfTouches < touchCount {
+                // Still waiting for more fingers.
+            } else {
+                coordinator.isDone = true
+            }
+        default:
+            if coordinator.isActive {
+                end(coordinator)
+            }
+            coordinator.isDone = false
+        }
+    }
+
+    private func end(_ coordinator: Coordinator) {
+        coordinator.isActive = false
+        coordinator.isDone = true
+        // The last sample's velocity predates the finger change, which moves the centroid.
+        if let sample = coordinator.lastSample {
+            onEnded(sample)
+        }
+        coordinator.lastSample = nil
+    }
+
+    private static func sample(coordinator: Coordinator, translation: CGPoint, location: CGPoint, velocity: CGPoint) -> DragSample {
+        let size = CGSize(width: translation.x - coordinator.origin.x, height: translation.y - coordinator.origin.y)
+        // Matches UIScrollView's normal deceleration rate.
+        let decay: CGFloat = 0.998 / (1 - 0.998) / 1_000
+        return DragSample(
+            translation: size,
+            startLocation: coordinator.startLocation,
+            location: location,
+            predictedEndTranslation: CGSize(width: size.width + velocity.x * decay, height: size.height + velocity.y * decay)
+        )
+    }
+}
+#endif
 
 // MARK: - Drag Filter
 
@@ -298,33 +449,177 @@ struct ScrollGestureModifier<T: Transformer>: ViewModifier where T.Input == Doub
 
 struct MagnifyGestureModifier<T: Transformer>: ViewModifier where T.Input == Double, T.Output: AdditiveArithmetic {
     let transformer: T
+    let momentum: Bool
     @Binding var value: T.Output
 
-    @Environment(\.interactionMagnifyFilter) private var magnifyFilter
-    @State private var lastMagnification: Double = 0
-    @State private var claimState: CoreDragModifier.ClaimState = .unclaimed
+    @State private var lastMagnification: Double = 1
 
     func body(content: Content) -> some View {
-        content.gesture(
-            MagnifyGesture()
-                .onChanged { gestureValue in
-                    if claimState == .unclaimed {
-                        let accepted = magnifyFilter?.accepts(gestureValue.startLocation) ?? true
-                        claimState = accepted ? .claimed : .rejected
-                    }
-                    guard claimState == .claimed else {
-                        return
-                    }
-                    let current = Double(gestureValue.magnification - 1)
-                    let delta = current - lastMagnification
-                    lastMagnification = current
-                    value += transformer.transform(delta)
+        content.modifier(CoreMagnifyModifier(momentum: momentum) { magnification in
+            let delta = magnification - lastMagnification
+            lastMagnification = magnification
+            value += transformer.transform(delta)
+        } onEnded: {
+            lastMagnification = 1
+        })
+    }
+}
+
+// Seconds of release velocity that momentum carries forward.
+private let gestureMomentumTime = 0.2
+
+/// Low-level magnify gesture with momentum. Reports the total magnification since the gesture began, starting at 1.
+/// Honors `interactionMagnifyFilter`.
+public struct CoreMagnifyModifier: ViewModifier {
+    let momentum: Bool
+    let onChanged: (Double) -> Void
+    let onEnded: () -> Void
+
+    @Environment(\.interactionMagnifyFilter) private var magnifyFilter
+    @State private var claimState: CoreDragModifier.ClaimState = .unclaimed
+    @State private var animatedMagnification: Double = 1
+    @State private var isAnimating = false
+
+    public init(momentum: Bool = true, onChanged: @escaping (Double) -> Void, onEnded: @escaping () -> Void = { /* nothing */ }) {
+        self.momentum = momentum
+        self.onChanged = onChanged
+        self.onEnded = onEnded
+    }
+
+    public func body(content: Content) -> some View {
+        content
+            .modifier(AnimatedSizeModifier(width: animatedMagnification, height: 0) { size in
+                if isAnimating {
+                    onChanged(size.width)
                 }
-                .onEnded { _ in
-                    lastMagnification = 0
-                    claimState = .unclaimed
+            })
+            .simultaneousGesture(
+                MagnifyGesture()
+                    .onChanged { gestureValue in
+                        if claimState == .unclaimed {
+                            let accepted = magnifyFilter?.accepts(gestureValue.startLocation) ?? true
+                            claimState = accepted ? .claimed : .rejected
+                        }
+                        guard claimState == .claimed else {
+                            return
+                        }
+                        isAnimating = false
+                        animatedMagnification = gestureValue.magnification
+                        onChanged(gestureValue.magnification)
+                    }
+                    .onEnded { gestureValue in
+                        let wasClaimed = claimState == .claimed
+                        claimState = .unclaimed
+                        guard wasClaimed else {
+                            return
+                        }
+                        let current = gestureValue.magnification
+                        // Keep the prediction positive so the zoom can't flip.
+                        let predicted = max(current + gestureValue.velocity * gestureMomentumTime, current / 2)
+                        guard momentum, abs(predicted - current) > 0.02 else {
+                            finish()
+                            return
+                        }
+                        isAnimating = true
+                        withAnimation(.easeOut(duration: 0.3)) {
+                            animatedMagnification = predicted
+                        } completion: {
+                            finish()
+                        }
+                    }
+            )
+    }
+
+    private func finish() {
+        isAnimating = false
+        animatedMagnification = 1
+        onEnded()
+    }
+}
+
+/// Low-level two-finger rotate gesture with momentum. Reports the total rotation since the gesture began.
+/// Honors `interactionMagnifyFilter`, because rotate and magnify share the same two-finger input.
+public struct CoreRotateModifier: ViewModifier {
+    let momentum: Bool
+    let onChanged: (Angle) -> Void
+    let onEnded: () -> Void
+
+    @Environment(\.interactionMagnifyFilter) private var magnifyFilter
+    @State private var claimState: CoreDragModifier.ClaimState = .unclaimed
+    @State private var animatedRadians: Double = 0
+    @State private var isAnimating = false
+
+    public init(momentum: Bool = true, onChanged: @escaping (Angle) -> Void, onEnded: @escaping () -> Void = { /* nothing */ }) {
+        self.momentum = momentum
+        self.onChanged = onChanged
+        self.onEnded = onEnded
+    }
+
+    public func body(content: Content) -> some View {
+        content
+            .modifier(AnimatedSizeModifier(width: animatedRadians, height: 0) { size in
+                if isAnimating {
+                    onChanged(.radians(size.width))
                 }
-        )
+            })
+            .simultaneousGesture(
+                RotateGesture()
+                    .onChanged { gestureValue in
+                        if claimState == .unclaimed {
+                            let accepted = magnifyFilter?.accepts(gestureValue.startLocation) ?? true
+                            claimState = accepted ? .claimed : .rejected
+                        }
+                        guard claimState == .claimed else {
+                            return
+                        }
+                        isAnimating = false
+                        animatedRadians = gestureValue.rotation.radians
+                        onChanged(gestureValue.rotation)
+                    }
+                    .onEnded { gestureValue in
+                        let wasClaimed = claimState == .claimed
+                        claimState = .unclaimed
+                        guard wasClaimed else {
+                            return
+                        }
+                        let current = gestureValue.rotation.radians
+                        let predicted = current + gestureValue.velocity.radians * gestureMomentumTime
+                        guard momentum, abs(predicted - current) > 0.02 else {
+                            finish()
+                            return
+                        }
+                        isAnimating = true
+                        withAnimation(.easeOut(duration: 0.3)) {
+                            animatedRadians = predicted
+                        } completion: {
+                            finish()
+                        }
+                    }
+            )
+    }
+
+    private func finish() {
+        isAnimating = false
+        animatedRadians = 0
+        onEnded()
+    }
+}
+
+struct RotateGestureModifier<T: Transformer>: ViewModifier where T.Input == Angle, T.Output: AdditiveArithmetic {
+    let transformer: T
+    let momentum: Bool
+    @Binding var value: T.Output
+
+    @State private var lastRotation: Angle = .zero
+
+    func body(content: Content) -> some View {
+        content.modifier(CoreRotateModifier(momentum: momentum) { rotation in
+            let delta = rotation - lastRotation
+            lastRotation = rotation
+            value += transformer.transform(delta)
+        } onEnded: {
+            lastRotation = .zero
+        })
     }
 }
 
@@ -346,7 +641,11 @@ public extension View {
     }
     #endif
 
-    func transformedMagnifyGesture<T: Transformer>(transformer: T, writes value: Binding<T.Output>) -> some View where T.Input == Double, T.Output: AdditiveArithmetic {
-        modifier(MagnifyGestureModifier(transformer: transformer, value: value))
+    func transformedMagnifyGesture<T: Transformer>(momentum: Bool = true, transformer: T, writes value: Binding<T.Output>) -> some View where T.Input == Double, T.Output: AdditiveArithmetic {
+        modifier(MagnifyGestureModifier(transformer: transformer, momentum: momentum, value: value))
+    }
+
+    func transformedRotateGesture<T: Transformer>(momentum: Bool = true, transformer: T, writes value: Binding<T.Output>) -> some View where T.Input == Angle, T.Output: AdditiveArithmetic {
+        modifier(RotateGestureModifier(transformer: transformer, momentum: momentum, value: value))
     }
 }
