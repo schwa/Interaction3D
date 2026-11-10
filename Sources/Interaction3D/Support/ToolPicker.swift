@@ -211,6 +211,23 @@ public extension View {
         let entry = ToolPickerModel.Tool(id: id, group: group, label: Text(label), modifier: modifier, enabled: enabled)
         return self.modifier(ToolModifier(entry: entry))
     }
+
+    /// A tool built from view modifiers, for example `.tool("Orbit", id: "orbit") { $0.interactiveCamera(cameraMatrix: $matrix) }`.
+    func tool(_ label: some View, group: ToolPickerGroup = .default, id: some Hashable, enabled: Bool = true, apply: @escaping (AnyView) -> some View) -> some View {
+        tool(label, group: group, id: id, enabled: enabled) { ClosureModifier(apply: apply) }
+    }
+
+    func tool(_ label: LocalizedStringKey, group: ToolPickerGroup = .default, id: some Hashable, enabled: Bool = true, apply: @escaping (AnyView) -> some View) -> some View {
+        tool(Text(label), group: group, id: id, enabled: enabled, apply: apply)
+    }
+}
+
+private struct ClosureModifier<Output: View>: ViewModifier {
+    let apply: (AnyView) -> Output
+
+    func body(content: Content) -> some View {
+        apply(AnyView(content))
+    }
 }
 
 struct AnyViewModifier: ViewModifier {

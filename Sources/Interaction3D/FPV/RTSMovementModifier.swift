@@ -89,7 +89,7 @@ public struct RTSMovementSettings: Equatable, Sendable {
     }
 }
 
-public struct RTSMovementModifier: ViewModifier {
+struct RTSMovementModifier: ViewModifier {
     let navigator: RTSNavigator
     let updatesAutomatically: Bool
 
@@ -108,12 +108,12 @@ public struct RTSMovementModifier: ViewModifier {
     }
 
     // updatesAutomatically: false means the app calls navigator.update(deltaTime:) from its own frame loop.
-    public init(navigator: RTSNavigator, updatesAutomatically: Bool = true) {
+    init(navigator: RTSNavigator, updatesAutomatically: Bool = true) {
         self.navigator = navigator
         self.updatesAutomatically = updatesAutomatically
     }
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         GeometryReader { proxy in
             content
                 .frame(width: proxy.size.width, height: proxy.size.height)
@@ -191,7 +191,7 @@ public struct RTSMovementModifier: ViewModifier {
 }
 
 // RTS movement for a pose binding, with a navigator it owns.
-public struct RTSPoseModifier: ViewModifier {
+struct RTSPoseModifier: ViewModifier {
     @Binding
     var pose: RTSCameraPose
 
@@ -203,12 +203,12 @@ public struct RTSPoseModifier: ViewModifier {
     @State
     private var hasSeededHome = false
 
-    public init(pose: Binding<RTSCameraPose>, settings: RTSMovementSettings = .init()) {
+    init(pose: Binding<RTSCameraPose>, settings: RTSMovementSettings = .init()) {
         self._pose = pose
         self.settings = settings
     }
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content
             .modifier(RTSMovementModifier(navigator: navigator))
             .onChange(of: settings, initial: true) {

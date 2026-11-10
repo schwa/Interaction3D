@@ -13,7 +13,7 @@ public struct InteractiveCameraDebugView: View {
     var target: SIMD3<Float>
 
     @Binding
-    var mode: InteractiveCameraModifier.Mode
+    var mode: InteractiveCameraMode
 
     @Binding
     var transforms: InteractionAxisTransforms
@@ -22,7 +22,7 @@ public struct InteractiveCameraDebugView: View {
         rotation: Binding<simd_quatf>,
         distance: Binding<Float>,
         target: Binding<SIMD3<Float>>,
-        mode: Binding<InteractiveCameraModifier.Mode>,
+        mode: Binding<InteractiveCameraMode>,
         transforms: Binding<InteractionAxisTransforms>
     ) {
         self._rotation = rotation
@@ -80,7 +80,7 @@ struct CameraStateSectionView: View {
 
 struct CameraModeSectionView: View {
     @Binding
-    var mode: InteractiveCameraModifier.Mode
+    var mode: InteractiveCameraMode
 
     var body: some View {
         Section("Mode") {
@@ -98,7 +98,7 @@ private enum ModeKind: Hashable {
     case arcball
 }
 
-private extension InteractiveCameraModifier.Mode {
+private extension InteractiveCameraMode {
     var kind: ModeKind {
         get {
             switch self {
@@ -202,7 +202,7 @@ struct TransformOptionsSectionView: View {
     var target: SIMD3<Float> = .zero
 
     @Previewable @State
-    var mode: InteractiveCameraModifier.Mode = .turntable()
+    var mode: InteractiveCameraMode = .turntable()
 
     @Previewable @State
     var transforms: InteractionAxisTransforms = .default

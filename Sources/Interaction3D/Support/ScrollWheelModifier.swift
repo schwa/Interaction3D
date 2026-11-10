@@ -5,11 +5,11 @@ import SwiftUI
 // MARK: - Scroll Wheel Modifier
 
 /// Captures macOS scroll wheel events via a local event monitor when the mouse is over the view.
-public struct ScrollWheelModifier: ViewModifier {
+struct ScrollWheelModifier: ViewModifier {
     @Binding var delta: Double
     @Environment(\.interactionScrollFilter) private var scrollFilter
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content.overlay {
             ScrollWheelView(filter: scrollFilter) { delta += $0 }
         }

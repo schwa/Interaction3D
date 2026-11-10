@@ -16,7 +16,7 @@ struct PitchYawDemoView: View {
     private var target: SIMD3<Float> = .zero
 
     @State
-    private var mode: InteractiveCameraModifier.Mode = .turntable()
+    private var mode: InteractiveCameraMode = .turntable()
 
     @State
     private var transforms: InteractionAxisTransforms = .default

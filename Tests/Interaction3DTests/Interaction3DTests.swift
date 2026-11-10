@@ -505,9 +505,21 @@ private struct TestProjection: ProjectionProtocol {
 
     _ = Color.clear.interactiveCamera(rotation: rotation, distance: floatDistance, target: .constant(.zero), zoom: .multiplicative(), panEnabled: false)
     _ = Color.clear.interactiveCamera(rotation: rotation, distance: doubleDistance, target: doubleTarget, mode: .turntable(TurntableTransformer(upAxis: [0, 0, 1])))
-    _ = Color.clear.modifier(InteractiveCameraModifier(rotation: rotation, distance: floatDistance, target: .constant(.zero), zoom: .multiplicative(), distanceRange: 1...100, panEnabled: false))
+    _ = Color.clear.interactiveCamera(rotation: rotation, distance: floatDistance, target: .constant(.zero), zoom: .multiplicative(), distanceRange: 1...100, panEnabled: false)
     _ = Color.clear.interactiveCamera(yaw: yaw, pitch: pitch, distance: doubleDistance, zoom: .multiplicative(), distanceRange: 1.01...1e6)
     _ = Color.clear.interactiveLook(yaw: yaw, pitch: pitch, pitchRange: SwiftUI.Angle.degrees(-89)...SwiftUI.Angle.degrees(89))
+}
+
+// #89: controls are added as tools through their View extensions, not modifier structs.
+@MainActor
+@Test func toolsAcceptViewExtensionClosures() {
+    let matrix = Binding.constant(matrix_identity_float4x4)
+    _ = ToolPickerHost {
+        Color.clear
+            .tool("Orbit", id: "orbit") { $0.interactiveCamera(cameraMatrix: matrix, mode: InteractiveCameraMode.arcball()) }
+            .tool("FPV", id: "fpv") { $0.fpvMovement(cameraMatrix: matrix) }
+            .tool("RTS", id: "rts") { $0.rtsMovement(pose: .constant(RTSCameraPose())) }
+    }
 }
 
 // #81: every orbit form takes the same zoom, distance range and pan options.

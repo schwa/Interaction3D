@@ -5,11 +5,11 @@ import SwiftUI
 // MARK: - Interactive Camera Matrix Modifier
 
 /// Adapter that bridges between simd_float4x4 camera matrix and the rotation/distance/target state
-public struct InteractiveCameraMatrixModifier: ViewModifier {
+struct InteractiveCameraMatrixModifier: ViewModifier {
     @Binding
     var cameraMatrix: simd_float4x4
 
-    var mode: InteractiveCameraModifier.Mode
+    var mode: InteractiveCameraMode
     var transforms: InteractionAxisTransforms
     var target: SIMD3<Float>
     var zoom: CameraZoomModel
@@ -30,9 +30,9 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
     @State
     private var stateFromMatrix: InteractionState?
 
-    public init(
+    init(
         cameraMatrix: Binding<simd_float4x4>,
-        mode: InteractiveCameraModifier.Mode,
+        mode: InteractiveCameraMode,
         transforms: InteractionAxisTransforms? = nil,
         target: SIMD3<Float> = .zero,
         zoom: CameraZoomModel = .additive,
@@ -48,18 +48,17 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
         self.panEnabled = panEnabled
     }
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content
             .modifier(
-                InteractiveCameraModifier(
+                CameraControlsModifier(
                     rotation: $interactionState.rotation,
                     distance: $interactionState.distance,
-                    target: $interactionState.target,
+                    target: panEnabled ? $interactionState.target : nil,
                     mode: mode,
                     transforms: transforms,
                     zoom: zoom,
-                    distanceRange: distanceRange,
-                    panEnabled: panEnabled
+                    distanceRange: distanceRange
                 )
             )
             .onChange(of: interactionState) { _, newValue in
@@ -110,7 +109,7 @@ public extension View {
     /// Orbit camera controls for a camera matrix. `target` is the point the camera orbits.
     func interactiveCamera(
         cameraMatrix: Binding<simd_float4x4>,
-        mode: InteractiveCameraModifier.Mode = .turntable(),
+        mode: InteractiveCameraMode = .turntable(),
         transforms: InteractionAxisTransforms? = nil,
         target: SIMD3<Float> = .zero,
         zoom: CameraZoomModel = .additive,

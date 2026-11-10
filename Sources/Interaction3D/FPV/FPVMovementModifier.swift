@@ -43,7 +43,7 @@ public struct FPVMovementSettings: Equatable, Sendable {
     }
 }
 
-public struct FPVMovementModifier: ViewModifier {
+struct FPVMovementModifier: ViewModifier {
     let navigator: FPVNavigator
     let updatesAutomatically: Bool
     let showsControls: Bool
@@ -56,13 +56,13 @@ public struct FPVMovementModifier: ViewModifier {
 
     // updatesAutomatically: false means the app calls navigator.update(deltaTime:) from its own frame loop.
     // showsControls adds Capture Mouse and Reset toolbar buttons to the host window.
-    public init(navigator: FPVNavigator, updatesAutomatically: Bool = true, showsControls: Bool = false) {
+    init(navigator: FPVNavigator, updatesAutomatically: Bool = true, showsControls: Bool = false) {
         self.navigator = navigator
         self.updatesAutomatically = updatesAutomatically
         self.showsControls = showsControls
     }
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content
             .movementInputFocus(claiming: .fpvMovementKeys(extraControls: navigator.settings.extraControls)) { isFocused in
                 navigator.isKeyboardEnabled = isFocused
@@ -108,7 +108,7 @@ public struct FPVMovementModifier: ViewModifier {
 }
 
 // FPV movement for a camera matrix binding, with a navigator it owns.
-public struct FPVCameraMatrixModifier: ViewModifier {
+struct FPVCameraMatrixModifier: ViewModifier {
     @Binding
     var cameraMatrix: matrix_float4x4
 
@@ -122,7 +122,7 @@ public struct FPVCameraMatrixModifier: ViewModifier {
     @State
     private var navigator = FPVNavigator()
 
-    public init(
+    init(
         cameraMatrix: Binding<matrix_float4x4>,
         isMouseLookEnabled: Binding<Bool> = .constant(true),
         settings: FPVMovementSettings = .init(),
@@ -136,7 +136,7 @@ public struct FPVCameraMatrixModifier: ViewModifier {
         self.showsControls = showsControls
     }
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         navigator.hooks = hooks
         return content
             .modifier(FPVMovementModifier(navigator: navigator, showsControls: showsControls))

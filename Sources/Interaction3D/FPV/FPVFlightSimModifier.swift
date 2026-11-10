@@ -6,7 +6,7 @@ import SwiftUI
 /// A full-featured FPV flight modifier that includes all flight simulation controls.
 /// This is the "kitchen sink" version that shows navigation instruments, map, speedometers, etc.
 /// For a minimal version without overlays, use `FPVMovementModifier`.
-public struct FPVFlightSimModifier: ViewModifier {
+struct FPVFlightSimModifier: ViewModifier {
     @Binding
     var cameraMatrix: matrix_float4x4
 
@@ -40,13 +40,13 @@ public struct FPVFlightSimModifier: ViewModifier {
         externalMouseLookEnabled ?? $localMouseLookEnabled
     }
 
-    public init(cameraMatrix: Binding<matrix_float4x4>, isMouseLookEnabled: Binding<Bool>? = nil, verticalFOV: CGFloat = 60) {
+    init(cameraMatrix: Binding<matrix_float4x4>, isMouseLookEnabled: Binding<Bool>? = nil, verticalFOV: CGFloat = 60) {
         self._cameraMatrix = cameraMatrix
         self.externalMouseLookEnabled = isMouseLookEnabled
         self.verticalFOV = verticalFOV
     }
 
-    public func body(content: Content) -> some View {
+    func body(content: Content) -> some View {
         content
             .movementInputFocus(claiming: .fpvMovementKeys()) { isFocused in
                 wasdController.isKeyboardEnabled = isFocused

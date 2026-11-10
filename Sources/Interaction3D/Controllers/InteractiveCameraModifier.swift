@@ -1,53 +1,19 @@
 import simd
 import SwiftUI
 
-public struct InteractiveCameraModifier: ViewModifier {
-    public enum Mode {
-        case turntable(TurntableTransformer = TurntableTransformer())
-        case arcball(ArcballTransformer = ArcballTransformer())
+public enum InteractiveCameraMode {
+    case turntable(TurntableTransformer = TurntableTransformer())
+    case arcball(ArcballTransformer = ArcballTransformer())
 
-        /// The transforms tuned for this mode, used when the caller does not pass any.
-        public var defaultTransforms: InteractionAxisTransforms {
-            switch self {
-            case .turntable:
-                .turntableDefault
+    /// The transforms tuned for this mode, used when the caller does not pass any.
+    public var defaultTransforms: InteractionAxisTransforms {
+        switch self {
+        case .turntable:
+            .turntableDefault
 
-            case .arcball:
-                .default
-            }
+        case .arcball:
+            .default
         }
-    }
-
-    var controls: CameraControlsModifier<Float>
-
-    /// - Parameters:
-    ///   - zoom: How scroll and magnify change `distance`. Use `.multiplicative` for scenes whose scale spans orders
-    ///     of magnitude.
-    ///   - distanceRange: Limits for `distance`. Defaults to `0.01...`.
-    ///   - panEnabled: Whether Command-drag pans `target`.
-    public init(
-        rotation: Binding<simd_quatf>,
-        distance: Binding<Float>,
-        target: Binding<SIMD3<Float>>,
-        mode: Mode = .turntable(),
-        transforms: InteractionAxisTransforms? = nil,
-        zoom: CameraZoomModel = .additive,
-        distanceRange: ClosedRange<Float> = 0.01...Float.greatestFiniteMagnitude,
-        panEnabled: Bool = true
-    ) {
-        controls = CameraControlsModifier(
-            rotation: rotation,
-            distance: distance,
-            target: panEnabled ? target : nil,
-            mode: mode,
-            transforms: transforms ?? mode.defaultTransforms,
-            zoom: zoom,
-            distanceRange: distanceRange
-        )
-    }
-
-    public func body(content: Content) -> some View {
-        content.modifier(controls)
     }
 }
 
@@ -57,7 +23,7 @@ struct CameraControlsModifier<Scalar: BinaryFloatingPoint & SIMDScalar>: ViewMod
     @Binding var distance: Scalar
     var target: Binding<SIMD3<Scalar>>?
 
-    var mode: InteractiveCameraModifier.Mode
+    var mode: InteractiveCameraMode
     var transforms: InteractionAxisTransforms
     var zoom: CameraZoomModel
     var distanceRange: ClosedRange<Scalar>
@@ -66,7 +32,7 @@ struct CameraControlsModifier<Scalar: BinaryFloatingPoint & SIMDScalar>: ViewMod
         rotation: Binding<simd_quatf>,
         distance: Binding<Scalar>,
         target: Binding<SIMD3<Scalar>>?,
-        mode: InteractiveCameraModifier.Mode,
+        mode: InteractiveCameraMode,
         transforms: InteractionAxisTransforms,
         zoom: CameraZoomModel,
         distanceRange: ClosedRange<Scalar>
@@ -146,7 +112,7 @@ struct CameraRotationSession {
     mutating func input(
         for drag: CoreDragValue,
         rotation: simd_quatf,
-        mode: InteractiveCameraModifier.Mode,
+        mode: InteractiveCameraMode,
         viewSize: CGSize
     ) -> InteractionInput {
         let startRotation = rotationAtDragStart ?? rotation
@@ -178,7 +144,7 @@ struct CameraRotationSession {
 private struct CameraRotationModifier: ViewModifier {
     @Binding var rotation: simd_quatf
 
-    var mode: InteractiveCameraModifier.Mode
+    var mode: InteractiveCameraMode
     var transforms: InteractionAxisTransforms
 
     @State private var viewSize: CGSize = .zero
@@ -231,7 +197,7 @@ public extension View {
         rotation: Binding<simd_quatf>,
         distance: Binding<Scalar>,
         target: Binding<SIMD3<Scalar>>,
-        mode: InteractiveCameraModifier.Mode = .turntable(),
+        mode: InteractiveCameraMode = .turntable(),
         transforms: InteractionAxisTransforms? = nil,
         zoom: CameraZoomModel = .additive,
         distanceRange: ClosedRange<Scalar> = 0.01...Scalar.greatestFiniteMagnitude,
@@ -255,7 +221,7 @@ public extension View {
     /// Orbit camera controls for an `InteractionState`. Same options as `interactiveCamera(rotation:distance:target:)`.
     func interactiveCamera(
         _ state: Binding<InteractionState>,
-        mode: InteractiveCameraModifier.Mode = .turntable(),
+        mode: InteractiveCameraMode = .turntable(),
         transforms: InteractionAxisTransforms? = nil,
         zoom: CameraZoomModel = .additive,
         distanceRange: ClosedRange<Float> = 0.01...Float.greatestFiniteMagnitude,

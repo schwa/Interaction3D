@@ -1880,12 +1880,13 @@ Clients often import other packages with similar helpers (for example GeometryLi
 ## 89: Public modifier structs duplicate their View extensions
 
 +++
-status: open
+status: closed
 priority: low
 kind: enhancement
 labels: effort:s, area:api
 created: 2026-11-10T04:52:38Z
-updated: 2026-11-10T04:53:23Z
+updated: 2026-11-10T05:04:26Z
+closed: 2026-11-10T05:04:26Z
 +++
 
 Several controls have both a public `ViewModifier` struct and a public `View` extension that does the same thing:
