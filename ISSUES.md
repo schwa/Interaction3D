@@ -1665,10 +1665,12 @@ Related: collision (the step-up limit is both).
 ## 79: FPV walk mode assumes +Y is up (gravity is a scalar)
 
 +++
-status: new
+status: open
 priority: low
 kind: enhancement
+labels: effort:l, area:camera
 created: 2026-11-10T04:38:19Z
+updated: 2026-11-10T04:53:23Z
 +++
 
 FPVWalkSettings.gravity is a scalar that always pulls along -Y, and the rest of FPV movement is fixed to +Y up:
@@ -1704,5 +1706,198 @@ TinyTorii's explore mode (`Explorer.swift`) does this. It can't use the modifier
 
 Expected: `FPVMovementModifier` is the only way to use FPV movement and covers these cases; the controller types are not public.
 Actual: apps must choose between the modifier (missing features) and the raw controllers (missing key handling and future modifier features).
+
+---
+
+## 81: Orbit camera forms have inconsistent options and no InteractionState binding
+
++++
+status: open
+priority: medium
+kind: enhancement
+labels: effort:m, area:camera
+created: 2026-11-10T04:50:19Z
+updated: 2026-11-10T04:53:23Z
++++
+
+The orbit camera has three `.interactiveCamera` forms for different state shapes: `rotation:distance:target:`, `cameraMatrix:`, and `yaw:pitch:distance:`. Their options differ in ways that don't follow from the state shape:
+- The `cameraMatrix:` form has no zoom model, no distance range, and no way to turn pan off.
+- The `rotation:distance:target:` form turns pan off with a `nil` target; `InteractiveCameraModifier` uses a `panEnabled` flag instead.
+
+Clients keep their camera as an `InteractionState` (68 uses across MetalSprocketsAddOns, SceneSprockets and others), but no form takes `Binding<InteractionState>`. Clients write wrappers that split it into three bindings, for example MetalSprocketsAddOns `demoCameraControls`.
+
+- `2026-11-10T04:53:23Z`: Related: #89 (public modifier structs duplicate their extensions).
+
+---
+
+## 82: Two different drag-with-momentum building blocks behave differently
+
++++
+status: open
+priority: low
+kind: enhancement
+labels: effort:m, area:swiftui
+created: 2026-11-10T04:50:19Z
+updated: 2026-11-10T04:53:23Z
++++
+
+`CoreDragModifier` and `DragGestureModifier` both wrap `DragGesture` with momentum, but behave differently:
+- `CoreDragModifier`: ease-out to predicted end over 0.3 s; claims drags by modifier keys and `interactionDragFilter`; touch-count option on iOS.
+- `DragGestureModifier`: linear animation; Shift locks to an axis; Command-drags are ignored; skips momentum after `animationMaxDelay`; no drag filter.
+
+Controls built on one feel different from controls built on the other, and features added to one (for example touch counting in #76) do not reach the other.
+
+---
+
+## 83: RTS camera has no app-facing handle like FPVNavigator
+
++++
+status: open
+priority: medium
+kind: enhancement
+labels: effort:m, area:camera
+created: 2026-11-10T04:50:19Z
+updated: 2026-11-10T04:53:23Z
++++
+
+FPV movement has `FPVNavigator` (#80): the app can feed outside input, pause movement for an autopilot and hand the camera back, and drive updates from its own frame loop.
+
+`.rtsMovement(pose:)` only takes a `Binding<RTSCameraPose>`:
+- No outside input (for example on-screen buttons or a minimap click to pan).
+- No pause: the modifier's update loop writes `pose` while input is held, so an app animation writing `pose` at the same time conflicts.
+- No way to drive updates from a scene graph frame loop.
+- No access to state such as whether the user is currently moving the camera.
+
+- `2026-11-10T04:53:23Z`: Related: #84 and #86 (shared handle, focus and key claiming).
+
+---
+
+## 84: FPVFlightSimModifier does not use FPVNavigator
+
++++
+status: open
+priority: low
+kind: enhancement
+labels: effort:m, area:camera
+created: 2026-11-10T04:50:19Z
+updated: 2026-11-10T04:53:23Z
++++
+
+`FPVFlightSimModifier` connects `FPVMovementController`, `WASDController` and `GameControllerMovementController` itself, the way `FPVMovementModifier` did before #80.
+
+As a result it does not get `FPVMovementSettings`, `FPVMovementHooks` (collision, ground, camera adjustment), walk mode, extra controls, outside input or pausing. Features added to `FPVNavigator` do not reach it.
+
+- `2026-11-10T04:53:23Z`: Related: #83 (navigator-style handles), #86 (duplicated capture and key claiming).
+
+---
+
+## 85: Camera controls apply input filters inconsistently
+
++++
+status: open
+priority: medium
+kind: bug
+labels: effort:m, area:camera
+created: 2026-11-10T04:50:19Z
+updated: 2026-11-10T04:53:23Z
++++
+
+`interactionDragFilter`, `interactionScrollFilter` and `interactionMagnifyFilter` let an app keep camera input off things like gizmos. Support differs per control:
+- Orbit camera (`interactiveCamera`): drag, scroll and magnify filters.
+- RTS (`rtsMovement`): drag and magnify (twist also uses the magnify filter). Scroll zoom goes through `GCMouse` / an `NSEvent` monitor and ignores `interactionScrollFilter`.
+- FPV (`fpvMovement`): no filters. Mouse look and scroll speed adjustment are gated only by focus.
+- There is no separate filter for rotate (twist); it reuses the magnify filter.
+
+Expected: each camera control honors the filters for the input it uses.
+
+---
+
+## 86: Key claiming and mouse capture are not available as building blocks
+
++++
+status: open
+priority: medium
+kind: enhancement
+labels: effort:m, area:swiftui
+created: 2026-11-10T04:50:19Z
+updated: 2026-11-10T04:53:23Z
++++
+
+`disableKeys` and `disableWASDKeys` are internal. Apps that build their own controls from the input building blocks cannot claim movement keys, so AppKit beeps on W A S D, arrows and other keys (the problem behind #80).
+
+Focus claiming and key claiming are repeated in the FPV, RTS and flight sim modifiers. Mouse capture (hide cursor, lock pointer) lives inside `WASDController`, and its toggle and release handling is repeated in the FPV and flight sim modifiers. None of these is available as a shared building block.
+
+- `2026-11-10T04:53:23Z`: Related: #87 (FPV building blocks), #83, #84.
+
+---
+
+## 87: FPV input building blocks are no longer public
+
++++
+status: open
+priority: high
+kind: enhancement
+labels: effort:s, area:api
+created: 2026-11-10T04:50:19Z
+updated: 2026-11-10T04:53:23Z
++++
+
+#80 made `WASDController`, `GameControllerMovementController`, `FPVMovementController`, `MovementController` and `NavigationEvent` internal so `FPVNavigator` is the only FPV entry point.
+
+These are building blocks that apps compose themselves. Clients that used them no longer build, for example TinyTorii (`Explorer.swift`, `TownView.swift`) uses `WASDController` and `GameControllerMovementController` directly. `RTSController`, `CoreDragModifier` and other building blocks are still public, so the library is inconsistent about which building blocks are available.
+
+- `2026-11-10T04:53:23Z`: Related: #86. Priority high: TinyTorii no longer builds against current Interaction3D.
+
+---
+
+## 88: Public utility extensions on simd and standard types can clash with clients
+
++++
+status: open
+priority: low
+kind: enhancement
+labels: effort:s, area:api
+created: 2026-11-10T04:50:20Z
+updated: 2026-11-10T04:53:23Z
++++
+
+Interaction3D adds public members to types it does not own:
+- `simd_quatf`: `matrix`, `fromPitchYaw(pitch:yaw:)`, `extractPitchYaw()`
+- `simd_float4x4`: `yaw`, `pitch`
+- `Comparable.clamped(to:)`
+- `Float.double`
+
+Clients often import other packages with similar helpers (for example GeometryLite3D), which can cause ambiguous-use errors or silently pick a different implementation.
+
+---
+
+## 89: Public modifier structs duplicate their View extensions
+
++++
+status: open
+priority: low
+kind: enhancement
+labels: effort:s, area:api
+created: 2026-11-10T04:52:38Z
+updated: 2026-11-10T04:53:23Z
++++
+
+Several controls have both a public `ViewModifier` struct and a public `View` extension that does the same thing:
+
+| Public struct | Public extension |
+|---|---|
+| `InteractiveCameraModifier` | `.interactiveCamera(rotation:distance:target:)` |
+| `InteractiveCameraMatrixModifier` | `.interactiveCamera(cameraMatrix:)` |
+| `FPVMovementModifier` | `.fpvMovement(_:)` |
+| `FPVCameraMatrixModifier` | `.fpvMovement(cameraMatrix:)` |
+| `FPVFlightSimModifier` | `.fpvFlightSim(...)` |
+| `RTSMovementModifier` | `.rtsMovement(...)` |
+| `ScrollWheelModifier` | `.onScrollWheel(delta:)` |
+
+The structs are implementation details of the extensions, but being public they are a second API to keep in sync, and the two can drift (for example `InteractiveCameraModifier` is `Float` only while the extension is generic).
+
+`WorldView` and `ToolPickerHost` `.tool { ... }` take a `ViewModifier` value, so tools are built from these structs. Apps that add their own tools to `ToolPickerHost` have no other way to pass these controls.
+
+- `2026-11-10T04:53:23Z`: Related: #81.
 
 ---
