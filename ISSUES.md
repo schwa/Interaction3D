@@ -1685,10 +1685,12 @@ Expected: gravity can be a 3D vector, and FPV movement (walk plane, yaw, ground 
 ## 80: FPV has too many public entry points; apps bypass FPVMovementModifier
 
 +++
-status: new
+status: closed
 priority: medium
 kind: enhancement
 created: 2026-11-10T04:45:15Z
+updated: 2026-11-10T04:48:26Z
+closed: 2026-11-10T04:48:26Z
 +++
 
 `WASDController`, `GameControllerMovementController` and `FPVMovementController` are public, so an app can wire them together itself instead of using `FPVMovementModifier`. Apps that do this miss what the modifier adds, for example claiming movement keys with `disableWASDKeys` (private). Without it, AppKit beeps on W A S D, arrows and other movement keys.

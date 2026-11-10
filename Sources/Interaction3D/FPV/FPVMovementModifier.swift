@@ -44,37 +44,78 @@ public struct FPVMovementSettings: Equatable, Sendable {
 }
 
 public struct FPVMovementModifier: ViewModifier {
-    @Binding
-    var cameraMatrix: matrix_float4x4
-
-    @State
-    private var fpvController = FPVMovementController()
-
-    @State
-    private var wasdController = WASDController()
-
-    @State
-    private var gameController = GameControllerMovementController()
+    let navigator: FPVNavigator
+    let updatesAutomatically: Bool
+    let showsControls: Bool
 
     @FocusState
     private var isFocused: Bool
 
+    // updatesAutomatically: false means the app calls navigator.update(deltaTime:) from its own frame loop.
+    // showsControls adds Capture Mouse and Reset toolbar buttons to the host window.
+    public init(navigator: FPVNavigator, updatesAutomatically: Bool = true, showsControls: Bool = false) {
+        self.navigator = navigator
+        self.updatesAutomatically = updatesAutomatically
+        self.showsControls = showsControls
+    }
+
+    public func body(content: Content) -> some View {
+        content
+            .focusable()
+            .focused($isFocused)
+            .task {
+                // Claim focus on appear so WASD works without a click.
+                isFocused = true
+            }
+            .onChange(of: isFocused, initial: true) {
+                navigator.isKeyboardEnabled = isFocused
+            }
+            .disableWASDKeys(extraControls: navigator.settings.extraControls)
+            .toolbar {
+                if showsControls {
+                    toolbarContent
+                }
+            }
+            .task { await navigator.runInput() }
+            .task(id: updatesAutomatically) {
+                if updatesAutomatically {
+                    await navigator.runUpdates()
+                }
+            }
+    }
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem {
+            Button(navigator.isMouseCaptured ? "Release Mouse" : "Capture Mouse") {
+                navigator.toggleMouseCapture()
+            }
+            .disabled(!navigator.isMouseLookEnabled)
+        }
+
+        ToolbarItem {
+            Button("Reset to Origin") {
+                navigator.reset()
+            }
+        }
+    }
+}
+
+// FPV movement for a camera matrix binding, with a navigator it owns.
+public struct FPVCameraMatrixModifier: ViewModifier {
+    @Binding
+    var cameraMatrix: matrix_float4x4
+
     @Binding
     var isMouseLookEnabled: Bool
 
-    let showsControls: Bool
     let settings: FPVMovementSettings
     let hooks: FPVMovementHooks
+    let showsControls: Bool
 
-    // Holds the latest hooks so the update loop sees closures from the latest body.
     @State
-    private var hooksBox = HooksBox()
+    private var navigator = FPVNavigator()
 
-    private final class HooksBox {
-        var hooks = FPVMovementHooks()
-    }
-
-    // showsControls adds Capture Mouse and Reset toolbar buttons to the host window.
     public init(
         cameraMatrix: Binding<matrix_float4x4>,
         isMouseLookEnabled: Binding<Bool> = .constant(true),
@@ -90,98 +131,32 @@ public struct FPVMovementModifier: ViewModifier {
     }
 
     public func body(content: Content) -> some View {
-        hooksBox.hooks = hooks
+        navigator.hooks = hooks
         return content
-            .focusable()
-            .focused($isFocused)
-            .task {
-                // Claim focus on appear so WASD works without a click.
-                isFocused = true
-            }
-            .onChange(of: isFocused, initial: true) {
-                wasdController.isKeyboardEnabled = isFocused
-            }
-            .disableWASDKeys(extraControls: settings.extraControls)
-            .toolbar {
-                if showsControls {
-                    toolbarContent
-                }
-            }
+            .modifier(FPVMovementModifier(navigator: navigator, showsControls: showsControls))
             .onChange(of: settings, initial: true) {
-                fpvController.speed = settings.speed
-                fpvController.fastSpeedMultiplier = settings.fastSpeedMultiplier
-                fpvController.mouseSensitivity = settings.mouseSensitivity
-                fpvController.controllerTurnSpeed = settings.controllerTurnSpeed
-                fpvController.keyboardTurnSpeed = settings.keyboardTurnSpeed
-                fpvController.isFreeFlightEnabled = settings.isFreeFlightEnabled
-                fpvController.slowSpeedMultiplier = settings.slowSpeedMultiplier
-                fpvController.speedAdjustmentFactor = settings.speedAdjustmentFactor
-                fpvController.rollSpeed = settings.rollSpeed
-                fpvController.walkSettings = settings.walk
-                fpvController.isRollEnabled = settings.extraControls.contains(.roll)
-                wasdController.extraControls = settings.extraControls
+                navigator.settings = settings
             }
             .onChange(of: isMouseLookEnabled, initial: true) {
-                fpvController.mouseTrackingEnabled = isMouseLookEnabled
-                if !isMouseLookEnabled {
-                    wasdController.releaseMouse()
-                }
+                navigator.isMouseLookEnabled = isMouseLookEnabled
             }
-            .task { await handleKeyboardEvents() }
-            .task { await handleGameControllerEvents() }
-            .task { await updateMovement() }
             .onChange(of: cameraMatrix, initial: true) {
-                if cameraMatrix != fpvController.movementController.transform {
-                    fpvController.setPose(cameraMatrix)
+                if cameraMatrix != navigator.transform {
+                    navigator.setPose(cameraMatrix)
                 }
             }
-            .onChange(of: fpvController.movementController.transform) {
-                cameraMatrix = fpvController.movementController.transform
+            .onChange(of: navigator.transform) {
+                cameraMatrix = navigator.transform
             }
-    }
-
-    private func handleKeyboardEvents() async {
-        for await event in wasdController.events {
-            fpvController.process(event: event)
-        }
-    }
-
-    private func handleGameControllerEvents() async {
-        for await event in gameController.events {
-            fpvController.process(event: event)
-        }
-    }
-
-    private func updateMovement() async {
-        let clock = ContinuousClock()
-        var previousUpdate = clock.now
-        for await _ in AsyncTimerSequence(interval: .milliseconds(8), clock: clock) {
-            let updateTime = clock.now
-            let deltaTime = previousUpdate.duration(to: updateTime).timeInterval
-            previousUpdate = updateTime
-            fpvController.hooks = hooksBox.hooks
-            fpvController.update(deltaTime: deltaTime)
-        }
-    }
-
-    @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
-        ToolbarItem {
-            Button(wasdController.isMouseCaptured ? "Release Mouse" : "Capture Mouse") {
-                wasdController.toggleMouseCapture()
-            }
-            .disabled(!fpvController.mouseTrackingEnabled)
-        }
-
-        ToolbarItem {
-            Button("Reset to Origin") {
-                fpvController.reset()
-            }
-        }
     }
 }
 
 public extension View {
+    // Settings, hooks and input live on the navigator.
+    func fpvMovement(_ navigator: FPVNavigator, updatesAutomatically: Bool = true, showsControls: Bool = false) -> some View {
+        modifier(FPVMovementModifier(navigator: navigator, updatesAutomatically: updatesAutomatically, showsControls: showsControls))
+    }
+
     func fpvMovement(
         cameraMatrix: Binding<matrix_float4x4>,
         isMouseLookEnabled: Binding<Bool> = .constant(true),
@@ -189,13 +164,6 @@ public extension View {
         hooks: FPVMovementHooks = .init(),
         showsControls: Bool = false
     ) -> some View {
-        modifier(FPVMovementModifier(cameraMatrix: cameraMatrix, isMouseLookEnabled: isMouseLookEnabled, settings: settings, hooks: hooks, showsControls: showsControls))
-    }
-}
-
-private extension Duration {
-    var timeInterval: Float {
-        let components = self.components
-        return Float(components.seconds) + Float(components.attoseconds) / 1e18
+        modifier(FPVCameraMatrixModifier(cameraMatrix: cameraMatrix, isMouseLookEnabled: isMouseLookEnabled, settings: settings, hooks: hooks, showsControls: showsControls))
     }
 }
