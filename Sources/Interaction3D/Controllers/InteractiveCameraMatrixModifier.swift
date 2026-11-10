@@ -17,6 +17,16 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
     @State
     private var interactionState = InteractionState()
 
+    // The state last read from cameraMatrix. It is never written back to cameraMatrix.
+    //
+    // Why: cameraMatrix and interactionState each update the other. Callers often pass a binding that changes what
+    // it is given (SceneSprockets clamps it to camera limits), and matrix -> state -> matrix is not exact in Float.
+    // A tolerance check alone can't stop that: far from the origin, Float error is bigger than the tolerance. The
+    // two onChange handlers then fire each other forever and the app hangs (this hung SceneView on iOS at launch).
+    // Don't remove this guard, and don't add another write-back path without one like it.
+    @State
+    private var stateFromMatrix: InteractionState?
+
     public init(
         cameraMatrix: Binding<simd_float4x4>,
         mode: InteractiveCameraModifier.Mode,
@@ -41,6 +51,10 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
                 )
             )
             .onChange(of: interactionState) { _, newValue in
+                // This change came from cameraMatrix; writing it back would restart the loop.
+                guard newValue != stateFromMatrix else {
+                    return
+                }
                 let newMatrix = synchronizer.cameraMatrix(from: newValue)
                 guard !matricesMatch(cameraMatrix, newMatrix) else {
                     return
@@ -52,12 +66,15 @@ public struct InteractiveCameraMatrixModifier: ViewModifier {
                 guard !matricesMatch(newValue, expectedMatrix), let newState = synchronizer.interactionState(from: newValue) else {
                     return
                 }
+                // Set before interactionState so the handler above knows not to write it back.
+                stateFromMatrix = newState
                 interactionState = newState
             }
             .onChange(of: target) { _, _ in
                 guard let newState = synchronizer.interactionState(from: cameraMatrix) else {
                     return
                 }
+                stateFromMatrix = newState
                 interactionState = newState
             }
     }
