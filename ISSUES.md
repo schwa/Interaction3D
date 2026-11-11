@@ -1914,11 +1914,13 @@ The structs are implementation details of the extensions, but being public they 
 ## 90: Depends on GeometryLite3D 0.2.x / SwiftMesh 0.0.x; the rest of the stack has moved to 0.3 / 0.1
 
 +++
-status: new
+status: closed
 priority: high
 kind: task
 labels: dependencies
 created: 2026-11-11T21:15:47Z
+updated: 2026-11-11T21:18:41Z
+closed: 2026-11-11T21:18:41Z
 +++
 
 This package still requires:
