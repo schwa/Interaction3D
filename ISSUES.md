@@ -1940,3 +1940,25 @@ Expected: this package requires GeometryLite3D 0.3.x (and SwiftMesh 0.1.x where 
 Reported from SceneSprockets #378.
 
 ---
+
+## 91: Keyboard and controller input waits behind the main thread
+
++++
+status: new
+priority: medium
+kind: enhancement
+labels: effort:m
+created: 2026-11-14T21:32:01Z
++++
+
+WASDController (and RTSController) poll GCKeyboard from a Task timer every 16 ms and yield NavigationEvent values into an AsyncStream, which FPVNavigator consumes in another Task. Both tasks run on the main actor. When the main thread is busy (for example rendering a heavy scene), polling and event delivery wait behind that work, so input arrives late.
+
+Seen in TinyTorii (TinyTorii #68): in first-person mode there is a noticeable lag between pressing a movement key and the camera moving, in a scene whose frames take about 70 ms of CPU on the main thread. Not yet confirmed that the main thread is the cause.
+
+Related: SceneSprockets issue about SceneView doing its per-frame work on the main thread.
+
+## Proposed fix (per user)
+
+Move input work off the main thread, so key and controller state is current when the navigator updates, however busy the main thread is.
+
+---
