@@ -116,6 +116,15 @@ public final class FPVNavigator {
 
     // Advances movement. Call from your frame loop only if you passed `updatesAutomatically: false`.
     public func update(deltaTime: Float) {
+        // Poll here, not on a timer, so held keys and sticks are current for this frame (#91).
+        if let keyboard {
+            for event in keyboard.poll() {
+                controller.process(event: event)
+            }
+        }
+        if let gamepad {
+            controller.process(event: gamepad.poll())
+        }
         guard !isPaused else {
             return
         }
@@ -137,12 +146,13 @@ public final class FPVNavigator {
 
     // Reads keyboard, mouse and game controller input until cancelled.
     func runInput() async {
-        let keyboard = WASDController(mouseCapture: mouseCapture)
+        // The stream carries only mouse and scroll events; key and stick state is polled in update().
+        let keyboard = WASDController(mouseCapture: mouseCapture, pollsAutomatically: false)
         keyboard.isKeyboardEnabled = isKeyboardEnabled
         keyboard.isLookAllowed = isLookAllowed
         keyboard.isScrollAllowed = isScrollAllowed
         keyboard.extraControls = settings.extraControls
-        let gamepad = GameControllerMovementController()
+        let gamepad = GameControllerMovementController(pollsAutomatically: false)
         self.keyboard = keyboard
         self.gamepad = gamepad
         defer {

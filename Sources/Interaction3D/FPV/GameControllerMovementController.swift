@@ -48,7 +48,8 @@ public final class GameControllerMovementController {
     public init(
         movementTransformer: MovementTransformer = MovementTransformer(deadzone: 0.05, scale: 1, curve: .quadratic, reverseY: false),
         lookTransformer: RotationTransformer = RotationTransformer(deadzone: 0.05, scale: 1, curve: .quadratic, reverseX: false, reverseY: false),
-        altitudeTransformer: AnyTransformer<Float, Float>? = nil
+        altitudeTransformer: AnyTransformer<Float, Float>? = nil,
+        pollsAutomatically: Bool = true
     ) {
         self.movementTransformer = movementTransformer
         self.lookTransformer = lookTransformer
@@ -58,7 +59,9 @@ public final class GameControllerMovementController {
         bootstrapInitialController()
         observeControllerConnections()
         observeControllerDisconnections()
-        startTimerLoop()
+        if pollsAutomatically {
+            startTimerLoop()
+        }
     }
 
     deinit {
@@ -150,28 +153,26 @@ public final class GameControllerMovementController {
                 guard let self else {
                     return
                 }
-
-                synchronizeActiveController()
-
-                guard isControllerConnected else {
-                    emitNeutralFrame()
-                    continue
-                }
-
-                let state = readInputVectors()
-
-                guard state.connected else {
-                    eventContinuation.yield(.controllerState(move: .zero, look: .zero, altitude: 0))
-                    continue
-                }
-
-                let move = movementTransformer.transform(state.move)
-                let look = lookTransformer.transform(state.look)
-                let altitude = altitudeTransformer.transform(state.altitude)
-
-                eventContinuation.yield(.controllerState(move: move, look: look, altitude: altitude))
+                eventContinuation.yield(poll())
             }
         }
+    }
+
+    // Reads the current stick state. See Docs/InputLatency.md.
+    public func poll() -> NavigationEvent {
+        let neutral = NavigationEvent.controllerState(move: .zero, look: .zero, altitude: 0)
+        synchronizeActiveController()
+        guard isControllerConnected else {
+            return neutral
+        }
+        let state = readInputVectors()
+        guard state.connected else {
+            return neutral
+        }
+        let move = movementTransformer.transform(state.move)
+        let look = lookTransformer.transform(state.look)
+        let altitude = altitudeTransformer.transform(state.altitude)
+        return .controllerState(move: move, look: look, altitude: altitude)
     }
 
     private func emitNeutralFrame() {

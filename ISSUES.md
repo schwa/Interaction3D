@@ -1944,11 +1944,13 @@ Reported from SceneSprockets #378.
 ## 91: Keyboard and controller input waits behind the main thread
 
 +++
-status: new
+status: closed
 priority: medium
 kind: enhancement
 labels: effort:m
 created: 2026-11-14T21:32:01Z
+updated: 2026-11-14T21:37:58Z
+closed: 2026-11-14T21:37:58Z
 +++
 
 WASDController (and RTSController) poll GCKeyboard from a Task timer every 16 ms and yield NavigationEvent values into an AsyncStream, which FPVNavigator consumes in another Task. Both tasks run on the main actor. When the main thread is busy (for example rendering a heavy scene), polling and event delivery wait behind that work, so input arrives late.

@@ -60,10 +60,14 @@ public final class RTSController {
     @ObservationIgnored
     private var wasResetPressed = false
 
-    public init() {
+    // pollsAutomatically: false skips the 16 ms timer; the owner calls poll() right before each update instead.
+    // See Docs/InputLatency.md.
+    public init(pollsAutomatically: Bool = true) {
         (events, eventContinuation) = AsyncStream.makeStream(of: RTSEvent.self, bufferingPolicy: .bufferingNewest(32))
         setupMouseHandling()
-        startTimerLoop()
+        if pollsAutomatically {
+            startTimerLoop()
+        }
     }
 
     isolated deinit {
@@ -127,20 +131,28 @@ public final class RTSController {
         return pressed && !wasResetPressed
     }
 
+    // Reads the current key and edge-pan state. Reset fires once per press across calls.
+    public func poll() -> [RTSEvent] {
+        let state = keyboardState()
+        var events: [RTSEvent] = [.keyboardState(pan: state.pan, rotate: state.rotate, zoom: state.zoom, isFast: state.isFast)]
+        let edge = edgePan()
+        if edge != .zero {
+            events.append(.edgePan(edge))
+        }
+        if isResetTriggered() {
+            events.append(.reset)
+        }
+        return events
+    }
+
     private func startTimerLoop() {
         timerTask = Task { [weak self] in
             for await _ in AsyncTimerSequence(interval: .milliseconds(16), clock: .continuous) {
                 guard let self else {
                     return
                 }
-                let state = keyboardState()
-                eventContinuation.yield(.keyboardState(pan: state.pan, rotate: state.rotate, zoom: state.zoom, isFast: state.isFast))
-                let edge = edgePan()
-                if edge != .zero {
-                    eventContinuation.yield(.edgePan(edge))
-                }
-                if isResetTriggered() {
-                    eventContinuation.yield(.reset)
+                for event in poll() {
+                    eventContinuation.yield(event)
                 }
             }
         }

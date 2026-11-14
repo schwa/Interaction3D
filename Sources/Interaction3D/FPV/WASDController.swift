@@ -79,11 +79,15 @@ public final class WASDController {
     @ObservationIgnored
     private var wasResetPressed = false
 
-    public init(mouseCapture: MouseCapture = MouseCapture()) {
+    // pollsAutomatically: false skips the 16 ms timer; the owner calls poll() right before each update instead,
+    // so key state is never older than the frame that uses it. See Docs/InputLatency.md.
+    public init(mouseCapture: MouseCapture = MouseCapture(), pollsAutomatically: Bool = true) {
         self.mouseCapture = mouseCapture
         (events, eventContinuation) = AsyncStream.makeStream(of: NavigationEvent.self, bufferingPolicy: .bufferingNewest(32))
         setupMouseHandling()
-        startTimerLoop()
+        if pollsAutomatically {
+            startTimerLoop()
+        }
     }
 
     isolated deinit {
@@ -175,28 +179,35 @@ public final class WASDController {
         return pressed && !wasResetPressed
     }
 
+    // Reads the current key state. Edge-triggered keys (speed, reset) fire once per press across calls.
+    public func poll() -> [NavigationEvent] {
+        let state = keyboardState()
+        var events: [NavigationEvent] = [.keyboardState(move: state.move, look: state.look, altitude: state.altitude, isFast: state.isFast)]
+        if !extraControls.isEmpty {
+            let extra = extraKeyboardState()
+            events.append(.extraKeyboardState(roll: extra.roll, isSlow: extra.isSlow, isLookHeld: extra.isLookHeld))
+            let steps = speedKeySteps()
+            if steps != 0 {
+                events.append(.adjustSpeed(steps: steps))
+            }
+            if isResetTriggered() {
+                events.append(.reset)
+            }
+            if extraControls.contains(.jump) {
+                events.append(.jumpState(isPressed: isJumpPressed()))
+            }
+        }
+        return events
+    }
+
     private func startTimerLoop() {
         timerTask = Task { [weak self] in
             for await _ in AsyncTimerSequence(interval: .milliseconds(16), clock: .continuous) {
                 guard let self else {
                     return
                 }
-
-                let state = keyboardState()
-                eventContinuation.yield(.keyboardState(move: state.move, look: state.look, altitude: state.altitude, isFast: state.isFast))
-                if !extraControls.isEmpty {
-                    let extra = extraKeyboardState()
-                    eventContinuation.yield(.extraKeyboardState(roll: extra.roll, isSlow: extra.isSlow, isLookHeld: extra.isLookHeld))
-                    let steps = speedKeySteps()
-                    if steps != 0 {
-                        eventContinuation.yield(.adjustSpeed(steps: steps))
-                    }
-                    if isResetTriggered() {
-                        eventContinuation.yield(.reset)
-                    }
-                    if extraControls.contains(.jump) {
-                        eventContinuation.yield(.jumpState(isPressed: isJumpPressed()))
-                    }
+                for event in poll() {
+                    eventContinuation.yield(event)
                 }
             }
         }

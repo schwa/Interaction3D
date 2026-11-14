@@ -80,6 +80,12 @@ public final class RTSNavigator {
 
     // Advances key and app input. Call from your frame loop only if you passed `updatesAutomatically: false`.
     public func update(deltaTime: Float) {
+        // Poll here, not on a timer, so held keys are current for this frame (#91).
+        if let controller {
+            for event in controller.poll() {
+                process(event)
+            }
+        }
         guard !isPaused, deltaTime > 0 else {
             return
         }
@@ -157,7 +163,8 @@ public final class RTSNavigator {
 
     // Reads keyboard, edge pan and scroll input until cancelled.
     func runInput() async {
-        let controller = RTSController()
+        // The stream carries only scroll events; key and edge-pan state is polled in update().
+        let controller = RTSController(pollsAutomatically: false)
         controller.isKeyboardEnabled = isKeyboardEnabled
         controller.pointerLocation = pointerLocation
         controller.isScrollAllowed = isScrollAllowed
